@@ -18,6 +18,7 @@ export function AudioSettings() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
   const storeSelectedMicId = useSettingsStore((s) => s.selectedMicId);
   const setSelectedMicId = useSettingsStore((s) => s.setSelectedMicId);
@@ -68,6 +69,7 @@ export function AudioSettings() {
       streamRef.current = stream;
 
       const audioCtx = new AudioContext();
+      audioCtxRef.current = audioCtx;
       const source = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 256;
@@ -93,6 +95,9 @@ export function AudioSettings() {
   const stopMicTest = () => {
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     streamRef.current?.getTracks().forEach((t) => t.stop());
+    audioCtxRef.current?.close().catch(() => {});
+    audioCtxRef.current = null;
+    analyserRef.current = null;
     setIsTestingMic(false);
     setMicLevel(0);
   };

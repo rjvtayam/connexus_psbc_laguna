@@ -10,61 +10,19 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// ─── Request Deduplication ───
-// Prevents duplicate in-flight GET requests for the same URL
-const pendingRequests = new Map<string, Promise<unknown>>();
-
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
-  // Deduplicate identical GET requests
-  if (config.method === 'get') {
-    const key = `${config.method}:${config.url}:${JSON.stringify(config.params || {})}`;
-    if (pendingRequests.has(key)) {
-      const controller = new AbortController();
-      config.signal = controller.signal;
-      controller.abort('Duplicate request');
-    } else {
-      const key = `${config.method}:${config.url}:${JSON.stringify(config.params || {})}`;
-      pendingRequests.set(key, Promise.resolve());
-    }
-  }
-
   return config;
 });
 
 api.interceptors.response.use(
   (response) => {
-    // Clear pending request tracker
-    if (response.config.method === 'get') {
-      const key = `${response.config.method}:${response.config.url}:${JSON.stringify(response.config.params || {})}`;
-      pendingRequests.delete(key);
-    }
-
-    // Store ETag for conditional requests
-    const etag = response.headers['etag'];
-    if (etag && response.config.method === 'get') {
-      const etagKey = `etag:${response.config.url}`;
-      sessionStorage.setItem(etagKey, etag);
-    }
-
     return response;
   },
   async (error) => {
-    // Clear pending request tracker on error
-    if (error.config?.method === 'get') {
-      const key = `${error.config.method}:${error.config.url}:${JSON.stringify(error.config.params || {})}`;
-      pendingRequests.delete(key);
-    }
-
-    // Skip deduplication-aborted requests
-    if (axios.isCancel(error)) {
-      return Promise.reject(error);
-    }
-
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {

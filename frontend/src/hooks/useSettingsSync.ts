@@ -3,13 +3,14 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { usePeerStore } from '../stores/peerStore';
 
 export function useSettingsSync() {
-  const prevAudioRef = useRef({ echoCancellation: true, noiseSuppression: true, autoGainControl: true });
+  const prevAudioRef = useRef({ echoCancellation: true, noiseSuppression: true, autoGainControl: true, hdAudio: true });
   const prevVideoRef = useRef({ hdVideo: true, lowLatency: true });
   const prevDeviceRef = useRef({ selectedCameraId: '', selectedMicId: '' });
 
   const echoCancellation = useSettingsStore((s) => s.echoCancellation);
   const noiseSuppression = useSettingsStore((s) => s.noiseSuppression);
   const autoGainControl = useSettingsStore((s) => s.autoGainControl);
+  const hdAudio = useSettingsStore((s) => s.hdAudio);
   const hdVideo = useSettingsStore((s) => s.hdVideo);
   const lowLatency = useSettingsStore((s) => s.lowLatency);
   const selectedCameraId = useSettingsStore((s) => s.selectedCameraId);
@@ -20,16 +21,17 @@ export function useSettingsSync() {
     if (
       prev.echoCancellation !== echoCancellation ||
       prev.noiseSuppression !== noiseSuppression ||
-      prev.autoGainControl !== autoGainControl
+      prev.autoGainControl !== autoGainControl ||
+      prev.hdAudio !== hdAudio
     ) {
-      prevAudioRef.current = { echoCancellation, noiseSuppression, autoGainControl };
+      prevAudioRef.current = { echoCancellation, noiseSuppression, autoGainControl, hdAudio };
       const localStream = usePeerStore.getState().localStream;
       if (localStream) {
         usePeerStore.getState().applyAudioSettings();
-        console.log('[SettingsSync] Audio constraints applied in real-time');
+        console.log('[SettingsSync] Audio constraints applied in real-time, HD Audio:', hdAudio);
       }
     }
-  }, [echoCancellation, noiseSuppression, autoGainControl]);
+  }, [echoCancellation, noiseSuppression, autoGainControl, hdAudio]);
 
   useEffect(() => {
     const prev = prevVideoRef.current;

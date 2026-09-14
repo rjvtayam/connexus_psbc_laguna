@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, MessageSquare, Send, Users, School, MessageCircle, Reply, CornerUpLeft, SmilePlus } from 'lucide-react';
+import { X, MessageSquare, Send, Users, School, MessageCircle, Reply, CornerUpLeft, SmilePlus, AlertTriangle } from 'lucide-react';
 import { getSocket } from '../../hooks/useSocket';
 import { useAuthStore } from '../../stores/authStore';
 import { useSessionStore, ChatMessage } from '../../stores/sessionStore';
@@ -54,6 +54,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
   const [chatReactions, setChatReactions] = useState<Record<string, ChatReactionSummary[]>>({});
   const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
   const reactionsLoadedRef = useRef(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuthStore();
   const messages = useSessionStore((s) => s.chatMessages);
@@ -165,10 +166,13 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
         payload.reply_to_message = replyingTo.message;
       }
       s.emit('chat_message', payload);
+      setInput('');
+      setReplyingTo(null);
+      isNearBottom.current = true;
+    } else {
+      setSendError('Not connected — message not sent');
+      setTimeout(() => setSendError(null), 3000);
     }
-    setInput('');
-    setReplyingTo(null);
-    isNearBottom.current = true;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -447,6 +451,12 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
 
         {/* Input */}
         <div className="p-3 border-t border-gray-700/60 bg-gray-900/80 backdrop-blur-sm flex-shrink-0">
+          {sendError && (
+            <div className="mb-2 flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-[10px] text-red-400">
+              <AlertTriangle size={10} />
+              {sendError}
+            </div>
+          )}
           <div className="flex items-center gap-2 mb-2">
             <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${activeTab === 'campus' ? 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400' : 'bg-gray-700/60 border border-gray-600/40 text-gray-400'}`}>
               {activeTab === 'campus' ? `To ${effectiveCampus === 'paete' ? 'Paete' : 'Pagsanjan'}` : 'To Everyone'}

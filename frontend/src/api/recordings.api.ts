@@ -39,7 +39,7 @@ export const recordingsApi = {
     formData.append('started_at', startedAt);
     formData.append('ended_at', endedAt);
     const { data } = await api.post('/recordings/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': undefined },
     });
     return data;
   },

@@ -30,7 +30,7 @@ export const announcementsApi = {
     return response.data;
   },
 
-  deactivate: async (id: string): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     await api.delete(`/announcements/${id}`);
   },
 };

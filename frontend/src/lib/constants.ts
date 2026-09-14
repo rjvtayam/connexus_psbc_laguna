@@ -1,8 +1,9 @@
 export const API_BASE_URL = '/api/v1';
 
-export const SOCKET_URL = window.location.hostname === 'localhost'
-  ? `http://${window.location.hostname}:8000`
-  : window.location.origin;
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+  || (window.location.hostname === 'localhost'
+    ? `http://${window.location.hostname}:8000`
+    : window.location.origin);
 
 export const ROOMS = {
   MAIN: 'main-session',

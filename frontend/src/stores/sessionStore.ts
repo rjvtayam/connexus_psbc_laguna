@@ -39,6 +39,7 @@ interface SessionState {
   unreadAllCount: number;
   unreadCampusCount: number;
   unreadNotificationCount: number;
+  lastViewedBulletinsAt: number;
   setCurrentRoom: (roomId: string | null) => void;
   setRoomUsers: (users: RoomUser[]) => void;
   addRoomUser: (user: RoomUser) => void;
@@ -65,6 +66,8 @@ interface SessionState {
   incrementNotification: () => void;
   setNotificationCount: (count: number) => void;
   clearNotificationCount: () => void;
+  markBulletinsViewed: () => void;
+  clearAllNotifications: () => void;
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -90,6 +93,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   unreadAllCount: 0,
   unreadCampusCount: 0,
   unreadNotificationCount: 0,
+  lastViewedBulletinsAt: Date.now(),
 
   setCurrentRoom: (roomId) => set({ currentRoom: roomId }),
 
@@ -197,4 +201,10 @@ export const useSessionStore = create<SessionState>((set) => ({
 
   clearNotificationCount: () =>
     set({ unreadNotificationCount: 0 }),
+
+  markBulletinsViewed: () =>
+    set({ lastViewedBulletinsAt: Date.now() }),
+
+  clearAllNotifications: () =>
+    set({ unreadNotificationCount: 0, lastViewedBulletinsAt: Date.now() }),
 }));

@@ -6,13 +6,12 @@ import { useAuthStore } from '../../stores/authStore';
 import { useSettingsStore, type SettingsState } from '../../stores/settingsStore';
 import { profileApi } from '../../api/profile.api';
 import { User as UserType, ActivityLog } from '../../types/user';
-import {
-  Save, Shield, Bell, User, Building2, Monitor, AudioLines,
+import { Save, Shield, Bell, User, Building2, Monitor, AudioLines,
   Wifi, Globe, Volume2, VolumeX, RefreshCw, Camera, CameraOff, Aperture,
-  Circle, Square, Download, Trash2, Film, Clock, HardDrive, Play,
-  Mic, MicOff, Speaker, Phone, Mail, Lock, History, CheckCircle2,
+  Clock, Mic, MicOff, Speaker, Phone, Mail, Lock, History, CheckCircle2,
   AlertCircle, LogIn, Key, Edit3, Eye, EyeOff, X
 } from 'lucide-react';
+import { pushSettingsToast, SettingsToast } from '../../components/ui/SettingsToast';
 
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void }) {
   return (
@@ -44,13 +43,12 @@ function SettingRow({ icon, iconBg, label, description, children }: {
   );
 }
 
-type Tab = 'profile' | 'video' | 'recording' | 'audio' | 'connection' | 'notifications';
+type Tab = 'profile' | 'video' | 'audio' | 'connection' | 'notifications';
 type ProfileSubTab = 'personal' | 'security' | 'activity';
 
 const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
   { key: 'profile', label: 'Profile', icon: <User size={14} /> },
   { key: 'video', label: 'Video', icon: <Monitor size={14} /> },
-  { key: 'recording', label: 'Recording', icon: <Film size={14} /> },
   { key: 'audio', label: 'Audio', icon: <AudioLines size={14} /> },
   { key: 'connection', label: 'Connection', icon: <Wifi size={14} /> },
   { key: 'notifications', label: 'Notifications', icon: <Bell size={14} /> },
@@ -83,6 +81,7 @@ export function SettingsPage() {
 
   return (
     <DashboardLayout>
+      <SettingsToast />
       <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -119,7 +118,6 @@ export function SettingsPage() {
         {/* Tab Content */}
         {activeTab === 'profile' && <ProfileSection user={user} updateUser={updateUser} activeSubTab={profileSubTab} onSubTabChange={setProfileSubTab} />}
         {activeTab === 'video' && <VideoTab settings={settings} />}
-        {activeTab === 'recording' && <RecordingTab />}
         {activeTab === 'audio' && <AudioTab settings={settings} />}
         {activeTab === 'connection' && <ConnectionTab settings={settings} />}
         {activeTab === 'notifications' && <NotificationsTab settings={settings} />}
@@ -895,10 +893,10 @@ function VideoTab({ settings }: { settings: SettingsState }) {
         </div>
         <div className="p-5 divide-y divide-gray-800/60">
           <SettingRow icon={<Monitor size={18} className="text-cyan-400" />} iconBg="bg-cyan-500/10 border border-cyan-500/20" label="HD Video" description="Use high-definition video quality (720p)">
-            <Toggle enabled={settings.hdVideo} onChange={() => settings.setHdVideo(!settings.hdVideo)} />
+            <Toggle enabled={settings.hdVideo} onChange={() => { const next = !settings.hdVideo; settings.setHdVideo(next); pushSettingsToast('HD Video', next); }} />
           </SettingRow>
           <SettingRow icon={<Monitor size={18} className="text-blue-400" />} iconBg="bg-blue-500/10 border border-blue-500/20" label="Mirror Video" description="Mirror your local camera preview">
-            <Toggle enabled={settings.mirrorVideo} onChange={() => settings.setMirrorVideo(!settings.mirrorVideo)} />
+            <Toggle enabled={settings.mirrorVideo} onChange={() => { const next = !settings.mirrorVideo; settings.setMirrorVideo(next); pushSettingsToast('Mirror Video', next); }} />
           </SettingRow>
         </div>
       </div>
@@ -947,126 +945,6 @@ function VideoTab({ settings }: { settings: SettingsState }) {
   );
 }
 
-/* ─── RECORDING TAB ─── */
-interface RecordingEntry { id: string; blob: Blob; url: string; duration: string; size: string; timestamp: Date; }
-
-function RecordingTab() {
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordings, setRecordings] = useState<RecordingEntry[]>([]);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        const minutes = Math.floor(elapsedTime / 60);
-        const seconds = elapsedTime % 60;
-        setRecordings((prev) => [{ id: Date.now().toString(), blob, url, duration: `${minutes}:${seconds.toString().padStart(2, '0')}`, size: `${(blob.size / (1024 * 1024)).toFixed(1)} MB`, timestamp: new Date() }, ...prev]);
-        stream.getTracks().forEach((t) => t.stop());
-      };
-      mediaRecorder.start();
-      setIsRecording(true);
-      setElapsedTime(0);
-      timerRef.current = setInterval(() => { setElapsedTime((prev) => prev + 1); }, 1000);
-    } catch (err) { console.error('Failed to start recording:', err); }
-  };
-
-  const stopRecording = () => { mediaRecorderRef.current?.stop(); setIsRecording(false); if (timerRef.current) clearInterval(timerRef.current); };
-  const downloadRecording = (rec: RecordingEntry) => { const a = document.createElement('a'); a.href = rec.url; a.download = `recording-${rec.id}.webm`; a.click(); };
-  const deleteRecording = (id: string) => { const rec = recordings.find((r) => r.id === id); if (rec) URL.revokeObjectURL(rec.url); setRecordings((prev) => prev.filter((r) => r.id !== id)); };
-  const formatTime = (secs: number) => { const m = Math.floor(secs / 60); const s = secs % 60; return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`; };
-
-  return (
-    <div className="space-y-4">
-      <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 overflow-hidden">
-        <div className="p-4 border-b border-gray-800/60 flex items-center gap-2">
-          <Circle size={16} className={isRecording ? 'text-red-400 fill-red-400' : 'text-gray-500'} />
-          <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Recording Control</span>
-        </div>
-        <div className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
-                {isRecording ? (
-                  <><div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" /><span className="font-orbitron text-3xl font-bold text-red-400 tracking-wider">{formatTime(elapsedTime)}</span></>
-                ) : (
-                  <><Clock size={20} className="text-gray-600" /><span className="font-orbitron text-3xl font-bold text-gray-600 tracking-wider">00:00</span></>
-                )}
-              </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-semibold ${isRecording ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-gray-800 text-gray-500 border border-gray-700/50'}`}>
-                {isRecording ? 'RECORDING' : 'STANDBY'}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              {!isRecording ? (
-                <Button onClick={startRecording} size="sm" className="inline-flex items-center whitespace-nowrap bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500">
-                  <Circle size={12} className="mr-1.5 fill-current" />Start
-                </Button>
-              ) : (
-                <Button onClick={stopRecording} size="sm" className="inline-flex items-center whitespace-nowrap">
-                  <Square size={12} className="mr-1.5" />Stop
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 overflow-hidden">
-        <div className="p-4 border-b border-gray-800/60 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <HardDrive size={16} className="text-gray-500" />
-            <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Recordings</span>
-          </div>
-          <span className="text-xs text-gray-600 bg-gray-800 px-2 py-1 rounded-md">{recordings.length} file(s)</span>
-        </div>
-        {recordings.length === 0 ? (
-          <div className="p-10 flex flex-col items-center justify-center">
-            <div className="w-12 h-12 rounded-2xl bg-gray-800/60 border border-gray-700/40 flex items-center justify-center mb-3">
-              <Film size={20} className="text-gray-600" />
-            </div>
-            <p className="text-gray-500 text-sm font-medium">No recordings yet</p>
-            <p className="text-gray-600 text-xs mt-1">Start a recording to see it here</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-800/60">
-            {recordings.map((rec) => (
-              <div key={rec.id} className="p-4 flex items-center gap-4 hover:bg-gray-800/30 transition-colors group">
-                <div className="relative w-28 h-16 rounded-lg overflow-hidden bg-gray-800 flex-shrink-0">
-                  <video src={rec.url} className="w-full h-full object-cover" controls={false} />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Play size={16} className="text-white" fill="white" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{rec.timestamp.toLocaleString()}</p>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <span className="flex items-center gap-1 text-[11px] text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md"><Clock size={10} /> {rec.duration}</span>
-                    <span className="flex items-center gap-1 text-[11px] text-gray-400 bg-gray-800 px-2 py-0.5 rounded-md"><HardDrive size={10} /> {rec.size}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => downloadRecording(rec)} className="p-2 rounded-lg text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all" title="Download"><Download size={16} /></button>
-                  <button onClick={() => deleteRecording(rec.id)} className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all" title="Delete"><Trash2 size={16} /></button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 /* ─── AUDIO TAB ─── */
 function AudioTab({ settings }: { settings: SettingsState }) {
   const [inputDevices, setInputDevices] = useState<MediaDeviceInfo[]>([]);
@@ -1080,8 +958,14 @@ function AudioTab({ settings }: { settings: SettingsState }) {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => { loadDevices(); return () => { stopMicTest(); }; }, []);
+
+  useEffect(() => {
+    if (settings.selectedMicId) setSelectedInput(settings.selectedMicId);
+    if (settings.selectedSpeakerId) setSelectedOutput(settings.selectedSpeakerId);
+  }, []);
 
   const loadDevices = async () => {
     setIsRefreshing(true);
@@ -1099,6 +983,7 @@ function AudioTab({ settings }: { settings: SettingsState }) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: selectedInput ? { deviceId: { exact: selectedInput } } : true });
       streamRef.current = stream;
       const audioCtx = new AudioContext();
+      audioCtxRef.current = audioCtx;
       const source = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 256;
@@ -1120,6 +1005,9 @@ function AudioTab({ settings }: { settings: SettingsState }) {
   const stopMicTest = () => {
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     streamRef.current?.getTracks().forEach((t) => t.stop());
+    audioCtxRef.current?.close().catch(() => {});
+    audioCtxRef.current = null;
+    analyserRef.current = null;
     setIsTestingMic(false); setMicLevel(0);
   };
 
@@ -1137,16 +1025,16 @@ function AudioTab({ settings }: { settings: SettingsState }) {
         </div>
         <div className="p-5 divide-y divide-gray-800/60">
           <SettingRow icon={<AudioLines size={18} className="text-purple-400" />} iconBg="bg-purple-500/10 border border-purple-500/20" label="HD Audio" description="Use high-quality audio encoding (48kHz)">
-            <Toggle enabled={settings.hdAudio} onChange={() => settings.setHdAudio(!settings.hdAudio)} />
+            <Toggle enabled={settings.hdAudio} onChange={() => { const next = !settings.hdAudio; settings.setHdAudio(next); pushSettingsToast('HD Audio', next); }} />
           </SettingRow>
           <SettingRow icon={<Volume2 size={18} className="text-pink-400" />} iconBg="bg-pink-500/10 border border-pink-500/20" label="Echo Cancellation" description="Reduce echo during speaker playback">
-            <Toggle enabled={settings.echoCancellation} onChange={() => settings.setEchoCancellation(!settings.echoCancellation)} />
+            <Toggle enabled={settings.echoCancellation} onChange={() => { const next = !settings.echoCancellation; settings.setEchoCancellation(next); pushSettingsToast('Echo Cancellation', next); }} />
           </SettingRow>
           <SettingRow icon={<AudioLines size={18} className="text-emerald-400" />} iconBg="bg-emerald-500/10 border border-emerald-500/20" label="Noise Suppression" description="Filter background noise from microphone">
-            <Toggle enabled={settings.noiseSuppression} onChange={() => settings.setNoiseSuppression(!settings.noiseSuppression)} />
+            <Toggle enabled={settings.noiseSuppression} onChange={() => { const next = !settings.noiseSuppression; settings.setNoiseSuppression(next); pushSettingsToast('Noise Suppression', next); }} />
           </SettingRow>
           <SettingRow icon={<Volume2 size={18} className="text-amber-400" />} iconBg="bg-amber-500/10 border border-amber-500/20" label="Auto Gain Control" description="Automatically adjust microphone sensitivity">
-            <Toggle enabled={settings.autoGainControl} onChange={() => settings.setAutoGainControl(!settings.autoGainControl)} />
+            <Toggle enabled={settings.autoGainControl} onChange={() => { const next = !settings.autoGainControl; settings.setAutoGainControl(next); pushSettingsToast('Auto Gain Control', next); }} />
           </SettingRow>
         </div>
       </div>
@@ -1164,7 +1052,7 @@ function AudioTab({ settings }: { settings: SettingsState }) {
         <div className="p-5 space-y-4">
           <div>
             <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2">Input Device</label>
-            <select value={selectedInput} onChange={(e) => setSelectedInput(e.target.value)} className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/40 focus:outline-none transition-all">
+            <select value={selectedInput} onChange={(e) => { setSelectedInput(e.target.value); settings.setSelectedMicId(e.target.value); pushSettingsToast('Microphone', !!e.target.value); }} className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/40 focus:outline-none transition-all">
               {inputDevices.map((d) => (<option key={d.deviceId} value={d.deviceId}>{d.label || 'Microphone'}</option>))}
               {inputDevices.length === 0 && <option value="">No microphones detected</option>}
             </select>
@@ -1201,7 +1089,7 @@ function AudioTab({ settings }: { settings: SettingsState }) {
         </div>
         <div className="p-5">
           <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2">Output Device</label>
-          <select value={selectedOutput} onChange={(e) => setSelectedOutput(e.target.value)} className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 focus:outline-none transition-all">
+          <select value={selectedOutput} onChange={(e) => { setSelectedOutput(e.target.value); settings.setSelectedSpeakerId(e.target.value); pushSettingsToast('Speaker', !!e.target.value); }} className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 focus:outline-none transition-all">
             {outputDevices.map((d) => (<option key={d.deviceId} value={d.deviceId}>{d.label || 'Speaker'}</option>))}
             {outputDevices.length === 0 && <option value="">No speakers detected</option>}
           </select>
@@ -1225,10 +1113,10 @@ function ConnectionTab({ settings }: { settings: SettingsState }) {
       </div>
       <div className="p-5 divide-y divide-gray-800/60">
         <SettingRow icon={<Wifi size={18} className="text-green-400" />} iconBg="bg-green-500/10 border border-green-500/20" label="Auto Reconnect" description="Automatically reconnect if connection drops">
-          <Toggle enabled={settings.autoReconnect} onChange={() => settings.setAutoReconnect(!settings.autoReconnect)} />
+          <Toggle enabled={settings.autoReconnect} onChange={() => { const next = !settings.autoReconnect; settings.setAutoReconnect(next); pushSettingsToast('Auto Reconnect', next); }} />
         </SettingRow>
         <SettingRow icon={<Globe size={18} className="text-cyan-400" />} iconBg="bg-cyan-500/10 border border-cyan-500/20" label="Low Latency Mode" description="Prioritize low latency over video quality">
-          <Toggle enabled={settings.lowLatency} onChange={() => settings.setLowLatency(!settings.lowLatency)} />
+          <Toggle enabled={settings.lowLatency} onChange={() => { const next = !settings.lowLatency; settings.setLowLatency(next); pushSettingsToast('Low Latency Mode', next); }} />
         </SettingRow>
       </div>
     </div>
@@ -1245,7 +1133,7 @@ function NotificationsTab({ settings }: { settings: SettingsState }) {
       </div>
       <div className="p-5">
         <SettingRow icon={<Bell size={18} className="text-amber-400" />} iconBg="bg-amber-500/10 border border-amber-500/20" label="Enable Notifications" description="Receive alerts for announcements and emergencies">
-          <Toggle enabled={settings.notifications} onChange={() => settings.setNotifications(!settings.notifications)} />
+          <Toggle enabled={settings.notifications} onChange={() => { const next = !settings.notifications; settings.setNotifications(next); pushSettingsToast('Notifications', next); }} />
         </SettingRow>
       </div>
     </div>

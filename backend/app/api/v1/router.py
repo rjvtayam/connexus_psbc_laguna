@@ -8,6 +8,7 @@ from app.api.v1.notifications import router as notifications_router
 from app.api.v1.profile import router as profile_router
 from app.api.v1.chat_reactions import router as chat_reactions_router
 from app.api.v1.recordings import router as recordings_router
+from app.api.v1.bulletin_comments import router as bulletin_comments_router
 
 api_router = APIRouter()
 
@@ -20,3 +21,4 @@ api_router.include_router(notifications_router, prefix="/notifications", tags=["
 api_router.include_router(profile_router, prefix="/profile", tags=["Profile"])
 api_router.include_router(chat_reactions_router, prefix="/chat-messages", tags=["Chat Reactions"])
 api_router.include_router(recordings_router, prefix="/recordings", tags=["Recordings"])
+api_router.include_router(bulletin_comments_router, prefix="/announcements", tags=["Bulletin Comments"])

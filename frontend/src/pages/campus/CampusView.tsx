@@ -18,7 +18,7 @@ import { usePeerStore } from '../../stores/peerStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useAuthStore } from '../../stores/authStore';
 import { ROOMS } from '../../lib/constants';
-import { Users, Wifi, MessageSquare, MonitorUp, AlertTriangle } from 'lucide-react';
+import { Users, Wifi, MessageSquare, MonitorUp, AlertTriangle, X } from 'lucide-react';
 import { PortalStatusIndicator } from '../../components/indicators/PortalStatusIndicator';
 import { MicTalkingIndicator } from '../../components/indicators/MicTalkingIndicator';
 import { WelcomeToast } from '../../components/demo/WelcomeToast';
@@ -43,15 +43,18 @@ export function CampusView() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showLiveDemo, setShowLiveDemo] = useState(false);
   const [demoData, setDemoData] = useState<{ userId: string; name: string; campus: string; role: string } | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   useEffect(() => {
     const pending = localStorage.getItem('pending_live_demo');
     if (pending) {
-      const data = JSON.parse(pending);
-      if (data?.name && data?.campus && data?.role) {
-        setDemoData(data);
-        setShowWelcome(true);
-      }
+      try {
+        const data = JSON.parse(pending);
+        if (data?.name && data?.campus && data?.role) {
+          setDemoData(data);
+          setShowWelcome(true);
+        }
+      } catch { localStorage.removeItem('pending_live_demo'); }
     }
   }, []);
 
@@ -62,8 +65,9 @@ export function CampusView() {
         await startLocalStream();
         emit('join_room', { room_id: roomId });
         emit('portal_mode_changed', { active: portalMode, meeting: false });
-      } catch (err) {
+      } catch (err: any) {
         console.error('[CampusView] Error in init:', err);
+        setCameraError(err?.message || 'Could not access camera/microphone. Please allow permissions and reload.');
       }
     };
     init();
@@ -233,6 +237,14 @@ export function CampusView() {
             <div data-demo="btn-bell"><BulletinBoard /></div>
           </div>
         </header>
+
+        {cameraError && (
+          <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+            <AlertTriangle size={14} />
+            <span className="flex-1">{cameraError}</span>
+            <button onClick={() => setCameraError(null)} className="p-0.5 rounded hover:bg-red-500/20"><X size={12} /></button>
+          </div>
+        )}
 
         <div className="flex-1 mb-2 sm:mb-3 md:mb-4 min-h-0" data-demo="remote-area">
           {screenSharerSid ? (

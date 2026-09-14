@@ -23,6 +23,7 @@ class AnnouncementResponse(BaseModel):
     type: str
     target_campus: str
     created_by: UUID
+    creator_name: Optional[str] = None
     is_active: bool
     display_until: Optional[datetime]
     created_at: datetime

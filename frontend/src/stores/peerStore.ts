@@ -9,7 +9,7 @@ interface PeerState {
   isAudioMuted: boolean;
   isVideoOff: boolean;
   isScreenSharing: boolean;
-  talkTarget: 'paete' | 'pagsanjan' | null;
+  talkTarget: 'paete' | 'pagsanjan' | 'both' | null;
   localMicActive: boolean;
   addPeer: (sid: string, peer: PeerConnection) => void;
   removePeer: (sid: string) => void;
@@ -19,7 +19,7 @@ interface PeerState {
   toggleAudio: () => void;
   toggleVideo: () => void;
   toggleScreenShare: () => void;
-  setTalkTarget: (target: 'paete' | 'pagsanjan' | null) => void;
+  setTalkTarget: (target: 'paete' | 'pagsanjan' | 'both' | null) => void;
   setLocalMicActive: (active: boolean) => void;
   getCombinedTarget: () => 'paete' | 'pagsanjan' | 'both' | 'local' | null;
   applyAudioSettings: () => void;
@@ -186,7 +186,7 @@ export const usePeerStore = create<PeerState>((set, get) => ({
   },
 
   switchMicrophone: async (deviceId: string) => {
-    const { localStream, peers } = get();
+    const { localStream, peers, isAudioMuted } = get();
     if (!localStream) return;
     const audioConstraints = useSettingsStore.getState().getAudioConstraints();
     if (deviceId) audioConstraints.deviceId = { exact: deviceId };
@@ -194,6 +194,8 @@ export const usePeerStore = create<PeerState>((set, get) => ({
       const newStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: audioConstraints });
       const newAudioTrack = newStream.getAudioTracks()[0];
       if (!newAudioTrack) return;
+
+      newAudioTrack.enabled = !isAudioMuted;
 
       peers.forEach((peer) => {
         const sender = peer.connection.getSenders().find((s) => s.track?.kind === 'audio');
@@ -207,7 +209,7 @@ export const usePeerStore = create<PeerState>((set, get) => ({
       localStream.getAudioTracks().forEach((t) => { t.stop(); });
       const merged = new MediaStream([newAudioTrack, ...localStream.getVideoTracks()]);
       set({ localStream: merged });
-      console.log('[PeerStore] Microphone switched to device:', deviceId);
+      console.log('[PeerStore] Microphone switched to device:', deviceId, 'muted:', isAudioMuted);
     } catch (err) {
       console.error('[PeerStore] Failed to switch microphone:', err);
     }

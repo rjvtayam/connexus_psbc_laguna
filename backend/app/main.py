@@ -8,6 +8,7 @@ from app.api.v1.router import api_router
 from app.middleware.cors import setup_cors
 from app.middleware.rate_limit import limiter
 from app.signaling.events import sio
+from app.database import engine
 
 
 def create_app() -> FastAPI:
@@ -35,7 +36,17 @@ def create_app() -> FastAPI:
     @app.get("/health")
     @limiter.exempt
     def health_check():
-        return {"status": "healthy", "service": "here-to-there"}
+        try:
+            with engine.connect() as conn:
+                conn.execute(__import__("sqlalchemy").text("SELECT 1"))
+            db_status = "connected"
+        except Exception:
+            db_status = "disconnected"
+        return {"status": "healthy" if db_status == "connected" else "degraded", "database": db_status, "service": "here-to-there"}
+
+    @app.on_event("shutdown")
+    def shutdown():
+        engine.dispose()
 
     return app
 

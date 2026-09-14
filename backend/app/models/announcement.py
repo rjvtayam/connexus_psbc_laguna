@@ -20,5 +20,7 @@ class Announcement(Base):
     is_active = Column(Boolean, default=True)
     display_until = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=True)
+    deleted_at = Column(DateTime, nullable=True)
 
     creator = relationship("User", back_populates="announcements")

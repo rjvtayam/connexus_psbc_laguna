@@ -43,6 +43,9 @@ async def connect(sid, environ, auth):
         "role": user.role,
         "campus": user.campus,
     })
+
+    await sio.enter_room(sid, f"user_{user.id}")
+
     print(f"[Backend] User connected: {user.full_name} ({user.campus}), sid={sid}")
 
 
@@ -53,6 +56,7 @@ async def disconnect(sid, reason=""):
     except (KeyError, Exception):
         return
 
+    user_id = session.get("user_id")
     room_id = session.get("current_room")
     if room_id:
         if room_id in room_members and sid in room_members[room_id]:
@@ -70,6 +74,12 @@ async def disconnect(sid, reason=""):
             pass
 
         await _broadcast_room_users(room_id)
+
+    if user_id:
+        try:
+            await sio.leave_room(sid, f"user_{user_id}")
+        except Exception:
+            pass
 
     print(f"[Backend] User disconnected: {sid}")
 
@@ -462,9 +472,10 @@ async def bulletin_update(sid, data):
     try:
         db = SessionLocal()
         notif_service = NotificationService(db)
+        creator_name = session.get("full_name", "Unknown")
         notif_service.create_for_all(
-            title=title,
-            message=content,
+            title=f"{title}",
+            message=f"Posted by {creator_name}. {content}" if content else f"Posted by {creator_name}",
             notif_type=data.get("type", "bulletin"),
         )
         db.close()

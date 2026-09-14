@@ -17,7 +17,7 @@ import { usePeerStore } from '../../stores/peerStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useAuthStore } from '../../stores/authStore';
 import { ROOMS } from '../../lib/constants';
-import { Users, Wifi, MessageSquare, MonitorUp, AlertTriangle } from 'lucide-react';
+import { Users, Wifi, MessageSquare, MonitorUp, AlertTriangle, X } from 'lucide-react';
 import { PortalToggle } from '../../components/controls/PortalToggle';
 import { PortalStatusIndicator } from '../../components/indicators/PortalStatusIndicator';
 import { MicTalkingIndicator } from '../../components/indicators/MicTalkingIndicator';
@@ -32,7 +32,7 @@ export function ControlRoom() {
   const { localStream, isVideoOff, isScreenSharing, localMicActive } = usePeerStore();
   const { roomUsers, isEmergency, emergencyTriggeredBy, remotePortalModes, remoteMeetingModes, remoteVideoOff, remoteAudioMuted, screenSharerSid, portalMode, unreadAllCount, unreadCampusCount, clearUnreadChat } = useSessionStore();
   const { user } = useAuthStore();
-  const { isRecording, elapsedTime, uploading: recordingUploading, startRecording, stopRecording, formatTime: formatRecordingTime } = useRecording(roomId);
+  const { isRecording, elapsedTime, uploading: recordingUploading, uploadError, startRecording, stopRecording, formatTime: formatRecordingTime } = useRecording(roomId);
   const [activeTalkTarget, setActiveTalkTarget] = useState<'paete' | 'pagsanjan' | 'both' | null>(null);
   const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -42,6 +42,7 @@ export function ControlRoom() {
   const [showLiveDemo, setShowLiveDemo] = useState(false);
   const [demoData, setDemoData] = useState<{ userId: string; name: string; campus: string; role: string } | null>(null);
   const [isHandRaised, setIsHandRaised] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   const myCampus = user?.campus;
   const mySid = useSocket().socket?.id;
@@ -51,11 +52,13 @@ export function ControlRoom() {
   useEffect(() => {
     const pending = localStorage.getItem('pending_live_demo');
     if (pending) {
-      const data = JSON.parse(pending);
-      if (data?.name && data?.campus && data?.role) {
-        setDemoData(data);
-        setShowWelcome(true);
-      }
+      try {
+        const data = JSON.parse(pending);
+        if (data?.name && data?.campus && data?.role) {
+          setDemoData(data);
+          setShowWelcome(true);
+        }
+      } catch { localStorage.removeItem('pending_live_demo'); }
     }
   }, []);
 
@@ -66,8 +69,9 @@ export function ControlRoom() {
         await startLocalStream();
         emit('join_room', { room_id: roomId });
         emit('portal_mode_changed', { active: portalMode, meeting: false });
-      } catch (err) {
+      } catch (err: any) {
         console.error('[ControlRoom] Error in init:', err);
+        setCameraError(err?.message || 'Could not access camera/microphone. Please allow permissions and reload.');
       }
     };
     init();
@@ -125,11 +129,11 @@ export function ControlRoom() {
     setActiveTalkTarget((prev) => {
       const next = prev === target ? null : target;
       if (next === 'both') {
-        setTalkTarget('paete');
+        setTalkTarget('both');
         setLocalMicActive(true);
       } else {
         setTalkTarget(next);
-        setLocalMicActive(false);
+        setLocalMicActive(!!next);
       }
       return next;
     });
@@ -191,6 +195,17 @@ export function ControlRoom() {
               <span className="flex items-center gap-1.5 text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded-md font-semibold">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                 REC {formatRecordingTime(elapsedTime)}
+              </span>
+            )}
+            {recordingUploading && (
+              <span className="flex items-center gap-1.5 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md font-semibold">
+                <span className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                UPLOADING
+              </span>
+            )}
+            {uploadError && (
+              <span className="flex items-center gap-1.5 text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded-md font-semibold" title={uploadError}>
+                UPLOAD FAILED
               </span>
             )}
           </div>
@@ -268,6 +283,14 @@ export function ControlRoom() {
             <div data-demo="btn-bell"><BulletinBoard /></div>
           </div>
         </header>
+
+        {cameraError && (
+          <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+            <AlertTriangle size={14} />
+            <span className="flex-1">{cameraError}</span>
+            <button onClick={() => setCameraError(null)} className="p-0.5 rounded hover:bg-red-500/20"><X size={12} /></button>
+          </div>
+        )}
 
         {/* Video Grid */}
         <div className="flex-1 mb-2 sm:mb-3 md:mb-4 min-h-0" data-demo="remote-area">

@@ -59,18 +59,26 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             body = b""
             async for chunk in response.body_iterator:
                 body += chunk if isinstance(chunk, bytes) else chunk.encode()
+            # Always re-create response since body_iterator is consumed
+            from starlette.responses import Response as StarletteResponse
+            headers = dict(response.headers)
             if body:
                 import hashlib
                 etag = hashlib.md5(body).hexdigest()[:16]
-                response.headers["ETag"] = f'"{etag}"'
+                headers["ETag"] = f'"{etag}"'
                 # Check If-None-Match for 304 responses
                 if_none_match = request.headers.get("if-none-match")
                 if if_none_match and if_none_match.strip('"') == etag:
-                    from starlette.responses import Response as StarletteResponse
                     return StarletteResponse(status_code=304, headers={
                         "ETag": f'"{etag}"',
-                        "Cache-Control": response.headers.get("Cache-Control", "no-store"),
+                        "Cache-Control": headers.get("Cache-Control", "no-store"),
                     })
+            return StarletteResponse(
+                content=body,
+                status_code=response.status_code,
+                headers=headers,
+                media_type=response.media_type,
+            )
 
         return response
 

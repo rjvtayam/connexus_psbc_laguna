@@ -209,6 +209,13 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
     });
   });
 
+  socket.on('notification_update', (data) => {
+    console.log('[Socket] notification_update:', data);
+    notificationsApi.getUnreadCount().then((count) => {
+      useSessionStore.getState().setNotificationCount(count);
+    }).catch(() => {});
+  });
+
   socket.on('disconnect', (reason) => {
     console.log('[Socket] Disconnected:', reason);
   });

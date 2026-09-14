@@ -3,9 +3,11 @@ import { Announcement } from '../../types/announcement';
 import { announcementsApi } from '../../api/announcements.api';
 import { notificationsApi, Notification } from '../../api/notifications.api';
 import { reactionsApi, ReactionSummary } from '../../api/reactions.api';
+import { bulletinCommentsApi, BulletinComment } from '../../api/bulletinComments.api';
 import { useAuthStore } from '../../stores/authStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { getSocket } from '../../hooks/useSocket';
+import { pushSettingsToast } from '../ui/SettingsToast';
 import {
   X,
   Bell,
@@ -20,6 +22,10 @@ import {
   ExternalLink,
   Image as ImageIcon,
   Link as LinkIcon,
+  MessageSquare,
+  SmilePlus,
+  Edit3,
+  Save,
 } from 'lucide-react';
 
 const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '😡'];
@@ -33,10 +39,15 @@ export function BulletinBoard() {
   const [creating, setCreating] = useState(false);
   const { user } = useAuthStore();
   const unreadNotificationCount = useSessionStore((s) => s.unreadNotificationCount);
+  const lastViewedBulletinsAt = useSessionStore((s) => s.lastViewedBulletinsAt);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [reactionsMap, setReactionsMap] = useState<Record<string, ReactionSummary[]>>({});
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null);
+  const [commentsMap, setCommentsMap] = useState<Record<string, BulletinComment[]>>({});
+  const [showCommentsFor, setShowCommentsFor] = useState<string | null>(null);
+  const [commentInput, setCommentInput] = useState('');
+  const [commentLoading, setCommentLoading] = useState(false);
 
   const [formTitle, setFormTitle] = useState('');
   const [formContent, setFormContent] = useState('');
@@ -46,7 +57,22 @@ export function BulletinBoard() {
   const [formTarget, setFormTarget] = useState<'both' | 'paete' | 'pagsanjan'>('both');
   const formRef = useRef<HTMLFormElement>(null);
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [editLink, setEditLink] = useState('');
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const editImageInputRef = useRef<HTMLInputElement>(null);
+
   const canCreate = user?.role === 'admin' || user?.role === 'principal';
+
+  const unreadBulletinCount = announcements.filter(
+    (a) => new Date(a.created_at).getTime() > lastViewedBulletinsAt
+  ).length;
+
+  const totalUnread = unreadNotificationCount + unreadBulletinCount;
 
   useEffect(() => {
     loadAnnouncements();
@@ -57,6 +83,12 @@ export function BulletinBoard() {
     if (isOpen) {
       loadNotifications();
       loadAnnouncements();
+      if (unreadBulletinCount > 0) {
+        setActiveTab('bulletins');
+        useSessionStore.getState().markBulletinsViewed();
+      } else {
+        setActiveTab('notifications');
+      }
     }
   }, [isOpen]);
 
@@ -147,23 +179,120 @@ export function BulletinBoard() {
     }
   };
 
+  const loadComments = async (announcementId: string) => {
+    try {
+      const data = await bulletinCommentsApi.get(announcementId);
+      setCommentsMap((prev) => ({ ...prev, [announcementId]: data }));
+    } catch (error) {
+      // silent
+    }
+  };
+
+  const handleAddComment = async (announcementId: string) => {
+    if (!commentInput.trim()) return;
+    setCommentLoading(true);
+    try {
+      const newComment = await bulletinCommentsApi.add(announcementId, commentInput.trim());
+      setCommentsMap((prev) => ({
+        ...prev,
+        [announcementId]: [...(prev[announcementId] || []), newComment],
+      }));
+      setCommentInput('');
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
+  const handleDeleteComment = async (announcementId: string, commentId: string) => {
+    try {
+      await bulletinCommentsApi.delete(announcementId, commentId);
+      setCommentsMap((prev) => ({
+        ...prev,
+        [announcementId]: (prev[announcementId] || []).filter((c) => c.id !== commentId),
+      }));
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+    }
+  };
+
+  const startEdit = (ann: Announcement) => {
+    setEditingId(ann.id);
+    setEditTitle(ann.title);
+    setEditContent(ann.content || '');
+    setEditLink(ann.link || '');
+    setEditImagePreview(ann.image_url || null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditTitle('');
+    setEditContent('');
+    setEditLink('');
+    setEditImagePreview(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editTitle.trim()) return;
+    setEditSaving(true);
+    try {
+      const updated = await announcementsApi.update(editingId, {
+        title: editTitle.trim(),
+        content: editContent.trim() || undefined,
+        link: editLink.trim() || undefined,
+        image_url: editImagePreview || undefined,
+      });
+      setAnnouncements((prev) =>
+        prev.map((a) => (a.id === editingId ? { ...a, ...updated } : a))
+      );
+      cancelEdit();
+    } catch (error) {
+      console.error('Failed to update bulletin:', error);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleSoftDelete = async (id: string) => {
+    try {
+      await announcementsApi.delete(id);
+      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+      setDeleteConfirmId(null);
+    } catch (error) {
+      console.error('Failed to delete bulletin:', error);
+    }
+  };
+
   const handleMarkRead = async (id: string) => {
-    await notificationsApi.markRead(id);
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
-    if (unreadNotificationCount > 0) {
-      useSessionStore.getState().setNotificationCount(Math.max(0, unreadNotificationCount - 1));
+    try {
+      await notificationsApi.markRead(id);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+      if (unreadNotificationCount > 0) {
+        useSessionStore.getState().setNotificationCount(Math.max(0, unreadNotificationCount - 1));
+      }
+    } catch (error) {
+      console.error('Failed to mark notification read:', error);
     }
   };
 
   const handleMarkAllRead = async () => {
-    await notificationsApi.markAllRead();
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    useSessionStore.getState().clearNotificationCount();
+    try {
+      await notificationsApi.markAllRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      useSessionStore.getState().clearAllNotifications();
+    } catch (error) {
+      console.error('Failed to mark all read:', error);
+    }
   };
 
   const handleDeleteNotif = async (id: string) => {
-    await notificationsApi.delete(id);
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await notificationsApi.delete(id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+    }
   };
 
   const handleToggleReaction = async (announcementId: string, emoji: string) => {
@@ -180,11 +309,22 @@ export function BulletinBoard() {
     }
   };
 
+  const toggleComments = (announcementId: string) => {
+    if (showCommentsFor === announcementId) {
+      setShowCommentsFor(null);
+      setCommentInput('');
+    } else {
+      setShowCommentsFor(announcementId);
+      setCommentInput('');
+      if (!commentsMap[announcementId]) loadComments(announcementId);
+    }
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image must be under 5MB');
+      pushSettingsToast('Image too large (max 5MB)', false);
       return;
     }
     const reader = new FileReader();
@@ -267,9 +407,9 @@ export function BulletinBoard() {
         className="relative p-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
       >
         <Bell size={20} />
-        {unreadNotificationCount > 0 && (
+        {totalUnread > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center px-1 animate-badge-pulse">
-            {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+            {totalUnread > 99 ? '99+' : totalUnread}
           </span>
         )}
       </button>
@@ -287,12 +427,12 @@ export function BulletinBoard() {
                 <div>
                   <h2 className="text-sm font-bold text-white leading-tight">Notifications</h2>
                   <p className="text-[10px] text-gray-500">
-                    {unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}
+                    {totalUnread > 0 ? `${totalUnread} unread` : 'All caught up'}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                {activeTab === 'notifications' && unreadNotificationCount > 0 && (
+                {totalUnread > 0 && (
                   <button
                     onClick={handleMarkAllRead}
                     className="p-1.5 rounded-lg hover:bg-gray-700/60 text-gray-400 hover:text-green-400 transition-colors"
@@ -322,14 +462,19 @@ export function BulletinBoard() {
               >
                 <Bell size={13} />
                 Notifications
-                {activeTab !== 'notifications' && unreadNotificationCount > 0 && (
+                {unreadNotificationCount > 0 && (
                   <span className="absolute top-1.5 right-4 min-w-[14px] h-3.5 bg-red-500 rounded-full text-[9px] font-bold flex items-center justify-center px-1 animate-badge-pulse">
                     {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
                   </span>
                 )}
               </button>
               <button
-                onClick={() => setActiveTab('bulletins')}
+                onClick={() => {
+                  setActiveTab('bulletins');
+                  if (unreadBulletinCount > 0) {
+                    useSessionStore.getState().markBulletinsViewed();
+                  }
+                }}
                 className={`relative flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
                   activeTab === 'bulletins'
                     ? 'text-white border-b-2 border-primary-500 bg-gray-800/40'
@@ -338,9 +483,9 @@ export function BulletinBoard() {
               >
                 <Megaphone size={13} />
                 Bulletins
-                {activeTab !== 'bulletins' && announcements.length > 0 && (
+                {unreadBulletinCount > 0 && (
                   <span className="absolute top-1.5 right-4 min-w-[14px] h-3.5 bg-blue-500 rounded-full text-[9px] font-bold flex items-center justify-center px-1 animate-badge-pulse">
-                    {announcements.length > 9 ? '9+' : announcements.length}
+                    {unreadBulletinCount > 9 ? '9+' : unreadBulletinCount}
                   </span>
                 )}
               </button>
@@ -522,61 +667,168 @@ export function BulletinBoard() {
                         return (
                           <div
                             key={ann.id}
-                            className={`bg-gray-800 rounded-lg overflow-hidden border-l-4 ${announcementColors[ann.type] || 'border-l-gray-500'} hover:bg-gray-800/80 transition-colors`}
+                            className={`bg-gray-800 rounded-lg overflow-hidden border-l-4 ${announcementColors[ann.type] || 'border-l-gray-500'} hover:bg-gray-800/80 transition-colors group`}
                           >
+                            {editingId === ann.id ? (
+                              <div className="p-3 space-y-2">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Editing</span>
+                                  <button onClick={cancelEdit} className="p-1 rounded text-gray-500 hover:text-gray-300">
+                                    <X size={12} />
+                                  </button>
+                                </div>
+                                <input
+                                  type="text"
+                                  value={editTitle}
+                                  onChange={(e) => setEditTitle(e.target.value)}
+                                  className="w-full bg-gray-700/60 border border-gray-600/60 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                  placeholder="Title"
+                                />
+                                <textarea
+                                  value={editContent}
+                                  onChange={(e) => setEditContent(e.target.value)}
+                                  className="w-full bg-gray-700/60 border border-gray-600/60 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary-500 resize-none"
+                                  placeholder="Content"
+                                  rows={3}
+                                />
+                                <div className="relative">
+                                  <LinkIcon size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                                  <input
+                                    type="url"
+                                    value={editLink}
+                                    onChange={(e) => setEditLink(e.target.value)}
+                                    className="w-full bg-gray-700/60 border border-gray-600/60 rounded-lg pl-8 pr-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                    placeholder="https://example.com (optional)"
+                                  />
+                                </div>
+                                <div>
+                                  <input ref={editImageInputRef} type="file" accept="image/*" onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const reader = new FileReader();
+                                    reader.onload = () => setEditImagePreview(reader.result as string);
+                                    reader.readAsDataURL(file);
+                                  }} className="hidden" />
+                                  {editImagePreview ? (
+                                    <div className="relative rounded-lg overflow-hidden border border-gray-600/60">
+                                      <img src={editImagePreview} alt="Preview" className="w-full h-24 object-cover" />
+                                      <button type="button" onClick={() => setEditImagePreview(null)} className="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-red-500/80">
+                                        <X size={10} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button type="button" onClick={() => editImageInputRef.current?.click()} className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-dashed border-gray-600 text-gray-500 hover:border-primary-500 hover:text-primary-400 text-[10px]">
+                                      <ImageIcon size={11} /> Add image
+                                    </button>
+                                  )}
+                                </div>
+                                <div className="flex justify-end gap-1.5">
+                                  <button onClick={cancelEdit} className="px-2.5 py-1 text-[10px] rounded-lg bg-gray-700 text-gray-400 hover:bg-gray-600">Cancel</button>
+                                  <button onClick={handleSaveEdit} disabled={editSaving || !editTitle.trim()} className="flex items-center gap-1 px-2.5 py-1 text-[10px] rounded-lg bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-50">
+                                    <Save size={10} />{editSaving ? 'Saving...' : 'Save'}
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
                             {ann.image_url && (
-                              <img src={ann.image_url} alt={ann.title} className="w-full h-32 object-cover" />
+                              <div className="relative">
+                                <img src={ann.image_url} alt={ann.title} className="w-full h-36 object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                <div className="absolute bottom-0 left-0 right-0 p-3">
+                                  <div className="flex items-center gap-1.5 mb-1">
+                                    <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                                      ann.type === 'emergency' ? 'bg-red-500/30 text-red-300' : ann.type === 'bulletin' ? 'bg-blue-500/30 text-blue-300' : 'bg-green-500/30 text-green-300'
+                                    }`}>{ann.type}</span>
+                                  </div>
+                                  <h3 className="font-bold text-white text-sm drop-shadow-lg">{ann.title}</h3>
+                                </div>
+                              </div>
                             )}
                             <div className="p-3">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                                  ann.type === 'emergency' ? 'text-red-400' : ann.type === 'bulletin' ? 'text-blue-400' : 'text-green-400'
-                                }`}>
-                                  {ann.type}
-                                </span>
-                                <span className="text-[10px] text-gray-600">
-                                  {new Date(ann.created_at).toLocaleDateString()}
-                                </span>
-                              </div>
-                              <h3 className="font-semibold text-white text-sm">{ann.title}</h3>
-                              {ann.content && (
-                                <p className="text-gray-400 text-xs mt-1 line-clamp-3">{ann.content}</p>
+                              {!ann.image_url && (
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                                    ann.type === 'emergency' ? 'bg-red-500/30 text-red-300' : ann.type === 'bulletin' ? 'bg-blue-500/30 text-blue-300' : 'bg-green-500/30 text-green-300'
+                                  }`}>{ann.type}</span>
+                                  <span className="text-[10px] text-gray-600">{new Date(ann.created_at).toLocaleDateString()}</span>
+                                </div>
                               )}
+
+                              {!ann.image_url && (
+                                <h3 className="font-bold text-white text-sm mb-1">{ann.title}</h3>
+                              )}
+
+                              {ann.content && (
+                                <p className="text-gray-400 text-[11px] leading-relaxed line-clamp-3 mt-1">{ann.content}</p>
+                              )}
+
                               {ann.link && (
                                 <a
                                   href={ann.link}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 mt-2 text-[11px] text-primary-400 hover:text-primary-300 transition-colors"
+                                  className="inline-flex items-center gap-1.5 mt-2 px-2 py-1 rounded-md bg-primary-500/10 border border-primary-500/20 text-[10px] text-primary-400 hover:text-primary-300 hover:bg-primary-500/20 transition-colors"
                                 >
-                                  <ExternalLink size={11} />
-                                  {ann.link.length > 35 ? ann.link.slice(0, 35) + '...' : ann.link}
+                                  <ExternalLink size={10} />
+                                  {ann.link.length > 30 ? ann.link.slice(0, 30) + '...' : ann.link}
                                 </a>
                               )}
 
-                              {/* Reactions */}
-                              <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                              {/* Creator Highlight */}
+                              <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-gray-700/40">
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-500/40 to-cyan-500/40 border border-gray-600/50 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-[9px] font-bold text-white">
+                                    {(ann.creator_name || 'U').charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-[11px] font-semibold text-gray-300">{ann.creator_name || 'Unknown'}</span>
+                                  <span className="text-[9px] text-gray-600 ml-1.5">{new Date(ann.created_at).toLocaleDateString()}</span>
+                                </div>
+                                {(user?.id === ann.created_by || user?.role === 'admin') && (
+                                  <div className="flex items-center gap-0.5 opacity-100 transition-opacity">
+                                    <button
+                                      onClick={() => startEdit(ann)}
+                                      className="p-1 rounded text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                                      title="Edit"
+                                    >
+                                      <Edit3 size={11} />
+                                    </button>
+                                    <button
+                                      onClick={() => setDeleteConfirmId(ann.id)}
+                                      className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                      title="Delete"
+                                    >
+                                      <Trash2 size={11} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Reactions + Comments Row */}
+                              <div className="flex items-center gap-1 mt-2">
                                 {annReactions.map((r) => (
                                   <button
                                     key={r.emoji}
                                     onClick={() => handleToggleReaction(ann.id, r.emoji)}
-                                    className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border transition-all ${
+                                    className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] border transition-all ${
                                       r.user_reacted
                                         ? 'bg-primary-500/20 border-primary-500/40 text-primary-300'
-                                        : 'bg-gray-700/50 border-gray-600/50 text-gray-400 hover:bg-gray-700'
+                                        : 'bg-gray-700/40 border-gray-600/40 text-gray-500 hover:bg-gray-700 hover:text-gray-300'
                                     }`}
                                     title={r.users.join(', ')}
                                   >
-                                    <span>{r.emoji}</span>
+                                    <span className="leading-none">{r.emoji}</span>
                                     <span className="font-medium">{r.count}</span>
                                   </button>
                                 ))}
                                 <div className="relative">
                                   <button
                                     onClick={() => setShowReactionPicker(showReactionPicker === ann.id ? null : ann.id)}
-                                    className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700/50 border border-gray-600/50 text-gray-500 hover:text-gray-300 hover:bg-gray-700 transition-colors text-[11px]"
+                                    className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-700/40 border border-gray-600/40 text-gray-500 hover:text-gray-300 hover:bg-gray-700 transition-colors"
                                   >
-                                    +
+                                    <SmilePlus size={10} />
                                   </button>
                                   {showReactionPicker === ann.id && (
                                     <div className="absolute bottom-full left-0 mb-1 flex gap-0.5 bg-gray-800 border border-gray-600/60 rounded-lg p-1 shadow-xl z-10">
@@ -584,7 +836,7 @@ export function BulletinBoard() {
                                         <button
                                           key={emoji}
                                           onClick={() => handleToggleReaction(ann.id, emoji)}
-                                          className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-700 transition-colors text-sm"
+                                          className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-700 transition-colors text-sm"
                                         >
                                           {emoji}
                                         </button>
@@ -592,10 +844,81 @@ export function BulletinBoard() {
                                     </div>
                                   )}
                                 </div>
+                                <div className="w-px h-4 bg-gray-700/50 mx-0.5" />
+                                <button
+                                  onClick={() => toggleComments(ann.id)}
+                                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] border transition-all ${
+                                    showCommentsFor === ann.id
+                                      ? 'bg-primary-500/20 border-primary-500/40 text-primary-300'
+                                      : 'bg-gray-700/40 border-gray-600/40 text-gray-500 hover:bg-gray-700 hover:text-gray-300'
+                                  }`}
+                                >
+                                  <MessageSquare size={10} />
+                                  {(commentsMap[ann.id] || []).length > 0 && (
+                                    <span className="font-medium">{(commentsMap[ann.id] || []).length}</span>
+                                  )}
+                                </button>
                               </div>
 
-                              <p className="text-[10px] text-gray-600 mt-2">by {ann.created_by}</p>
+                              {/* Comments Section */}
+                              {showCommentsFor === ann.id && (
+                                <div className="mt-2.5 pt-2.5 border-t border-gray-700/40 space-y-2">
+                                  {(commentsMap[ann.id] || []).length === 0 && (
+                                    <p className="text-[10px] text-gray-600 text-center py-1.5">No comments yet</p>
+                                  )}
+                                  {(commentsMap[ann.id] || []).map((comment) => (
+                                    <div key={comment.id} className="flex items-start gap-1.5 group/comment">
+                                      <div className="w-4 h-4 rounded-full bg-gray-700/60 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <span className="text-[7px] font-bold text-gray-400">{comment.user_name?.charAt(0)?.toUpperCase()}</span>
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-[10px] font-semibold text-gray-300">{comment.user_name}</span>
+                                          <span className="text-[8px] text-gray-600">{new Date(comment.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                        <p className="text-[11px] text-gray-400 break-words leading-relaxed">{comment.message}</p>
+                                      </div>
+                                      {(comment.user_id === user?.id || user?.role === 'admin') && (
+                                        <button
+                                          onClick={() => handleDeleteComment(ann.id, comment.id)}
+                                          className="p-0.5 rounded opacity-0 group-hover/comment:opacity-100 text-gray-600 hover:text-red-400 transition-all"
+                                          title="Delete"
+                                        >
+                                          <Trash2 size={9} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  ))}
+                                  <div className="flex items-center gap-1.5 mt-1">
+                                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-primary-500/40 to-cyan-500/40 flex items-center justify-center flex-shrink-0">
+                                      <span className="text-[7px] font-bold text-white">{user?.full_name?.charAt(0)?.toUpperCase()}</span>
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={showCommentsFor === ann.id ? commentInput : ''}
+                                      onChange={(e) => setCommentInput(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                          e.preventDefault();
+                                          handleAddComment(ann.id);
+                                        }
+                                      }}
+                                      placeholder="Write a comment..."
+                                      className="flex-1 bg-gray-700/30 border border-gray-600/40 rounded-lg px-2 py-1 text-[10px] text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                    />
+                                    <button
+                                      onClick={() => handleAddComment(ann.id)}
+                                      disabled={commentLoading || !commentInput.trim()}
+                                      className="p-1 rounded-md bg-primary-500/20 text-primary-400 hover:bg-primary-500/30 transition-colors disabled:opacity-40"
+                                    >
+                                      <Send size={10} />
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
+                            </>
+                            )}
                           </div>
                         );
                       })}
@@ -603,6 +926,39 @@ export function BulletinBoard() {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-[60]" onClick={() => setDeleteConfirmId(null)} />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 bg-gray-900 border border-gray-700/60 rounded-2xl shadow-2xl z-[61] p-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                <Trash2 size={18} className="text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Delete Bulletin</h3>
+                <p className="text-[11px] text-gray-500">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400">This bulletin will be permanently removed from the board.</p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="px-3 py-1.5 text-[11px] rounded-lg bg-gray-700 text-gray-400 hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSoftDelete(deleteConfirmId)}
+                className="px-3 py-1.5 text-[11px] rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 transition-colors font-medium"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </>
