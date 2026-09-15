@@ -17,9 +17,7 @@
 
 ---
 
-**Live Demo:** [here-to-there.vercel.app](https://here-to-there.vercel.app)
-
-<img src="docs/preview.png" alt="Here to There Preview" width="800" />
+**Live Demo:** [frontend-seven-kappa-41.vercel.app](https://frontend-seven-kappa-41.vercel.app)
 
 </div>
 
@@ -384,7 +382,7 @@ The application is deployed using a cloud-native stack:
 
 | Component | Service | URL |
 |-----------|---------|-----|
-| Frontend | Vercel | [here-to-there.vercel.app](https://here-to-there.vercel.app) |
+| Frontend | Vercel | [frontend-seven-kappa-41.vercel.app](https://frontend-seven-kappa-41.vercel.app) |
 | Backend | Render | [here-to-there-api.onrender.com](https://here-to-there-api.onrender.com) |
 | Database | Neon | Serverless PostgreSQL |
 
