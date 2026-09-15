@@ -269,10 +269,11 @@
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Python 3.10+
-- PostgreSQL 15+
-- Git
+- **Node.js 18+** and **npm** — Frontend build and dev server
+- **Python 3.10+** and **pip** — Backend API server
+- **PostgreSQL 15+** — Database (or a cloud instance like Neon)
+- **Git** — Version control
+- **Modern browser** — Chrome 90+, Firefox 88+, Edge 90+, or Safari 14+ (WebRTC required)
 
 ### Installation
 
