@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    ALLOWED_ORIGINS: str = '["http://localhost:5173"]'
+    ALLOWED_ORIGINS: str = '["http://localhost:5173","https://here-to-there.vercel.app"]'
     STUN_SERVER: str = "stun:stun.l.google.com:19302"
     TURN_SERVER: str = ""
     TURN_USERNAME: str = ""
