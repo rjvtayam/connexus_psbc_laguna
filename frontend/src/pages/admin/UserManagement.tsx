@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { User } from '../../types/user';
@@ -7,7 +7,8 @@ import { useAuthStore } from '../../stores/authStore';
 import {
   Trash2, Users, UserPlus, Mail, Lock, Building2, Shield,
   Search, X, AlertCircle, RefreshCw, Eye, EyeOff, User as UserIcon,
-  ChevronDown, Crown, GraduationCap, Briefcase, UserCheck
+  ChevronDown, Crown, GraduationCap, Briefcase, UserCheck,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 export function UserManagement() {
@@ -25,6 +26,8 @@ export function UserManagement() {
   const [showPassword, setShowPassword] = useState(false);
   const [activeRoleFilter, setActiveRoleFilter] = useState<string>('all');
   const [animatedUsers, setAnimatedUsers] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const USERS_PER_PAGE = 8;
   const [newUser, setNewUser] = useState({
     email: '',
     password: '',
@@ -130,6 +133,12 @@ export function UserManagement() {
     const matchesRole = activeRoleFilter === 'all' || u.role === activeRoleFilter;
     return matchesSearch && matchesRole;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedUsers = filteredUsers.slice((safeCurrentPage - 1) * USERS_PER_PAGE, safeCurrentPage * USERS_PER_PAGE);
+
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, activeRoleFilter]);
 
   const roleConfig: Record<string, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
     principal: {
@@ -420,87 +429,165 @@ export function UserManagement() {
         </div>
 
         {/* Users List */}
-        <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 overflow-hidden">
-          <div className="p-4 border-b border-gray-800/60 flex items-center justify-between">
+        <div className="space-y-3">
+          {/* List Header */}
+          <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <Users size={16} className="text-gray-500" />
-              <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Users</span>
+              <Users size={14} className="text-gray-500" />
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Users</span>
             </div>
-            <span className="text-xs text-gray-600 bg-gray-800/60 px-2 py-1 rounded-md">
+            <span className="text-[11px] text-gray-600">
               {filteredUsers.length} of {users.length}
             </span>
           </div>
 
-          <div className="divide-y divide-gray-800/60">
-            {filteredUsers.length === 0 ? (
-              <div className="px-5 py-12 text-center">
-                <div className="w-12 h-12 rounded-2xl bg-gray-800/60 border border-gray-700/40 flex items-center justify-center mx-auto mb-3">
-                  <Users size={20} className="text-gray-600" />
-                </div>
-                <p className="text-gray-500 text-sm font-medium">No users found</p>
-                <p className="text-gray-600 text-xs mt-1">{searchQuery ? 'Try a different search' : 'Create your first user'}</p>
+          {/* User Cards Grid */}
+          {paginatedUsers.length === 0 ? (
+            <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 px-5 py-12 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-gray-800/60 border border-gray-700/40 flex items-center justify-center mx-auto mb-3">
+                <Users size={20} className="text-gray-600" />
               </div>
-            ) : (
-              filteredUsers.map((user, index) => {
+              <p className="text-gray-500 text-sm font-medium">No users found</p>
+              <p className="text-gray-600 text-xs mt-1">{searchQuery ? 'Try a different search' : 'Create your first user'}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {paginatedUsers.map((user, index) => {
                 const role = roleConfig[user.role] || roleConfig.staff;
                 const campusColor = campusColors[user.campus] || 'text-gray-400';
+                const campusGlow: Record<string, string> = {
+                  paete: 'rgba(34,211,238,0.08)',
+                  pagsanjan: 'rgba(168,85,247,0.08)',
+                  control_room: 'rgba(59,130,246,0.08)',
+                };
+                const campusBorder: Record<string, string> = {
+                  paete: 'border-cyan-500/20 hover:border-cyan-500/40',
+                  pagsanjan: 'border-purple-500/20 hover:border-purple-500/40',
+                  control_room: 'border-primary-500/20 hover:border-primary-500/40',
+                };
+                const neon: Record<string, string> = {
+                  paete: '#22d3ee',
+                  pagsanjan: '#a855f7',
+                  control_room: '#3b82f6',
+                };
+                const c = neon[user.campus] || '#6b7280';
                 return (
                   <div
                     key={user.id}
-                    className="flex items-center justify-between px-5 py-4 hover:bg-gray-800/30 transition-all duration-200 group"
+                    className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5"
                     style={{
-                      opacity: animatedUsers.has(user.id) ? 1 : 0,
-                      transform: animatedUsers.has(user.id) ? 'translateY(0)' : 'translateY(10px)',
-                      transition: `all 0.3s ease ${index * 50}ms`
+                      background: `linear-gradient(160deg, rgba(20,27,45,0.97) 0%, rgba(10,15,25,0.99) 100%)`,
+                      border: `1px solid ${c}20`,
+                      boxShadow: `0 0 20px ${campusGlow[user.campus] || 'rgba(0,0,0,0.3)'}, 0 4px 20px rgba(0,0,0,0.4)`,
+                      animation: `fadeInUp 0.4s ease ${index * 60}ms both`,
                     }}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 border border-gray-700/50 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform">
-                        {user.avatar_url ? (
-                          <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className={`text-sm font-bold ${role.color}`}>{user.full_name?.charAt(0)?.toUpperCase() || '?'}</span>
-                        )}
+                    {/* Top neon line */}
+                    <div className="absolute top-0 left-0 right-0 h-[1.5px]" style={{ background: `linear-gradient(90deg, transparent, ${c}50, transparent)` }} />
+
+                    {/* Corner accent */}
+                    <div className="absolute top-0 right-0 w-8 h-8 border-t border-r rounded-tr-2xl pointer-events-none opacity-40 group-hover:opacity-70 transition-opacity" style={{ borderColor: `${c}40` }} />
+
+                    <div className="p-4">
+                      {/* Top: Avatar + Status */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="relative">
+                          <div
+                            className="w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300"
+                            style={{
+                              background: `linear-gradient(135deg, ${c}20, ${c}08)`,
+                              border: `1.5px solid ${c}30`,
+                            }}
+                          >
+                            {user.avatar_url ? (
+                              <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-sm font-bold" style={{ color: c }}>{user.full_name?.charAt(0)?.toUpperCase() || '?'}</span>
+                            )}
+                          </div>
+                          {/* Online dot */}
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-900 ${user.is_active ? 'bg-green-400' : 'bg-gray-600'}`} />
+                        </div>
+
+                        {/* Role badge */}
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold border ${role.bg} ${role.color}`}>
+                          {role.icon}
+                          {role.label}
+                        </span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-white text-sm font-medium truncate">{user.full_name}</p>
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${role.bg} ${role.color}`}>
-                            {role.icon}
-                            {role.label}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 mt-0.5">
-                          <p className="text-gray-500 text-xs truncate">{user.email}</p>
-                          <span className="text-gray-700">·</span>
-                          <p className={`text-xs capitalize ${campusColor}`}>{user.campus?.replace('_', ' ')}</p>
-                        </div>
+
+                      {/* Name + Email */}
+                      <h3 className="text-white text-sm font-semibold truncate mb-0.5">{user.full_name}</h3>
+                      <p className="text-gray-500 text-[11px] truncate mb-3">{user.email}</p>
+
+                      {/* Campus + Status row */}
+                      <div className="flex items-center justify-between">
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${campusColor}`}>
+                          <Building2 size={10} />
+                          {user.campus?.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                        </span>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
+                          user.is_active ? 'text-green-400 bg-green-500/10' : 'text-gray-500 bg-gray-800'
+                        }`}>
+                          <span className={`w-1 h-1 rounded-full ${user.is_active ? 'bg-green-400' : 'bg-gray-600'}`} />
+                          {user.is_active ? 'Active' : 'Off'}
+                        </span>
+                      </div>
+
+                      {/* Delete button - shows on hover */}
+                      <div className="mt-3 pt-3 border-t border-gray-800/50 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-medium text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all"
+                        >
+                          <Trash2 size={10} />
+                          Deactivate
+                        </button>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium border ${
-                        user.is_active
-                          ? 'text-green-400 bg-green-500/10 border-green-500/20'
-                          : 'text-gray-500 bg-gray-800 border-gray-700/50'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-green-400' : 'bg-gray-600'}`} />
-                        {user.is_active ? 'Active' : 'Inactive'}
-                      </span>
-
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="p-2 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
-                        title="Deactivate user"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    {/* Bottom glow dot */}
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: c, boxShadow: `0 0 6px ${c}` }} />
                   </div>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-1.5 pt-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safeCurrentPage === 1}
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 bg-gray-800/60 border border-gray-700/40 text-gray-400 hover:bg-gray-700/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={14} />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 ${
+                    page === safeCurrentPage
+                      ? 'bg-primary-500/20 border border-primary-500/40 text-primary-400 shadow-lg shadow-primary-500/10'
+                      : 'bg-gray-800/60 border border-gray-700/40 text-gray-400 hover:bg-gray-700/60 hover:text-white'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage === totalPages}
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 bg-gray-800/60 border border-gray-700/40 text-gray-400 hover:bg-gray-700/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
