@@ -9,7 +9,7 @@ export function useWebRTC(_roomId: string) {
   const localStreamRef = useRef<MediaStream | null>(null);
   const peersRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const connectedSidsRef = useRef<Set<string>>(new Set());
-  const retryTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  const connectTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const [streamReady, setStreamReady] = useState(false);
   const { emit, socket } = useSocket();
   const { addPeer, removePeer, updatePeerStream, setLocalStream } = usePeerStore();
@@ -73,6 +73,10 @@ export function useWebRTC(_roomId: string) {
 
       pc.oniceconnectionstatechange = () => {
         console.log(`[WebRTC] ICE state with ${targetSid}: ${pc.iceConnectionState}`);
+        if (pc.iceConnectionState === 'failed') {
+          console.log(`[WebRTC] ICE failed with ${targetSid}, attempting restart`);
+          try { pc.restartIce(); } catch {}
+        }
       };
 
       pc.onconnectionstatechange = () => {
@@ -81,6 +85,12 @@ export function useWebRTC(_roomId: string) {
           removePeer(targetSid);
           peersRef.current.delete(targetSid);
           connectedSidsRef.current.delete(targetSid);
+          const timer = connectTimersRef.current.get(targetSid);
+          if (timer) { clearTimeout(timer); connectTimersRef.current.delete(targetSid); }
+        }
+        if (pc.connectionState === 'connected') {
+          const timer = connectTimersRef.current.get(targetSid);
+          if (timer) { clearTimeout(timer); connectTimersRef.current.delete(targetSid); }
         }
       };
 
@@ -121,6 +131,15 @@ export function useWebRTC(_roomId: string) {
           target_sid: targetSid,
           offer: pc.localDescription?.toJSON(),
         });
+
+        const failTimer = setTimeout(() => {
+          connectTimersRef.current.delete(targetSid);
+          if (!peersRef.current.get(targetSid) || peersRef.current.get(targetSid)?.connectionState !== 'connected') {
+            console.log(`[WebRTC] Offer to ${targetSid} timed out, clearing for retry`);
+            connectedSidsRef.current.delete(targetSid);
+          }
+        }, 10000);
+        connectTimersRef.current.set(targetSid, failTimer);
       } catch (err) {
         console.error(`[WebRTC] Failed to create offer for ${targetSid}:`, err);
         connectedSidsRef.current.delete(targetSid);
@@ -252,6 +271,8 @@ export function useWebRTC(_roomId: string) {
     peersRef.current.forEach((pc) => pc.close());
     peersRef.current.clear();
     connectedSidsRef.current.clear();
+    connectTimersRef.current.forEach((t) => clearTimeout(t));
+    connectTimersRef.current.clear();
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     localStreamRef.current = null;
   }, []);
@@ -303,41 +324,49 @@ export function useWebRTC(_roomId: string) {
     return cleanup;
   }, [cleanup]);
 
+  // Auto-connect: use a ref to avoid race conditions from roomUsers changes
+  const roomUsersRef = useRef(roomUsers);
+  roomUsersRef.current = roomUsers;
+
   useEffect(() => {
     const s = getSocket();
     const mySid = s?.id;
-    if (!mySid || !streamReady || !s?.connected) {
-      console.log(`[WebRTC] Auto-connect skip: mySid=${mySid}, streamReady=${streamReady}, connected=${s?.connected}`);
-      return;
-    }
+    if (!mySid || !streamReady || !s?.connected) return;
 
-    console.log(`[WebRTC] Auto-connect check: mySid=${mySid}, roomUsers=${roomUsers.length}, peers=${peersRef.current.size}`);
-    roomUsers.forEach((u) => {
-      if (u.sid !== mySid && !peersRef.current.has(u.sid) && !connectedSidsRef.current.has(u.sid)) {
-        if (mySid < u.sid) {
-          console.log(`[WebRTC] Initiating offer to ${u.user} (${u.sid})`);
-          createOffer(u.sid).catch((err) => {
-            console.error('[WebRTC] Auto-connect offer failed:', err);
-            connectedSidsRef.current.delete(u.sid);
-          });
-        } else {
-          console.log(`[WebRTC] Waiting for offer from ${u.user} (${u.sid}), will retry in 3s`);
-          const retryTimer = setTimeout(() => {
-            retryTimersRef.current.delete(retryTimer);
-            const stillNoPeer = !peersRef.current.has(u.sid) && !connectedSidsRef.current.has(u.sid);
-            if (stillNoPeer) {
-              console.log(`[WebRTC] Retrying - initiating offer to ${u.user} (${u.sid})`);
+    const tryConnect = () => {
+      const users = roomUsersRef.current;
+      users.forEach((u) => {
+        if (u.sid !== mySid && !peersRef.current.has(u.sid) && !connectedSidsRef.current.has(u.sid)) {
+          if (mySid < u.sid) {
+            console.log(`[WebRTC] Initiating offer to ${u.user} (${u.sid})`);
+            createOffer(u.sid).catch((err) => {
+              console.error('[WebRTC] Auto-connect offer failed:', err);
               connectedSidsRef.current.delete(u.sid);
-              createOffer(u.sid).catch((err) => {
-                console.error('[WebRTC] Retry offer failed:', err);
-                connectedSidsRef.current.delete(u.sid);
-              });
+            });
+          } else {
+            console.log(`[WebRTC] Waiting for offer from ${u.user} (${u.sid}), will retry in 3s`);
+            const existing = connectTimersRef.current.get(u.sid);
+            if (!existing) {
+              const retryTimer = setTimeout(() => {
+                connectTimersRef.current.delete(u.sid);
+                const stillNoPeer = !peersRef.current.has(u.sid) && !connectedSidsRef.current.has(u.sid);
+                if (stillNoPeer) {
+                  console.log(`[WebRTC] Retrying - initiating offer to ${u.user} (${u.sid})`);
+                  connectedSidsRef.current.delete(u.sid);
+                  createOffer(u.sid).catch((err) => {
+                    console.error('[WebRTC] Retry offer failed:', err);
+                    connectedSidsRef.current.delete(u.sid);
+                  });
+                }
+              }, 3000);
+              connectTimersRef.current.set(u.sid, retryTimer);
             }
-          }, 3000);
-          retryTimersRef.current.add(retryTimer);
+          }
         }
-      }
-    });
+      });
+    };
+
+    tryConnect();
 
     const currentTalkTarget = usePeerStore.getState().talkTarget;
     const currentLocalMic = usePeerStore.getState().localMicActive;
@@ -346,7 +375,6 @@ export function useWebRTC(_roomId: string) {
       if (currentTalkTarget && currentLocalMic) combined = 'both';
       else if (currentTalkTarget) combined = currentTalkTarget;
       else if (currentLocalMic) combined = 'local';
-      console.log(`[WebRTC] Emitting current talk state to room: ${combined}`);
       emit('talk_to', { target: combined });
     }
 
@@ -355,11 +383,8 @@ export function useWebRTC(_roomId: string) {
     const currentAudioMuted = usePeerStore.getState().isAudioMuted;
     emit('mute_audio', { muted: currentAudioMuted });
 
-    return () => {
-      retryTimersRef.current.forEach((t) => clearTimeout(t));
-      retryTimersRef.current.clear();
-    };
-  }, [roomUsers, streamReady, createOffer]);
+    // No cleanup needed — timers are tracked in connectTimersRef and managed per-SID
+  }, [roomUsers, streamReady, createOffer, emit]);
 
   useEffect(() => {
     const s = getSocket();
@@ -384,6 +409,8 @@ export function useWebRTC(_roomId: string) {
         pc.close();
         peersRef.current.delete(sid);
         connectedSidsRef.current.delete(sid);
+        const timer = connectTimersRef.current.get(sid);
+        if (timer) { clearTimeout(timer); connectTimersRef.current.delete(sid); }
         removePeer(sid);
       }
     });
