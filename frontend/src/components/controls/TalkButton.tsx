@@ -5,13 +5,20 @@ interface TalkButtonProps {
   isActive?: boolean;
   onClick: () => void;
   disabled?: boolean;
+  compact?: boolean;
 }
 
-export function TalkButton({ target, isActive, onClick, disabled }: TalkButtonProps) {
+export function TalkButton({ target, isActive, onClick, disabled, compact }: TalkButtonProps) {
   const labels = {
     paete: 'Paete',
     pagsanjan: 'Pagsanjan',
     both: 'Both',
+  };
+
+  const shortLabels = {
+    paete: 'PAE',
+    pagsanjan: 'PAG',
+    both: 'ALL',
   };
 
   const activeStyles = {
@@ -25,6 +32,29 @@ export function TalkButton({ target, isActive, onClick, disabled }: TalkButtonPr
     pagsanjan: 'text-purple-400',
     both: 'text-primary-400',
   };
+
+  if (compact) {
+    return (
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-[10px] sm:text-xs font-medium transition-all duration-200 ${
+          disabled
+            ? 'bg-gray-800 text-gray-600 border border-gray-700/30 cursor-not-allowed opacity-50'
+            : isActive
+              ? activeStyles[target]
+              : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-transparent'
+        }`}
+        title={disabled ? 'Disabled during Live Portal' : labels[target]}
+      >
+        {isActive ? (
+          <Mic size={12} className={activeIconColor[target]} />
+        ) : (
+          <MicOff size={12} className={disabled ? 'text-gray-600' : 'text-gray-500'} />
+        )}
+      </button>
+    );
+  }
 
   return (
     <button
@@ -44,7 +74,8 @@ export function TalkButton({ target, isActive, onClick, disabled }: TalkButtonPr
       ) : (
         <MicOff size={13} className={disabled ? 'text-gray-600' : 'text-gray-500'} />
       )}
-      {labels[target]}
+      <span className="hidden sm:inline">{labels[target]}</span>
+      <span className="sm:hidden">{shortLabels[target]}</span>
     </button>
   );
 }

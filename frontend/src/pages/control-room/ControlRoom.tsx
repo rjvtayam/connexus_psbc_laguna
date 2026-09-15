@@ -178,50 +178,50 @@ export function ControlRoom() {
 
   return (
     <DashboardLayout>
-      <div className="h-full flex flex-col p-2 sm:p-3 md:p-4">
+      <div className="h-full flex flex-col p-1.5 sm:p-3 md:p-4">
         {/* Header */}
-        <header className="flex items-center justify-between gap-2 mb-2 sm:mb-3 md:mb-4">
-          <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-wrap">
-            <h1 className="font-orbitron text-lg sm:text-xl md:text-2xl font-bold text-white truncate">Control Room</h1>
-            <span className="flex items-center gap-1 text-green-400 font-medium text-xs">
-              <Wifi size={12} /> <span className="hidden sm:inline">SYSTEM ONLINE</span>
+        <header className="flex items-center justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-3 md:mb-4">
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-wrap">
+            <h1 className="font-orbitron text-base sm:text-xl md:text-2xl font-bold text-white truncate">Control Room</h1>
+            <span className="flex items-center gap-1 text-green-400 font-medium text-[10px] sm:text-xs">
+              <Wifi size={10} className="sm:w-3 sm:h-3" /> <span className="hidden sm:inline">SYSTEM ONLINE</span>
             </span>
             {isAdmin && (
-              <span className="text-[10px] text-primary-400 bg-primary-500/10 border border-primary-500/20 px-1.5 py-0.5 rounded-md font-semibold" data-demo="campus-badge">
+              <span className="text-[9px] sm:text-[10px] text-primary-400 bg-primary-500/10 border border-primary-500/20 px-1 sm:px-1.5 py-0.5 rounded-md font-semibold" data-demo="campus-badge">
                 ADMIN
               </span>
             )}
             {isRecording && (
-              <span className="flex items-center gap-1.5 text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded-md font-semibold">
+              <span className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-1 sm:px-1.5 py-0.5 rounded-md font-semibold">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                REC {formatRecordingTime(elapsedTime)}
+                <span className="hidden sm:inline">REC</span> {formatRecordingTime(elapsedTime)}
               </span>
             )}
             {recordingUploading && (
-              <span className="flex items-center gap-1.5 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md font-semibold">
-                <span className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                UPLOADING
+              <span className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1 sm:px-1.5 py-0.5 rounded-md font-semibold">
+                <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                <span className="hidden sm:inline">UPLOADING</span>
               </span>
             )}
             {uploadError && (
-              <span className="flex items-center gap-1.5 text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded-md font-semibold" title={uploadError}>
-                UPLOAD FAILED
+              <span className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-1 sm:px-1.5 py-0.5 rounded-md font-semibold" title={uploadError}>
+                <span className="hidden sm:inline">UPLOAD FAILED</span>
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-0.5 sm:gap-1.5 flex-shrink-0">
             <div className="relative" ref={onlinePanelRef}>
               <button
                 onClick={() => setShowOnlinePanel(!showOnlinePanel)}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors px-2 sm:px-3 py-1.5 rounded-lg hover:bg-gray-700"
+                className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-gray-400 hover:text-white transition-colors px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg hover:bg-gray-700"
                 data-demo="online-count"
               >
-                <Users size={14} /> <span className="text-gray-500">Online</span>
-                <span className="min-w-[18px] h-[18px] bg-green-500/20 text-green-400 border border-green-500/30 rounded-full text-[10px] font-bold flex items-center justify-center px-1">{roomUsers.length}</span>
+                <Users size={12} className="sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline text-gray-500">Online</span>
+                <span className="min-w-[16px] sm:min-w-[18px] h-4 sm:h-[18px] bg-green-500/20 text-green-400 border border-green-500/30 rounded-full text-[9px] sm:text-[10px] font-bold flex items-center justify-center px-0.5 sm:px-1">{roomUsers.length}</span>
               </button>
 
               {showOnlinePanel && (
-                <div className="absolute right-0 top-full mt-2 w-64 sm:w-72 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 w-60 sm:w-72 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
                   <div className="px-3 py-2 border-b border-gray-700 flex items-center justify-between">
                     <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider">Online ({roomUsers.length})</p>
                     <div className="flex items-center gap-1.5">
@@ -247,17 +247,17 @@ export function ControlRoom() {
                             isMe ? 'bg-primary-500/10 border-l-2 border-primary-500' : 'hover:bg-gray-700/50'
                           }`}
                         >
-                          <div className={`w-7 h-7 rounded-full ${campusColors[u.campus] || 'bg-gray-600'} flex items-center justify-center text-xs font-bold text-white flex-shrink-0`}>
+                          <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full ${campusColors[u.campus] || 'bg-gray-600'} flex items-center justify-center text-[10px] sm:text-xs font-bold text-white flex-shrink-0`}>
                             {u.user?.charAt(0)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs sm:text-sm text-white truncate">
+                            <p className="text-[11px] sm:text-sm text-white truncate">
                               {u.user}
-                              {isMe && <span className="ml-1 text-[10px] text-primary-400 font-semibold">(You)</span>}
+                              {isMe && <span className="ml-1 text-[9px] sm:text-[10px] text-primary-400 font-semibold">(You)</span>}
                             </p>
-                            <p className="text-[10px] text-gray-500 uppercase truncate">{u.campus?.replace('_', ' ')} · {u.role}</p>
+                            <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase truncate">{u.campus?.replace('_', ' ')} · {u.role}</p>
                           </div>
-                          <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 flex-shrink-0" />
                         </div>
                       );
                     })}
@@ -270,12 +270,12 @@ export function ControlRoom() {
             <div className="hidden md:flex"><MicTalkingIndicator /></div>
             <button
               onClick={() => { setShowChat(true); clearUnreadChat(); }}
-              className="relative p-1.5 sm:p-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+              className="relative p-1 sm:p-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
               data-demo="btn-chat"
             >
-              <MessageSquare size={16} />
+              <MessageSquare size={14} className="sm:w-4 sm:h-4" />
               {(unreadAllCount + unreadCampusCount) > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-blue-500 rounded-full text-[10px] font-bold flex items-center justify-center px-1 animate-badge-pulse">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[14px] sm:min-w-[16px] h-3.5 sm:h-4 bg-blue-500 rounded-full text-[8px] sm:text-[10px] font-bold flex items-center justify-center px-0.5 sm:px-1 animate-badge-pulse">
                   {(unreadAllCount + unreadCampusCount) > 99 ? '99+' : (unreadAllCount + unreadCampusCount)}
                 </span>
               )}
@@ -285,17 +285,17 @@ export function ControlRoom() {
         </header>
 
         {cameraError && (
-          <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
-            <AlertTriangle size={14} />
-            <span className="flex-1">{cameraError}</span>
-            <button onClick={() => setCameraError(null)} className="p-0.5 rounded hover:bg-red-500/20"><X size={12} /></button>
+          <div className="mb-1.5 sm:mb-3 flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] sm:text-xs">
+            <AlertTriangle size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+            <span className="flex-1 min-w-0 truncate">{cameraError}</span>
+            <button onClick={() => setCameraError(null)} className="p-0.5 rounded hover:bg-red-500/20 flex-shrink-0"><X size={10} className="sm:w-3 sm:h-3" /></button>
           </div>
         )}
 
         {/* Video Grid */}
-        <div className="flex-1 mb-2 sm:mb-3 md:mb-4 min-h-0" data-demo="remote-area">
+        <div className="flex-1 mb-1.5 sm:mb-3 md:mb-4 min-h-0" data-demo="remote-area">
           {screenSharerSid ? (
-            <div className="h-full flex flex-col gap-2 sm:gap-3">
+            <div className="h-full flex flex-col gap-1.5 sm:gap-3">
               {(() => {
                 const isLocalSharer = screenSharerSid === mySid;
                 const sharer = isLocalSharer
@@ -317,8 +317,8 @@ export function ControlRoom() {
                         isScreenShare={true}
                         peerSid={isLocalSharer ? undefined : sharer.sid}
                       />
-                      <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1 text-[10px] sm:text-[11px] text-green-400 bg-green-500/15 border border-green-500/30 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-semibold backdrop-blur-sm">
-                        <MonitorUp size={10} className="sm:hidden md:block md:w-3 md:h-3" />
+                      <div className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 flex items-center gap-1 text-[9px] sm:text-[11px] text-green-400 bg-green-500/15 border border-green-500/30 px-1 sm:px-2 py-0.5 sm:py-1 rounded-lg font-semibold backdrop-blur-sm">
+                        <MonitorUp size={8} className="sm:w-3 sm:h-3" />
                         {isLocalSharer ? 'Presenting' : `${sharer.user}`}
                       </div>
                     </div>
@@ -327,9 +327,9 @@ export function ControlRoom() {
                 return null;
               })()}
               {remoteUsers.filter((u) => u.sid !== screenSharerSid).length > 0 && (
-                <div className="flex gap-2 h-20 sm:h-24 md:h-28 flex-shrink-0 overflow-x-auto">
+                <div className="flex gap-1.5 sm:gap-2 h-16 sm:h-24 md:h-28 flex-shrink-0 overflow-x-auto">
                   {remoteUsers.filter((u) => u.sid !== screenSharerSid).map((u) => (
-                    <div key={u.sid} className="w-28 sm:w-32 md:w-40 flex-shrink-0">
+                    <div key={u.sid} className="w-24 sm:w-32 md:w-40 flex-shrink-0">
                       <VideoCard
                         stream={u.stream || null}
                         name={u.user}
@@ -347,7 +347,7 @@ export function ControlRoom() {
               )}
             </div>
           ) : remoteUsers.length > 0 ? (
-            <div className={`grid ${getGridClass(remoteUsers.length)} gap-2 sm:gap-3 h-full`}>
+            <div className={`grid ${getGridClass(remoteUsers.length)} gap-1.5 sm:gap-3 h-full`}>
               {remoteUsers.map((u) => (
                 <VideoCard
                   key={u.sid}
@@ -365,17 +365,17 @@ export function ControlRoom() {
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center bg-gray-900/50 rounded-xl border border-gray-800/40">
-              <Users size={28} className="text-gray-600 mb-2" />
-              <p className="text-gray-500 font-medium text-sm">Waiting for connections...</p>
-              <p className="text-gray-600 text-xs mt-1 hidden sm:block">Other users will appear here when they join</p>
+              <Users size={24} className="text-gray-600 mb-1.5 sm:mb-2" />
+              <p className="text-gray-500 font-medium text-xs sm:text-sm">Waiting for connections...</p>
+              <p className="text-gray-600 text-[10px] sm:text-xs mt-1 hidden sm:block">Other users will appear here when they join</p>
             </div>
           )}
         </div>
 
-        {/* Your Feed + Controls */}
-        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+        {/* Your Feed + Controls — stacked on mobile, side-by-side on tablet+ */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 md:gap-4">
           {/* Local Feed */}
-          <div className="w-20 sm:w-28 md:w-36 lg:w-48 flex-shrink-0" data-demo="local-video">
+          <div className="w-full sm:w-20 md:w-36 lg:w-48 flex-shrink-0" data-demo="local-video">
             <VideoCard
               stream={localStream}
               name={user?.full_name || 'You'}
@@ -389,30 +389,31 @@ export function ControlRoom() {
           </div>
 
           {/* Controls */}
-          <div className="flex-1 bg-gray-900/80 backdrop-blur-xl rounded-xl border border-gray-800/60 p-2 sm:p-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <div className="flex-1 bg-gray-900/80 backdrop-blur-xl rounded-xl border border-gray-800/60 p-1.5 sm:p-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
               {myCampus && myCampus !== 'control_room' && (
                 <>
-                  <span className={`text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border ${myCampus === 'paete' ? 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30' : 'text-purple-300 bg-purple-500/10 border-purple-500/30'}`} data-demo="campus-badge">
-                    <span className="opacity-60">Campus :</span> <span className="font-bold">{myCampus.toUpperCase()}</span>
+                  <span className={`text-[9px] sm:text-[10px] md:text-xs px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg border ${myCampus === 'paete' ? 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30' : 'text-purple-300 bg-purple-500/10 border-purple-500/30'}`} data-demo="campus-badge">
+                    <span className="opacity-60 hidden sm:inline">Campus :</span> <span className="font-bold">{myCampus.toUpperCase()}</span>
                   </span>
                   <TalkButton
                     target={myCampus === 'paete' ? 'pagsanjan' : 'paete'}
                     isActive={activeTalkTarget !== null}
                     onClick={() => handleTalkTo(myCampus === 'paete' ? 'pagsanjan' : 'paete')}
                     disabled={portalMode}
+                    compact
                   />
                 </>
               )}
               {!myCampus || myCampus === 'control_room' ? (
                 <>
-                  <TalkButton target="paete" isActive={activeTalkTarget === 'paete'} onClick={() => handleTalkTo('paete')} disabled={portalMode} />
-                  <TalkButton target="pagsanjan" isActive={activeTalkTarget === 'pagsanjan'} onClick={() => handleTalkTo('pagsanjan')} disabled={portalMode} />
-                  <TalkButton target="both" isActive={activeTalkTarget === 'both'} onClick={() => handleTalkTo('both')} disabled={portalMode} />
+                  <TalkButton target="paete" isActive={activeTalkTarget === 'paete'} onClick={() => handleTalkTo('paete')} disabled={portalMode} compact />
+                  <TalkButton target="pagsanjan" isActive={activeTalkTarget === 'pagsanjan'} onClick={() => handleTalkTo('pagsanjan')} disabled={portalMode} compact />
+                  <TalkButton target="both" isActive={activeTalkTarget === 'both'} onClick={() => handleTalkTo('both')} disabled={portalMode} compact />
                 </>
               ) : null}
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-end">
+            <div className="flex items-center gap-1 sm:gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-end">
               <div data-demo="portal-toggle"><PortalToggle compact /></div>
               <VideoControls
                 isAudioMuted={!localMicActive}
@@ -435,7 +436,7 @@ export function ControlRoom() {
                 onToggleRecording={isAdmin ? (isRecording ? stopRecording : startRecording) : undefined}
                 recordingDisabled={!isAdmin || (isAdmin && portalMode)}
               />
-              <EmergencyButton onClick={() => setShowEmergencyConfirm(true)} onDismiss={() => { emit('emergency_dismiss'); }} disabled={portalMode} />
+              <EmergencyButton onClick={() => setShowEmergencyConfirm(true)} onDismiss={() => { emit('emergency_dismiss'); }} disabled={portalMode} compact />
             </div>
           </div>
         </div>

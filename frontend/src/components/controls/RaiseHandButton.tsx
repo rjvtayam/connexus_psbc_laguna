@@ -11,7 +11,7 @@ export function RaiseHandButton({ isRaised, onToggle, disabled }: RaiseHandButto
     <button
       onClick={onToggle}
       disabled={disabled}
-      className={`flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg transition-all duration-200 ${
+      className={`flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg transition-all duration-200 ${
         disabled
           ? 'bg-gray-800 text-gray-600 border border-gray-700/30 cursor-not-allowed opacity-50'
           : isRaised

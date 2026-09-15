@@ -8,9 +8,10 @@ interface EmergencyButtonProps {
   onClick: () => void;
   onDismiss?: () => void;
   disabled?: boolean;
+  compact?: boolean;
 }
 
-export function EmergencyButton({ onClick, onDismiss, disabled }: EmergencyButtonProps) {
+export function EmergencyButton({ onClick, onDismiss, disabled, compact }: EmergencyButtonProps) {
   const { isEmergency, emergencyTriggeredBySid } = useSessionStore();
   const { user } = useAuthStore();
   const mySid = useSocket().socket?.id;
@@ -24,7 +25,8 @@ export function EmergencyButton({ onClick, onDismiss, disabled }: EmergencyButto
         className="flex items-center gap-1.5 font-bold py-1.5 px-2.5 sm:px-3 rounded-lg text-xs transition-colors duration-200 bg-white/15 hover:bg-white/25 text-white border border-white/20"
       >
         <X size={13} />
-        Dismiss
+        <span className={compact ? 'hidden sm:inline' : ''}>{compact ? 'Dismiss' : 'Dismiss'}</span>
+        {compact && <span className="sm:hidden"><X size={13} /></span>}
       </button>
     );
   }
@@ -39,10 +41,10 @@ export function EmergencyButton({ onClick, onDismiss, disabled }: EmergencyButto
           ? 'bg-gray-800 text-gray-600 border border-gray-700/30 cursor-not-allowed opacity-50'
           : 'bg-red-600 hover:bg-red-700 text-white'
       }`}
-      title={disabled ? 'Disabled during Live Portal' : isEmergency ? 'Emergency already active' : undefined}
+      title={disabled ? 'Disabled during Live Portal' : isEmergency ? 'Emergency already active' : 'Emergency Broadcast'}
     >
       <AlertTriangle size={13} />
-      Emergency
+      {!compact && 'Emergency'}
     </button>
   );
 }

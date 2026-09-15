@@ -404,9 +404,9 @@ export function BulletinBoard() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="relative p-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+        className="relative p-1.5 sm:p-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
       >
-        <Bell size={20} />
+        <Bell size={16} className="sm:w-5 sm:h-5" />
         {totalUnread > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center px-1 animate-badge-pulse">
             {totalUnread > 99 ? '99+' : totalUnread}
