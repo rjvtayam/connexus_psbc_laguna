@@ -19,6 +19,7 @@ export function RaiseHandButton({ isRaised, onToggle, disabled }: RaiseHandButto
             : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-transparent'
       }`}
       title={isRaised ? 'Lower hand' : 'Raise hand'}
+      data-demo="btn-hand"
     >
       <Hand size={14} className={isRaised ? 'fill-amber-400' : ''} />
     </button>

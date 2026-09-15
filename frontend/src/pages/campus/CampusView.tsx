@@ -14,7 +14,6 @@ import { ChatPanel } from '../../components/chat/ChatPanel';
 import { useWebRTC } from '../../hooks/useWebRTC';
 import { useSocket } from '../../hooks/useSocket';
 import { useSettingsSync } from '../../hooks/useSettingsSync';
-import { useRecording } from '../../hooks/useRecording';
 import { usePeerStore } from '../../stores/peerStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -31,7 +30,6 @@ export function CampusView() {
   const { startLocalStream, toggleVideo, shareScreen } = useWebRTC(roomId);
   const { emit } = useSocket();
   useSettingsSync();
-  const { isRecording, elapsedTime, uploading: recordingUploading, uploadError, startRecording, stopRecording, formatTime: formatRecordingTime } = useRecording(roomId);
   const { localStream, isVideoOff, localMicActive } = usePeerStore();
   const { roomUsers, isEmergency, emergencyTriggeredBy, remotePortalModes, remoteMeetingModes, remoteVideoOff, remoteAudioMuted, screenSharerSid, portalMode, unreadAllCount, unreadCampusCount, clearUnreadChat } = useSessionStore();
   const { user } = useAuthStore();
@@ -163,23 +161,6 @@ export function CampusView() {
             <span className={`text-[10px] px-1.5 py-0.5 rounded-md border ${campusName === 'paete' ? 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30' : 'text-purple-300 bg-purple-500/10 border-purple-500/30'} truncate`}>
               {campusLabel} <span className="opacity-70">{user?.role === 'principal' ? 'Principal' : user?.role === 'teacher' ? 'Teacher' : 'Staff'}</span>
             </span>
-            {isRecording && (
-              <span className="flex items-center gap-1.5 text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded-md font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                REC {formatRecordingTime(elapsedTime)}
-              </span>
-            )}
-            {recordingUploading && (
-              <span className="flex items-center gap-1.5 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md font-semibold">
-                <span className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                UPLOADING
-              </span>
-            )}
-            {uploadError && (
-              <span className="flex items-center gap-1.5 text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded-md font-semibold" title={uploadError}>
-                UPLOAD FAILED
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             <div className="relative" ref={onlinePanelRef}>
@@ -384,11 +365,6 @@ export function CampusView() {
                 screenShareDisabled={portalMode}
                 handDisabled={portalMode}
                 reactionDisabled={portalMode}
-                isRecording={isRecording}
-                recordingUploading={recordingUploading}
-                recordingTime={isRecording ? formatRecordingTime(elapsedTime) : undefined}
-                onToggleRecording={isRecording ? stopRecording : startRecording}
-                recordingDisabled={portalMode}
               />
               {user?.role === 'principal' && (
                 <EmergencyButton onClick={() => setShowEmergencyConfirm(true)} onDismiss={() => { emit('emergency_dismiss'); }} disabled={portalMode} />

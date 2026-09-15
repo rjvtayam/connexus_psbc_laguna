@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   X, ChevronRight, ChevronLeft, Video, Monitor,
   Radio, ArrowRight, Check,
-  MessageSquare, AlertTriangle, Megaphone, Settings
+  MessageSquare, AlertTriangle, Megaphone, Settings,
+  Smile, Hand, Circle
 } from 'lucide-react';
 
 interface LiveDemoProps {
@@ -80,6 +81,28 @@ const demoSteps: DemoStep[] = [
   },
   {
     id: 6,
+    title: 'Reactions',
+    description: 'Send emoji reactions during the session. Click the smile icon to pick an emoji — it floats on the video for everyone to see.',
+    icon: <Smile size={14} />,
+    color: 'text-yellow-400',
+    roles: ['admin', 'principal', 'teacher', 'staff'],
+    labels: [
+      { text: 'Reaction Picker', target: '[data-demo="btn-reaction"]', color: 'text-yellow-400', delay: '0.1s' },
+    ],
+  },
+  {
+    id: 7,
+    title: 'Raise Hand',
+    description: 'Need attention? Click the hand icon to raise your hand. It shows an amber highlight so others know you want to speak.',
+    icon: <Hand size={14} />,
+    color: 'text-amber-400',
+    roles: ['admin', 'principal', 'teacher', 'staff'],
+    labels: [
+      { text: 'Raise Hand', target: '[data-demo="btn-hand"]', color: 'text-amber-400', delay: '0.1s' },
+    ],
+  },
+  {
+    id: 8,
     title: 'Emergency Broadcast',
     description: 'Press this button to immediately override ALL campus screens with a red emergency alert. Use only for urgent situations.',
     icon: <AlertTriangle size={14} />,
@@ -90,7 +113,7 @@ const demoSteps: DemoStep[] = [
     ],
   },
   {
-    id: 7,
+    id: 9,
     title: 'Chat Panel',
     description: 'Open the chat panel to send messages. You can message everyone or filter by campus (All / Paete / Pagsanjan).',
     icon: <MessageSquare size={14} />,
@@ -101,7 +124,7 @@ const demoSteps: DemoStep[] = [
     ],
   },
   {
-    id: 8,
+    id: 10,
     title: 'Notifications & Bulletins',
     description: 'Click the bell to view notifications and post bulletins visible to both campuses.',
     icon: <Megaphone size={14} />,
@@ -112,7 +135,18 @@ const demoSteps: DemoStep[] = [
     ],
   },
   {
-    id: 9,
+    id: 11,
+    title: 'Record Meetings',
+    description: 'Admin can record the video session. Click the record button to start — the recording uploads automatically when stopped. Check the Recordings page in the sidebar to view and manage them.',
+    icon: <Circle size={14} />,
+    color: 'text-red-400',
+    roles: ['admin'],
+    labels: [
+      { text: 'Record Button', target: '[data-demo="btn-record"]', color: 'text-red-400', delay: '0.1s' },
+    ],
+  },
+  {
+    id: 12,
     title: 'Online Users',
     description: 'Shows how many users are currently connected. Click to see the full list of online users and their campuses.',
     icon: <Settings size={14} />,
@@ -123,7 +157,7 @@ const demoSteps: DemoStep[] = [
     ],
   },
   {
-    id: 10,
+    id: 13,
     title: 'You\'re All Set!',
     description: 'You now know the essentials. Start communicating between PSBC Paete and PSBC Pagsanjan — in real time.',
     icon: <Check size={14} />,

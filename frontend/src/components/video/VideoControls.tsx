@@ -110,6 +110,7 @@ export function VideoControls({
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-transparent'
             }`}
             title={recordingDisabled ? 'Recording disabled' : recordingUploading ? 'Uploading...' : isRecording ? 'Stop Recording' : 'Start Recording'}
+            data-demo="btn-record"
           >
             {recordingUploading ? (
               <div className="w-3.5 h-3.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />

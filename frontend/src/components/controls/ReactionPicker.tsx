@@ -29,6 +29,7 @@ export function ReactionPicker({ onReact, disabled }: ReactionPickerProps) {
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-transparent'
         }`}
         title="Send reaction"
+        data-demo="btn-reaction"
       >
         <Smile size={14} />
       </button>
