@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { User } from '../../types/user';
@@ -25,7 +25,6 @@ export function UserManagement() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [activeRoleFilter, setActiveRoleFilter] = useState<string>('all');
-  const [animatedUsers, setAnimatedUsers] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const USERS_PER_PAGE = 8;
   const [newUser, setNewUser] = useState({
@@ -67,19 +66,10 @@ export function UserManagement() {
     loadUsers();
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const newAnimated = new Set(users.map(u => u.id));
-      setAnimatedUsers(newAnimated);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [users]);
-
   const loadUsers = async () => {
     try {
       const response = await api.get('/users/');
       setUsers(response.data);
-      setAnimatedUsers(new Set(response.data.map((u: User) => u.id)));
     } catch (error) {
       console.error('Failed to load users:', error);
     }
@@ -459,11 +449,6 @@ export function UserManagement() {
                   paete: 'rgba(34,211,238,0.08)',
                   pagsanjan: 'rgba(168,85,247,0.08)',
                   control_room: 'rgba(59,130,246,0.08)',
-                };
-                const campusBorder: Record<string, string> = {
-                  paete: 'border-cyan-500/20 hover:border-cyan-500/40',
-                  pagsanjan: 'border-purple-500/20 hover:border-purple-500/40',
-                  control_room: 'border-primary-500/20 hover:border-primary-500/40',
                 };
                 const neon: Record<string, string> = {
                   paete: '#22d3ee',
