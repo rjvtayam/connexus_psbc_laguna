@@ -370,10 +370,6 @@ The app will be available at:
 - Backend API: http://localhost:8000
 - API Docs: http://localhost:8000/api/docs
 
-Default admin credentials:
-- Email: `admin@psbc.edu.ph`
-- Password: `admin123`
-
 ---
 
 ## Deployment

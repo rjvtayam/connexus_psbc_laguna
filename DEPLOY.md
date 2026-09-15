@@ -80,7 +80,3 @@
    - Raise hand + reactions
    - Screen sharing
    - Recording (admin only)
-
-## Default Admin Credentials
-- Email: `admin@psbc.edu.ph`
-- Password: (check your database)
