@@ -156,7 +156,7 @@ export function CampusView() {
       <div className="h-full flex flex-col p-2 sm:p-3 md:p-4">
         <header className="flex items-center justify-between gap-2 mb-2 sm:mb-3 md:mb-4">
           <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-wrap">
-            <h1 className="font-orbitron text-lg sm:text-xl md:text-2xl font-bold text-white truncate">Control Room</h1>
+            <h1 className="font-orbitron text-lg sm:text-xl md:text-2xl font-bold text-white truncate">PSBC {campusLabel}</h1>
             <span className="flex items-center gap-1 text-green-400 font-medium text-xs">
               <Wifi size={12} /> <span className="hidden sm:inline">SYSTEM ONLINE</span>
             </span>

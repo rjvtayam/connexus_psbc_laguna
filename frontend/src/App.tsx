@@ -73,7 +73,7 @@ export default function App() {
           <Route
             path="/control-room/settings"
             element={
-              <ProtectedRoute allowedRoles={['principal', 'admin']}>
+              <ProtectedRoute allowedRoles={['principal', 'admin', 'teacher', 'staff']}>
                 <SettingsPage />
               </ProtectedRoute>
             }
