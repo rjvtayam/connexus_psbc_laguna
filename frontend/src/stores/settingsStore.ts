@@ -28,6 +28,7 @@ export interface SettingsState {
   setSelectedMicId: (id: string) => void;
   setSelectedSpeakerId: (id: string) => void;
   loadSettings: () => void;
+  resetSettings: () => void;
   saveSettings: () => void;
   getVideoConstraints: () => MediaTrackConstraints;
   getAudioConstraints: () => MediaTrackConstraints;
@@ -92,6 +93,16 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const saved = loadFromStorage();
     set({ ...defaults, ...saved });
     if (get().darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  },
+
+  resetSettings: () => {
+    localStorage.removeItem('ht-settings');
+    set({ ...defaults });
+    if (defaults.darkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');

@@ -125,7 +125,11 @@ export function SettingsPage() {
         {/* Save */}
         {showSaveButtons && (
           <div className="flex justify-end gap-2">
-            <Button onClick={() => { settings.loadSettings(); }} variant="secondary" size="sm" className="inline-flex items-center whitespace-nowrap">
+            <Button onClick={() => {
+              if (window.confirm('Reset all settings to factory defaults? This cannot be undone.')) {
+                settings.resetSettings();
+              }
+            }} variant="secondary" size="sm" className="inline-flex items-center whitespace-nowrap">
               <RefreshCw size={12} className="mr-1.5" />
               Reset
             </Button>
