@@ -345,63 +345,63 @@ function StatsSection() {
 function FeaturesSection() {
   const features = [
     {
-      icon: <Video size={20} />,
+      icon: <Video size={18} />,
       title: 'Live Video',
       desc: 'Crystal-clear two-way video using WebRTC peer-to-peer with sub-100ms latency.',
       gradient: 'from-blue-500 to-primary-500',
       neon: '#3b82f6',
     },
     {
-      icon: <ScreenShare size={20} />,
+      icon: <ScreenShare size={18} />,
       title: 'Screen Sharing',
       desc: 'Present docs and announcements. Google Meet-style spotlight layout.',
       gradient: 'from-purple-500 to-pink-500',
       neon: '#a855f7',
     },
     {
-      icon: <Mic size={20} />,
+      icon: <Mic size={18} />,
       title: 'Selective Audio',
       desc: 'Talk to Paete, Pagsanjan, or both. Independent audio controls for all.',
       gradient: 'from-cyan-500 to-blue-500',
       neon: '#06b6d4',
     },
     {
-      icon: <MessageSquare size={20} />,
+      icon: <MessageSquare size={18} />,
       title: 'Text Chat',
       desc: 'Real-time messaging with All or Campus-specific channels.',
       gradient: 'from-indigo-500 to-blue-500',
       neon: '#6366f1',
     },
     {
-      icon: <Bell size={20} />,
+      icon: <Bell size={18} />,
       title: 'Emergency',
       desc: 'Override all screens instantly. Campus-scoped or broadcast.',
       gradient: 'from-red-500 to-orange-500',
       neon: '#ef4444',
     },
     {
-      icon: <CircleDot size={20} />,
+      icon: <CircleDot size={18} />,
       title: 'Portal Modes',
       desc: 'LIVE, PORTAL, or IN MEETING — toggle connectivity modes.',
       gradient: 'from-green-500 to-emerald-500',
       neon: '#22c55e',
     },
     {
-      icon: <KeyRound size={20} />,
+      icon: <KeyRound size={18} />,
       title: '2FA Security',
       desc: 'TOTP-based two-factor auth with QR code setup.',
       gradient: 'from-amber-500 to-yellow-500',
       neon: '#f59e0b',
     },
     {
-      icon: <Users size={20} />,
+      icon: <Users size={18} />,
       title: 'Role Access',
       desc: 'Admin, Principal, Teacher, Staff — campus-locked permissions.',
       gradient: 'from-rose-500 to-pink-500',
       neon: '#f43f5e',
     },
     {
-      icon: <Settings size={20} />,
+      icon: <Settings size={18} />,
       title: 'Device Settings',
       desc: 'Camera/mic selection, HD video, echo cancellation, volume control.',
       gradient: 'from-teal-500 to-cyan-500',
@@ -409,126 +409,101 @@ function FeaturesSection() {
     },
   ];
 
-  const count = features.length;
-  const angleStep = 360 / count;
-  const radius = 380;
-
   return (
-    <section className="py-20 relative overflow-hidden">
+    <section className="py-16 sm:py-20 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary-500/5 rounded-full blur-[120px]" />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-        <div className="text-center mb-12">
+        <div className="text-center mb-10 sm:mb-12">
           <span className="text-xs font-semibold text-primary-400 uppercase tracking-widest">Features</span>
-          <h2 className="font-orbitron text-2xl sm:text-3xl md:text-4xl font-bold mt-3 mb-4">
+          <h2 className="font-orbitron text-xl sm:text-2xl md:text-3xl font-bold mt-3 mb-3">
             Everything You Need for{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-cyan-400">
               Campus Communication
             </span>
           </h2>
-          <p className="text-gray-400 max-w-xl mx-auto text-sm mb-20">
+          <p className="text-gray-400 max-w-xl mx-auto text-sm">
             Built specifically for PSBC Paete and PSBC Pagsanjan.
           </p>
         </div>
 
-        {/* 3D Carousel */}
-        <div className="carousel-wrapper relative flex justify-center items-center" style={{ height: '340px', perspective: '900px', perspectiveOrigin: '50% 50%' }}>
-          <div className="carousel-track relative w-[220px] h-[260px]" style={{ transformStyle: 'preserve-3d', animation: 'carousel-spin 28s linear infinite' }}>
-            {features.map((f, i) => (
+        {/* Mobile: Compact grid / Desktop: 3D Carousel */}
+        <div className="md:hidden grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {features.map((f, i) => (
+            <div
+              key={i}
+              className="relative rounded-xl p-3 text-center"
+              style={{
+                background: 'linear-gradient(160deg, rgba(20,27,45,0.97) 0%, rgba(10,15,25,0.99) 100%)',
+                border: `1px solid ${f.neon}25`,
+                boxShadow: `0 0 15px ${f.neon}10, 0 4px 20px rgba(0,0,0,0.5)`,
+              }}
+            >
+              <div className="absolute top-0 left-0 right-0 h-[1px]" style={{ background: `linear-gradient(90deg, transparent, ${f.neon}60, transparent)` }} />
               <div
-                key={i}
-                className="carousel-card absolute top-0 left-0 w-[220px] h-[260px]"
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-white mb-2 mx-auto"
                 style={{
-                  transform: `rotateY(${i * angleStep}deg) translateZ(${radius}px)`,
+                  background: f.neon,
+                  boxShadow: `0 0 12px ${f.neon}30`,
                 }}
               >
-                <div
-                  className="relative rounded-2xl h-full flex flex-col text-center transition-all duration-300 group overflow-hidden"
-                  style={{
-                    background: 'linear-gradient(160deg, rgba(20,27,45,0.97) 0%, rgba(10,15,25,0.99) 100%)',
-                    border: `1.5px solid ${f.neon}35`,
-                    boxShadow: `
-                      0 0 25px ${f.neon}15,
-                      0 12px 40px rgba(0,0,0,0.7),
-                      inset 0 1px 0 rgba(255,255,255,0.04)
-                    `,
-                  }}
-                >
-                  {/* Subtle grid texture */}
-                  <div
-                    className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                    style={{
-                      backgroundImage: `linear-gradient(${f.neon}30 1px, transparent 1px), linear-gradient(90deg, ${f.neon}30 1px, transparent 1px)`,
-                      backgroundSize: '20px 20px',
-                    }}
-                  />
-
-                  {/* Corner accents — top-left & bottom-right */}
-                  <div className="absolute top-0 left-0 w-6 h-6 border-t-[1.5px] border-l-[1.5px] rounded-tl-2xl pointer-events-none" style={{ borderColor: `${f.neon}60` }} />
-                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-[1.5px] border-r-[1.5px] rounded-br-2xl pointer-events-none" style={{ borderColor: `${f.neon}40` }} />
-
-                  {/* Top edge neon line */}
-                  <div className="absolute top-0 left-0 right-0 h-[1.5px]" style={{ background: `linear-gradient(90deg, transparent, ${f.neon}80, transparent)` }} />
-
-                  {/* Bottom edge neon line */}
-                  <div className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: `linear-gradient(90deg, transparent, ${f.neon}40, transparent)` }} />
-
-                  {/* Animated shine sweep on hover */}
-                  <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-                    <div
-                      className="absolute -top-full -left-full w-[200%] h-[200%] opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-                      style={{
-                        background: `linear-gradient(135deg, transparent 30%, ${f.neon}08 45%, ${f.neon}15 50%, ${f.neon}08 55%, transparent 70%)`,
-                        animation: 'none',
-                      }}
-                    />
-                  </div>
-
-                  {/* Number badge */}
-                  <div className="absolute top-3 right-3">
-                    <span
-                      className="text-[9px] font-orbitron font-bold px-1.5 py-0.5 rounded-md"
-                      style={{
-                        background: `${f.neon}15`,
-                        color: `${f.neon}`,
-                        border: `1px solid ${f.neon}25`,
-                      }}
-                    >
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                  </div>
-
-                  {/* Icon container with solid neon bg */}
-                  <div className="flex-1 flex flex-col items-center justify-center px-4 pt-3 pb-1">
-                    <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300 relative"
-                      style={{
-                        background: f.neon,
-                        boxShadow: `0 0 20px ${f.neon}40, 0 4px 12px rgba(0,0,0,0.3)`,
-                      }}
-                    >
-                      <span className="relative z-10">{f.icon}</span>
-                    </div>
-
-                    {/* Title with neon underline */}
-                    <h3 className="font-orbitron text-[11px] font-bold text-white mb-1.5 tracking-wide">
-                      {f.title}
-                    </h3>
-                    <div className="w-8 h-[1px] rounded-full mb-2.5" style={{ background: `linear-gradient(90deg, transparent, ${f.neon}60, transparent)` }} />
-
-                    {/* Description */}
-                    <p className="text-[10px] text-gray-400 leading-relaxed">{f.desc}</p>
-                  </div>
-
-                  {/* Bottom glow dot */}
-                  <div className="flex justify-center pb-2 mt-auto">
-                    <div
-                      className="w-1.5 h-1.5 rounded-full animate-pulse"
-                      style={{ background: f.neon, boxShadow: `0 0 8px ${f.neon}` }}
-                    />
-                  </div>
-                </div>
+                <span className="relative z-10">{f.icon}</span>
               </div>
-            ))}
+              <h3 className="font-orbitron text-[10px] font-bold text-white mb-1">{f.title}</h3>
+              <p className="text-[9px] text-gray-400 leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: 3D Carousel */}
+        <div className="hidden md:block">
+          <div className="carousel-wrapper relative flex justify-center items-center" style={{ height: '340px', perspective: '900px', perspectiveOrigin: '50% 50%' }}>
+            <div className="carousel-track relative w-[200px] h-[240px]" style={{ transformStyle: 'preserve-3d', animation: 'carousel-spin 28s linear infinite' }}>
+              {features.map((f, i) => {
+                const count = features.length;
+                const angleStep = 360 / count;
+                const radius = 340;
+                return (
+                  <div
+                    key={i}
+                    className="carousel-card absolute top-0 left-0 w-[200px] h-[240px]"
+                    style={{
+                      transform: `rotateY(${i * angleStep}deg) translateZ(${radius}px)`,
+                    }}
+                  >
+                    <div
+                      className="relative rounded-2xl h-full flex flex-col text-center transition-all duration-300 group overflow-hidden"
+                      style={{
+                        background: 'linear-gradient(160deg, rgba(20,27,45,0.97) 0%, rgba(10,15,25,0.99) 100%)',
+                        border: `1.5px solid ${f.neon}35`,
+                        boxShadow: `0 0 25px ${f.neon}15, 0 12px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)`,
+                      }}
+                    >
+                      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `linear-gradient(${f.neon}30 1px, transparent 1px), linear-gradient(90deg, ${f.neon}30 1px, transparent 1px)`, backgroundSize: '20px 20px' }} />
+                      <div className="absolute top-0 left-0 w-6 h-6 border-t-[1.5px] border-l-[1.5px] rounded-tl-2xl pointer-events-none" style={{ borderColor: `${f.neon}60` }} />
+                      <div className="absolute bottom-0 right-0 w-6 h-6 border-b-[1.5px] border-r-[1.5px] rounded-br-2xl pointer-events-none" style={{ borderColor: `${f.neon}40` }} />
+                      <div className="absolute top-0 left-0 right-0 h-[1.5px]" style={{ background: `linear-gradient(90deg, transparent, ${f.neon}80, transparent)` }} />
+                      <div className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: `linear-gradient(90deg, transparent, ${f.neon}40, transparent)` }} />
+                      <div className="absolute top-3 right-3">
+                        <span className="text-[9px] font-orbitron font-bold px-1.5 py-0.5 rounded-md" style={{ background: `${f.neon}15`, color: `${f.neon}`, border: `1px solid ${f.neon}25` }}>
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-3 pb-1">
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform duration-300" style={{ background: f.neon, boxShadow: `0 0 20px ${f.neon}40, 0 4px 12px rgba(0,0,0,0.3)` }}>
+                          <span className="relative z-10">{f.icon}</span>
+                        </div>
+                        <h3 className="font-orbitron text-[11px] font-bold text-white mb-1.5 tracking-wide">{f.title}</h3>
+                        <div className="w-8 h-[1px] rounded-full mb-2" style={{ background: `linear-gradient(90deg, transparent, ${f.neon}60, transparent)` }} />
+                        <p className="text-[10px] text-gray-400 leading-relaxed">{f.desc}</p>
+                      </div>
+                      <div className="flex justify-center pb-2 mt-auto">
+                        <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: f.neon, boxShadow: `0 0 8px ${f.neon}` }} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
