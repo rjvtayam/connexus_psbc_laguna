@@ -159,13 +159,10 @@ export function Login() {
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Campus</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <Building2 size={16} className="text-gray-500" />
-                    </div>
                     <button
                       type="button"
                       onClick={() => setShowCampusDropdown(!showCampusDropdown)}
-                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl pl-10 pr-4 py-3 text-white text-sm text-left focus:outline-none focus:ring-2 focus:ring-primary-500/40 transition-all duration-300 cursor-pointer flex items-center justify-between"
+                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl px-4 py-3 text-white text-sm text-left focus:outline-none focus:ring-2 focus:ring-primary-500/40 transition-all duration-300 cursor-pointer flex items-center justify-between"
                     >
                       <span className="flex items-center gap-2.5">
                         {campus === 'paete' && <Building2 size={14} className="text-blue-400" />}
