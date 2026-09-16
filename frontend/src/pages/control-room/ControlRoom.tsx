@@ -417,9 +417,18 @@ export function ControlRoom() {
               )}
               {!myCampus || myCampus === 'control_room' ? (
                 <>
-                  <TalkButton target="paete" isActive={activeTalkTarget === 'paete'} onClick={() => handleTalkTo('paete')} disabled={portalMode} compact />
-                  <TalkButton target="pagsanjan" isActive={activeTalkTarget === 'pagsanjan'} onClick={() => handleTalkTo('pagsanjan')} disabled={portalMode} compact />
-                  <TalkButton target="both" isActive={activeTalkTarget === 'both'} onClick={() => handleTalkTo('both')} disabled={portalMode} compact />
+                  <div className="flex flex-col items-center gap-0.5">
+                    <TalkButton target="paete" isActive={activeTalkTarget === 'paete'} onClick={() => handleTalkTo('paete')} disabled={portalMode} compact />
+                    <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">PAE</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <TalkButton target="pagsanjan" isActive={activeTalkTarget === 'pagsanjan'} onClick={() => handleTalkTo('pagsanjan')} disabled={portalMode} compact />
+                    <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">PAG</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <TalkButton target="both" isActive={activeTalkTarget === 'both'} onClick={() => handleTalkTo('both')} disabled={portalMode} compact />
+                    <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">ALL</span>
+                  </div>
                 </>
               ) : null}
             </div>
@@ -446,7 +455,7 @@ export function ControlRoom() {
                 onToggleRecording={isAdmin ? (isRecording ? stopRecording : startRecording) : undefined}
                 recordingDisabled={!isAdmin || (isAdmin && portalMode)}
               />
-              <EmergencyButton onClick={() => setShowEmergencyConfirm(true)} onDismiss={() => { emit('emergency_dismiss'); }} disabled={portalMode} compact />
+              <EmergencyButton onClick={() => setShowEmergencyConfirm(true)} onDismiss={() => { emit('emergency_dismiss'); }} disabled={portalMode} />
             </div>
           </div>
         </div>

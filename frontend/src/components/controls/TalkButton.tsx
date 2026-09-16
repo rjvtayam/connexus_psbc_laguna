@@ -38,7 +38,7 @@ export function TalkButton({ target, isActive, onClick, disabled, compact }: Tal
       <button
         onClick={onClick}
         disabled={disabled}
-        className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-[10px] sm:text-xs font-medium transition-all duration-200 ${
+        className={`flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg transition-all duration-200 ${
           disabled
             ? 'bg-gray-800 text-gray-600 border border-gray-700/30 cursor-not-allowed opacity-50'
             : isActive
@@ -48,9 +48,9 @@ export function TalkButton({ target, isActive, onClick, disabled, compact }: Tal
         title={disabled ? 'Disabled during Live Portal' : labels[target]}
       >
         {isActive ? (
-          <Mic size={12} className={activeIconColor[target]} />
+          <Mic size={12} className={`sm:w-3.5 sm:h-3.5 ${activeIconColor[target]}`} />
         ) : (
-          <MicOff size={12} className={disabled ? 'text-gray-600' : 'text-gray-500'} />
+          <MicOff size={12} className={`sm:w-3.5 sm:h-3.5 ${disabled ? 'text-gray-600' : 'text-gray-500'}`} />
         )}
       </button>
     );

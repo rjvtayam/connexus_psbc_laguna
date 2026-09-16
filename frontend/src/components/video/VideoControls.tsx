@@ -100,7 +100,7 @@ export function VideoControls({
           <button
             onClick={onToggleRecording}
             disabled={recordingDisabled || recordingUploading}
-            className={`flex items-center justify-center gap-1.5 h-7 sm:h-9 px-1.5 sm:px-2.5 rounded-lg transition-all duration-200 ${
+            className={`flex items-center justify-center gap-1.5 w-7 h-7 sm:w-9 sm:h-9 rounded-lg transition-all duration-200 ${
               recordingDisabled
                 ? 'bg-gray-800 text-gray-600 border border-gray-700/30 cursor-not-allowed opacity-50'
                 : recordingUploading

@@ -21,7 +21,7 @@ export function RaiseHandButton({ isRaised, onToggle, disabled }: RaiseHandButto
       title={isRaised ? 'Lower hand' : 'Raise hand'}
       data-demo="btn-hand"
     >
-      <Hand size={14} className={isRaised ? 'fill-amber-400' : ''} />
+      <Hand size={13} className={`sm:w-3.5 sm:h-3.5 ${isRaised ? 'fill-amber-400' : ''}`} />
     </button>
   );
 }

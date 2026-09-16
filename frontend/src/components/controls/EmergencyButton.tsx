@@ -8,10 +8,9 @@ interface EmergencyButtonProps {
   onClick: () => void;
   onDismiss?: () => void;
   disabled?: boolean;
-  compact?: boolean;
 }
 
-export function EmergencyButton({ onClick, onDismiss, disabled, compact }: EmergencyButtonProps) {
+export function EmergencyButton({ onClick, onDismiss, disabled }: EmergencyButtonProps) {
   const { isEmergency, emergencyTriggeredBySid } = useSessionStore();
   const { user } = useAuthStore();
   const mySid = useSocket().socket?.id;
@@ -22,11 +21,9 @@ export function EmergencyButton({ onClick, onDismiss, disabled, compact }: Emerg
     return (
       <button
         onClick={onDismiss}
-        className="flex items-center gap-1.5 font-bold py-1.5 px-2.5 sm:px-3 rounded-lg text-xs transition-colors duration-200 bg-white/15 hover:bg-white/25 text-white border border-white/20"
+        className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg font-bold transition-colors duration-200 bg-white/15 hover:bg-white/25 text-white border border-white/20"
       >
-        <X size={13} />
-        <span className={compact ? 'hidden sm:inline' : ''}>{compact ? 'Dismiss' : 'Dismiss'}</span>
-        {compact && <span className="sm:hidden"><X size={13} /></span>}
+        <X size={13} className="sm:w-3.5 sm:h-3.5" />
       </button>
     );
   }
@@ -36,15 +33,14 @@ export function EmergencyButton({ onClick, onDismiss, disabled, compact }: Emerg
       onClick={onClick}
       disabled={disabled || isEmergency}
       data-demo="btn-emergency"
-      className={`flex items-center gap-1.5 font-bold py-1.5 px-2.5 sm:px-3 rounded-lg text-xs transition-colors duration-200 ${
+      className={`flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg transition-colors duration-200 ${
         disabled || isEmergency
           ? 'bg-gray-800 text-gray-600 border border-gray-700/30 cursor-not-allowed opacity-50'
           : 'bg-red-600 hover:bg-red-700 text-white'
       }`}
       title={disabled ? 'Disabled during Live Portal' : isEmergency ? 'Emergency already active' : 'Emergency Broadcast'}
     >
-      <AlertTriangle size={13} />
-      {!compact && 'Emergency'}
+      <AlertTriangle size={13} className="sm:w-3.5 sm:h-3.5" />
     </button>
   );
 }

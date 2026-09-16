@@ -31,7 +31,7 @@ export function ReactionPicker({ onReact, disabled }: ReactionPickerProps) {
         title="Send reaction"
         data-demo="btn-reaction"
       >
-        <Smile size={14} />
+        <Smile size={13} className="sm:w-3.5 sm:h-3.5" />
       </button>
       {isOpen && (
         <>

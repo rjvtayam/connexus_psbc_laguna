@@ -344,13 +344,16 @@ export function CampusView() {
                 <span className="opacity-60 hidden sm:inline">Campus :</span> <span className="font-bold">{campusLabel}</span>
               </span>
               <div data-demo="portal-toggle"><PortalToggle compact /></div>
-              <TalkButton
-                target={oppositeCampus}
-                isActive={activeTalkTarget === oppositeCampus}
-                onClick={handleTalkToggle}
-                disabled={portalMode}
-                compact
-              />
+              <div className="flex flex-col items-center gap-0.5">
+                <TalkButton
+                  target={oppositeCampus}
+                  isActive={activeTalkTarget === oppositeCampus}
+                  onClick={handleTalkToggle}
+                  disabled={portalMode}
+                  compact
+                />
+                <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">{oppositeCampus === 'paete' ? 'PAE' : 'PAG'}</span>
+              </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-end">
               <VideoControls
@@ -370,7 +373,7 @@ export function CampusView() {
                 reactionDisabled={portalMode}
               />
               {user?.role === 'principal' && (
-                <EmergencyButton onClick={() => setShowEmergencyConfirm(true)} onDismiss={() => { emit('emergency_dismiss'); }} disabled={portalMode} compact />
+                <EmergencyButton onClick={() => setShowEmergencyConfirm(true)} onDismiss={() => { emit('emergency_dismiss'); }} disabled={portalMode} />
               )}
             </div>
           </div>
