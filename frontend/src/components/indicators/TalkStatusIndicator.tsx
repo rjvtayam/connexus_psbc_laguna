@@ -1,4 +1,4 @@
-import { Mic, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { useSessionStore } from '../../stores/sessionStore';
 
 export function TalkStatusIndicator() {

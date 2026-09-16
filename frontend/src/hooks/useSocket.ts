@@ -215,7 +215,7 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
     pushNotification({
       title: data.accepted ? 'Talk Accepted' : 'Talk Rejected',
       message: `${data.responder_name} (${data.responder_campus}) ${data.accepted ? 'accepted' : 'rejected'} your talk request`,
-      type: data.accepted ? 'info' : 'warning',
+      type: data.accepted ? 'info' : 'emergency',
       created_by: data.responder_name,
     });
     setTimeout(() => {

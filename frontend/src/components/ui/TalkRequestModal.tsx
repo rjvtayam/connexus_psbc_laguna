@@ -1,4 +1,4 @@
-import { Mic, MicOff, X } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
 import { useSocket } from '../../hooks/useSocket';
 import { useSessionStore } from '../../stores/sessionStore';
 

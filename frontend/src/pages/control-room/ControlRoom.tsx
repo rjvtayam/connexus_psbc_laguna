@@ -24,6 +24,7 @@ import { MicTalkingIndicator } from '../../components/indicators/MicTalkingIndic
 import { WelcomeToast } from '../../components/demo/WelcomeToast';
 import { LiveDemo } from '../../components/demo/LiveDemo';
 import { TalkStatusIndicator } from '../../components/indicators/TalkStatusIndicator';
+import { TalkRequestModal } from '../../components/ui/TalkRequestModal';
 
 export function ControlRoom() {
   const roomId = ROOMS.MAIN;
