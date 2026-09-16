@@ -128,13 +128,7 @@ export function ControlRoom() {
   const handleTalkTo = (target: 'paete' | 'pagsanjan' | 'both') => {
     setActiveTalkTarget((prev) => {
       const next = prev === target ? null : target;
-      if (next === 'both') {
-        setTalkTarget('both');
-        setLocalMicActive(true);
-      } else {
-        setTalkTarget(next);
-        setLocalMicActive(!!next);
-      }
+      setTalkTarget(next);
       return next;
     });
   };
