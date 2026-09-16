@@ -638,6 +638,88 @@ async def talk_to(sid, data):
 
 
 @sio.event
+async def talk_request(sid, data):
+    try:
+        session = await sio.get_session(sid)
+    except (KeyError, Exception):
+        return
+
+    target_campus = data.get("target_campus")
+    room_id = session.get("current_room")
+    campus = session.get("campus")
+    full_name = session.get("full_name")
+    role = session.get("role")
+    if not room_id or not target_campus:
+        return
+
+    targets = [target_campus] if target_campus != "both" else ["paete", "pagsanjan"]
+    print(f"[Backend] talk_request: {full_name} ({campus}) -> {targets}")
+
+    for member_sid in list(room_members.get(room_id, set())):
+        try:
+            member_session = await sio.get_session(member_sid)
+            member_campus = member_session.get("campus")
+            if member_campus in targets and member_sid != sid:
+                await sio.emit("talk_request_received", {
+                    "from_sid": sid,
+                    "from_name": full_name,
+                    "from_campus": campus,
+                    "from_role": role,
+                    "target_campus": target_campus,
+                }, room=member_sid)
+        except Exception:
+            pass
+
+
+@sio.event
+async def talk_request_accept(sid, data):
+    try:
+        session = await sio.get_session(sid)
+    except (KeyError, Exception):
+        return
+
+    from_sid = data.get("from_sid")
+    room_id = session.get("current_room")
+    full_name = session.get("full_name")
+    campus = session.get("campus")
+    if not room_id or not from_sid:
+        return
+
+    print(f"[Backend] talk_request_accept: {full_name} ({campus}) accepted from {from_sid}")
+    await sio.emit("talk_request_response", {
+        "from_sid": from_sid,
+        "responder_sid": sid,
+        "responder_name": full_name,
+        "responder_campus": campus,
+        "accepted": True,
+    }, room=from_sid)
+
+
+@sio.event
+async def talk_request_reject(sid, data):
+    try:
+        session = await sio.get_session(sid)
+    except (KeyError, Exception):
+        return
+
+    from_sid = data.get("from_sid")
+    room_id = session.get("current_room")
+    full_name = session.get("full_name")
+    campus = session.get("campus")
+    if not room_id or not from_sid:
+        return
+
+    print(f"[Backend] talk_request_reject: {full_name} ({campus}) rejected from {from_sid}")
+    await sio.emit("talk_request_response", {
+        "from_sid": from_sid,
+        "responder_sid": sid,
+        "responder_name": full_name,
+        "responder_campus": campus,
+        "accepted": False,
+    }, room=from_sid)
+
+
+@sio.event
 async def portal_mode_changed(sid, data):
     try:
         session = await sio.get_session(sid)

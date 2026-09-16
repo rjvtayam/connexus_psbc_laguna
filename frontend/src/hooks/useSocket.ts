@@ -198,6 +198,31 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
     useSessionStore.getState().addFloatingReaction(data.sid, data.emoji);
   });
 
+  socket.on('talk_request_received', (data) => {
+    console.log('[Socket] talk_request_received:', data.from_name, '->', data.target_campus);
+    useSessionStore.getState().setTalkRequest(data);
+    pushNotification({
+      title: 'Talk Request',
+      message: `${data.from_name} (${data.from_role}) wants to talk to ${data.target_campus === 'both' ? 'both campuses' : data.target_campus}`,
+      type: 'info',
+      created_by: data.from_name,
+    });
+  });
+
+  socket.on('talk_request_response', (data) => {
+    console.log('[Socket] talk_request_response:', data.responder_name, data.accepted ? 'accepted' : 'rejected');
+    useSessionStore.getState().setTalkResponseStatus(data.accepted ? 'accepted' : 'rejected', data.responder_name);
+    pushNotification({
+      title: data.accepted ? 'Talk Accepted' : 'Talk Rejected',
+      message: `${data.responder_name} (${data.responder_campus}) ${data.accepted ? 'accepted' : 'rejected'} your talk request`,
+      type: data.accepted ? 'info' : 'warning',
+      created_by: data.responder_name,
+    });
+    setTimeout(() => {
+      useSessionStore.getState().clearTalkRequest();
+    }, 4000);
+  });
+
   socket.on('bulletin_new', (data) => {
     console.log('[Socket] bulletin_new:', data.title);
     useSessionStore.getState().incrementNotification();

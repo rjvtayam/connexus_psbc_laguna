@@ -35,6 +35,9 @@ interface SessionState {
   raisedHands: Record<string, boolean>;
   floatingReactions: Array<{ id: number; sid: string; emoji: string; x: number }>;
   screenSharerSid: string | null;
+  talkRequest: { from_sid: string; from_name: string; from_campus: string; from_role: string; target_campus: string } | null;
+  talkResponseStatus: 'idle' | 'pending' | 'accepted' | 'rejected';
+  talkResponderName: string | null;
   chatMessages: ChatMessage[];
   unreadAllCount: number;
   unreadCampusCount: number;
@@ -55,6 +58,9 @@ interface SessionState {
   setRemoteAudioMuted: (sid: string, muted: boolean) => void;
   setRaisedHand: (sid: string, raised: boolean) => void;
   clearRaisedHands: () => void;
+  setTalkRequest: (request: SessionState['talkRequest']) => void;
+  setTalkResponseStatus: (status: SessionState['talkResponseStatus'], responderName?: string) => void;
+  clearTalkRequest: () => void;
   addFloatingReaction: (sid: string, emoji: string) => void;
   removeFloatingReaction: (id: number) => void;
   setScreenSharer: (sid: string | null) => void;
@@ -89,6 +95,9 @@ export const useSessionStore = create<SessionState>((set) => ({
   raisedHands: {},
   floatingReactions: [],
   screenSharerSid: null,
+  talkRequest: null,
+  talkResponseStatus: 'idle',
+  talkResponderName: null,
   chatMessages: [],
   unreadAllCount: 0,
   unreadCampusCount: 0,
@@ -152,6 +161,12 @@ export const useSessionStore = create<SessionState>((set) => ({
     })),
 
   clearRaisedHands: () => set({ raisedHands: {} }),
+
+  setTalkRequest: (request) => set({ talkRequest: request }),
+
+  setTalkResponseStatus: (status, responderName) => set({ talkResponseStatus: status, talkResponderName: responderName || null }),
+
+  clearTalkRequest: () => set({ talkRequest: null, talkResponseStatus: 'idle', talkResponderName: null }),
 
   addFloatingReaction: (sid, emoji) =>
     set((state) => {

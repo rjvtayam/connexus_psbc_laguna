@@ -23,6 +23,7 @@ import { PortalStatusIndicator } from '../../components/indicators/PortalStatusI
 import { MicTalkingIndicator } from '../../components/indicators/MicTalkingIndicator';
 import { WelcomeToast } from '../../components/demo/WelcomeToast';
 import { LiveDemo } from '../../components/demo/LiveDemo';
+import { TalkStatusIndicator } from '../../components/indicators/TalkStatusIndicator';
 
 export function ControlRoom() {
   const roomId = ROOMS.MAIN;
@@ -48,6 +49,13 @@ export function ControlRoom() {
   const mySid = useSocket().socket?.id;
   const isAdmin = user?.role === 'admin';
   const { setTalkTarget, setLocalMicActive } = usePeerStore();
+  const talkResponseStatus = useSessionStore((s) => s.talkResponseStatus);
+
+  useEffect(() => {
+    if (talkResponseStatus === 'accepted' && activeTalkTarget) {
+      setTalkTarget(activeTalkTarget);
+    }
+  }, [talkResponseStatus, activeTalkTarget, setTalkTarget]);
 
   useEffect(() => {
     const pending = localStorage.getItem('pending_live_demo');
@@ -128,7 +136,13 @@ export function ControlRoom() {
   const handleTalkTo = (target: 'paete' | 'pagsanjan' | 'both') => {
     setActiveTalkTarget((prev) => {
       const next = prev === target ? null : target;
-      setTalkTarget(next);
+      if (next) {
+        emit('talk_request', { target_campus: next });
+        useSessionStore.getState().setTalkResponseStatus('pending');
+      } else {
+        useSessionStore.getState().clearTalkRequest();
+        setTalkTarget(null);
+      }
       return next;
     });
   };
@@ -202,6 +216,7 @@ export function ControlRoom() {
                 <span className="hidden sm:inline">UPLOAD FAILED</span>
               </span>
             )}
+            <div className="hidden md:flex"><TalkStatusIndicator /></div>
           </div>
           <div className="flex items-center gap-0.5 sm:gap-1.5 flex-shrink-0">
             <div className="relative" ref={onlinePanelRef}>
@@ -483,6 +498,7 @@ export function ControlRoom() {
 
       <ActivityToast />
       <NotificationToast />
+      <TalkRequestModal />
     </DashboardLayout>
   );
 }

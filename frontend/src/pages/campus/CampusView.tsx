@@ -23,6 +23,7 @@ import { PortalStatusIndicator } from '../../components/indicators/PortalStatusI
 import { MicTalkingIndicator } from '../../components/indicators/MicTalkingIndicator';
 import { WelcomeToast } from '../../components/demo/WelcomeToast';
 import { LiveDemo } from '../../components/demo/LiveDemo';
+import { TalkRequestModal } from '../../components/ui/TalkRequestModal';
 
 export function CampusView() {
   const { campusName } = useParams<{ campusName: string }>();
@@ -421,6 +422,7 @@ export function CampusView() {
 
       <ActivityToast />
       <NotificationToast />
+      <TalkRequestModal />
     </DashboardLayout>
   );
 }
