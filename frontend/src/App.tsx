@@ -14,9 +14,9 @@ import { UserManagement } from './pages/admin/UserManagement';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30 * 1000,       // 30s — data considered fresh
-      gcTime: 5 * 60 * 1000,      // 5min — garbage collect unused data
-      refetchOnWindowFocus: true,  // refetch when tab gets focus
+      staleTime: 60 * 1000,       // 60s — data considered fresh
+      gcTime: 10 * 60 * 1000,     // 10min — garbage collect unused data
+      refetchOnWindowFocus: false, // don't refetch on focus (backend caches)
       refetchOnReconnect: true,    // refetch when network reconnects
       retry: 1,                    // retry failed requests once
       throwOnError: false,         // don't throw, let components handle errors

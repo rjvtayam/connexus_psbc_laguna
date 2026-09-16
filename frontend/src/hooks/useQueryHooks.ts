@@ -26,7 +26,7 @@ export function useUsers() {
       const { data } = await api.get('/users/');
       return data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
   });
 }
 
@@ -37,7 +37,7 @@ export function useUsersByCampus(campus: string) {
       const { data } = await api.get(`/users/by-campus/${campus}`);
       return data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 60 * 1000,
     enabled: !!campus,
   });
 }
@@ -50,7 +50,7 @@ export function useSessions() {
       const { data } = await api.get('/sessions/');
       return data;
     },
-    staleTime: 15 * 1000,
+    staleTime: 30 * 1000,
   });
 }
 
@@ -61,7 +61,7 @@ export function useActiveSession() {
       const { data } = await api.get('/sessions/active');
       return data;
     },
-    staleTime: 15 * 1000,
+    staleTime: 30 * 1000,
     retry: false,
   });
 }
@@ -75,7 +75,7 @@ export function useAnnouncements(campus?: string) {
       const { data } = await api.get(`/announcements/${params}`);
       return data;
     },
-    staleTime: 60 * 1000,
+    staleTime: 120 * 1000,
   });
 }
 
@@ -87,8 +87,8 @@ export function useNotifications() {
       const { data } = await api.get('/notifications');
       return data;
     },
-    staleTime: 15 * 1000,
-    refetchInterval: 30 * 1000, // poll every 30s for new notifications
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
   });
 }
 
@@ -99,7 +99,7 @@ export function useUnreadCount() {
       const { data } = await api.get('/notifications/unread-count');
       return data.count;
     },
-    staleTime: 15 * 1000,
+    staleTime: 30 * 1000,
     refetchInterval: 30 * 1000,
   });
 }
@@ -112,7 +112,7 @@ export function useProfile() {
       const { data } = await api.get('/profile/me');
       return data;
     },
-    staleTime: 60 * 1000,
+    staleTime: 120 * 1000,
   });
 }
 

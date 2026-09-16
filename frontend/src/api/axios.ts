@@ -6,6 +6,7 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Connection': 'keep-alive',
   },
   withCredentials: true,
 });
@@ -14,6 +15,10 @@ api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (config.method === 'get') {
+    config.headers['Cache-Control'] = 'no-cache';
+    config.headers['Pragma'] = 'no-cache';
   }
   return config;
 });

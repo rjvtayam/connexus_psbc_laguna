@@ -8,7 +8,7 @@ from app.api.v1.router import api_router
 from app.middleware.cors import setup_cors
 from app.middleware.rate_limit import limiter
 from app.signaling.events import sio
-from app.database import engine
+from app.database import engine, warmup_db
 
 
 def create_app() -> FastAPI:
@@ -43,6 +43,10 @@ def create_app() -> FastAPI:
         except Exception:
             db_status = "disconnected"
         return {"status": "healthy" if db_status == "connected" else "degraded", "database": db_status, "service": "here-to-there"}
+
+    @app.on_event("startup")
+    def startup():
+        warmup_db()
 
     @app.on_event("shutdown")
     def shutdown():

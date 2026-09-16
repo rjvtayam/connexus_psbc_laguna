@@ -4,6 +4,7 @@ from uuid import UUID
 from datetime import datetime
 from app.models.session import VideoSession, SessionParticipant
 from app.schemas.session import SessionCreate
+from app.services.cache import get_session_cache, invalidate
 
 
 class SessionService:
@@ -19,16 +20,36 @@ class SessionService:
         self.db.add(session)
         self.db.commit()
         self.db.refresh(session)
+        invalidate(get_session_cache())
         return session
 
     def get_active_session(self) -> Optional[VideoSession]:
-        return self.db.query(VideoSession).filter(VideoSession.status == "active").first()
+        cache = get_session_cache()
+        key = "session:active"
+        if key in cache:
+            return cache[key]
+        result = self.db.query(VideoSession).filter(VideoSession.status == "active").first()
+        cache[key] = result
+        return result
 
     def get_session_by_id(self, session_id: UUID) -> Optional[VideoSession]:
-        return self.db.query(VideoSession).filter(VideoSession.id == session_id).first()
+        cache = get_session_cache()
+        key = f"session:{session_id}"
+        if key in cache:
+            return cache[key]
+        result = self.db.query(VideoSession).filter(VideoSession.id == session_id).first()
+        if result:
+            cache[key] = result
+        return result
 
     def get_all_sessions(self, limit: int = 50) -> List[VideoSession]:
-        return self.db.query(VideoSession).order_by(VideoSession.created_at.desc()).limit(limit).all()
+        cache = get_session_cache()
+        key = f"session:list:{limit}"
+        if key in cache:
+            return cache[key]
+        result = self.db.query(VideoSession).order_by(VideoSession.created_at.desc()).limit(limit).all()
+        cache[key] = result
+        return result
 
     def join_session(self, session_id: UUID, user_id: UUID) -> SessionParticipant:
         existing = self.db.query(SessionParticipant).filter(
@@ -47,6 +68,7 @@ class SessionService:
         self.db.add(participant)
         self.db.commit()
         self.db.refresh(participant)
+        invalidate(get_session_cache())
         return participant
 
     def leave_session(self, session_id: UUID, user_id: UUID) -> bool:
@@ -59,6 +81,7 @@ class SessionService:
         if participant:
             participant.left_at = datetime.utcnow()
             self.db.commit()
+            invalidate(get_session_cache())
             return True
         return False
 
@@ -71,4 +94,5 @@ class SessionService:
         session.ended_at = datetime.utcnow()
         self.db.commit()
         self.db.refresh(session)
+        invalidate(get_session_cache())
         return session
