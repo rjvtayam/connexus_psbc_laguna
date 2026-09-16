@@ -22,27 +22,27 @@ export function TalkButton({ target, isActive, onClick, disabled, compact }: Tal
   };
 
   const activeStyles = {
-    paete: 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 shadow-lg shadow-cyan-500/10',
-    pagsanjan: 'bg-purple-500/20 border border-purple-500/40 text-purple-400 shadow-lg shadow-purple-500/10',
-    both: 'bg-primary-500/20 border border-primary-500/40 text-primary-400 shadow-lg shadow-primary-500/10',
+    paete: 'bg-blue-500 border border-blue-400 text-white shadow-lg shadow-blue-500/30',
+    pagsanjan: 'bg-purple-500 border border-purple-400 text-white shadow-lg shadow-purple-500/30',
+    both: 'bg-orange-500 border border-orange-400 text-white shadow-lg shadow-orange-500/30',
   };
 
   const inactiveStyles = {
-    paete: 'bg-cyan-500/8 border border-cyan-500/15 text-cyan-400/60 hover:bg-cyan-500/15 hover:border-cyan-500/25',
-    pagsanjan: 'bg-purple-500/8 border border-purple-500/15 text-purple-400/60 hover:bg-purple-500/15 hover:border-purple-500/25',
-    both: 'bg-primary-500/8 border border-primary-500/15 text-primary-400/60 hover:bg-primary-500/15 hover:border-primary-500/25',
+    paete: 'bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30',
+    pagsanjan: 'bg-purple-500/20 border border-purple-500/40 text-purple-400 hover:bg-purple-500/30',
+    both: 'bg-orange-500/20 border border-orange-500/40 text-orange-400 hover:bg-orange-500/30',
   };
 
   const activeIconColor = {
-    paete: 'text-cyan-400',
-    pagsanjan: 'text-purple-400',
-    both: 'text-primary-400',
+    paete: 'text-white',
+    pagsanjan: 'text-white',
+    both: 'text-white',
   };
 
   const inactiveIconColor = {
-    paete: 'text-cyan-400/50',
-    pagsanjan: 'text-purple-400/50',
-    both: 'text-primary-400/50',
+    paete: 'text-blue-400',
+    pagsanjan: 'text-purple-400',
+    both: 'text-orange-400',
   };
 
   if (compact) {
