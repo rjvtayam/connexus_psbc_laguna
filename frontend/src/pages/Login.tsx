@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Eye, EyeOff, Loader2, Wifi, Monitor, Shield, ArrowRight, Zap, Building2, KeyRound } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Wifi, Monitor, Shield, ArrowRight, Zap, Building2, KeyRound, ChevronDown } from 'lucide-react';
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [campus, setCampus] = useState<'paete' | 'pagsanjan' | 'control_room'>('paete');
+  const [showCampusDropdown, setShowCampusDropdown] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -161,20 +162,51 @@ export function Login() {
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                       <Building2 size={16} className="text-gray-500" />
                     </div>
-                    <select
-                      value={campus}
-                      onChange={(e) => setCampus(e.target.value as 'paete' | 'pagsanjan' | 'control_room')}
-                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl pl-10 pr-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40 transition-all duration-300 appearance-none cursor-pointer"
+                    <button
+                      type="button"
+                      onClick={() => setShowCampusDropdown(!showCampusDropdown)}
+                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl pl-10 pr-4 py-3 text-white text-sm text-left focus:outline-none focus:ring-2 focus:ring-primary-500/40 transition-all duration-300 cursor-pointer flex items-center justify-between"
                     >
-                      <option value="paete">PSBC Paete</option>
-                      <option value="pagsanjan">PSBC Pagsanjan</option>
-                      <option value="control_room">Control Room (Admin)</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                      <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                      </svg>
-                    </div>
+                      <span className="flex items-center gap-2.5">
+                        {campus === 'paete' && <Building2 size={14} className="text-blue-400" />}
+                        {campus === 'pagsanjan' && <Building2 size={14} className="text-purple-400" />}
+                        {campus === 'control_room' && <Monitor size={14} className="text-green-400" />}
+                        {campus === 'paete' ? 'PSBC Paete' : campus === 'pagsanjan' ? 'PSBC Pagsanjan' : 'Control Room (Admin)'}
+                      </span>
+                      <ChevronDown size={14} className={`text-gray-500 transition-transform ${showCampusDropdown ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showCampusDropdown && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setShowCampusDropdown(false)} />
+                        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-gray-800 border border-gray-700/60 rounded-xl shadow-2xl overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => { setCampus('paete'); setShowCampusDropdown(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${campus === 'paete' ? 'bg-blue-500/15 text-blue-400' : 'text-gray-300 hover:bg-gray-700/60'}`}
+                          >
+                            <Building2 size={16} className="text-blue-400" />
+                            <span className="font-medium">PSBC Paete</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setCampus('pagsanjan'); setShowCampusDropdown(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${campus === 'pagsanjan' ? 'bg-purple-500/15 text-purple-400' : 'text-gray-300 hover:bg-gray-700/60'}`}
+                          >
+                            <Building2 size={16} className="text-purple-400" />
+                            <span className="font-medium">PSBC Pagsanjan</span>
+                          </button>
+                          <div className="h-px bg-gray-700/50" />
+                          <button
+                            type="button"
+                            onClick={() => { setCampus('control_room'); setShowCampusDropdown(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${campus === 'control_room' ? 'bg-green-500/15 text-green-400' : 'text-gray-300 hover:bg-gray-700/60'}`}
+                          >
+                            <Monitor size={16} className="text-green-400" />
+                            <span className="font-medium">Control Room (Admin)</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
