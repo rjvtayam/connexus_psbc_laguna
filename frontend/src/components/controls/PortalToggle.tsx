@@ -51,12 +51,12 @@ export function PortalToggle({ compact = false }: PortalToggleProps) {
     return (
       <button
         onClick={handleCycle}
-        className={`flex items-center justify-center gap-1.5 w-7 h-7 sm:w-9 sm:h-9 rounded-lg text-xs font-semibold transition-all duration-200 ${config.styles}`}
+        className={`flex items-center justify-center gap-1.5 px-2.5 h-7 sm:h-9 sm:px-3 rounded-lg text-[10px] sm:text-xs font-semibold transition-all duration-200 ${config.styles}`}
         title={config.title}
       >
         {config.icon}
-        <span className="hidden sm:inline">{config.label}</span>
-        <span className={`w-1.5 h-1.5 rounded-full ${config.dot} hidden sm:block`} />
+        <span>{config.label}</span>
+        <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
       </button>
     );
   }

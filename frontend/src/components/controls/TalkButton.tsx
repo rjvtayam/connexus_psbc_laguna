@@ -18,7 +18,7 @@ export function TalkButton({ target, isActive, onClick, disabled, compact }: Tal
   const shortLabels = {
     paete: 'PAE',
     pagsanjan: 'PAG',
-    both: 'ALL',
+    both: 'BTH',
   };
 
   const activeStyles = {
@@ -27,10 +27,22 @@ export function TalkButton({ target, isActive, onClick, disabled, compact }: Tal
     both: 'bg-primary-500/20 border border-primary-500/40 text-primary-400 shadow-lg shadow-primary-500/10',
   };
 
+  const inactiveStyles = {
+    paete: 'bg-cyan-500/8 border border-cyan-500/15 text-cyan-400/60 hover:bg-cyan-500/15 hover:border-cyan-500/25',
+    pagsanjan: 'bg-purple-500/8 border border-purple-500/15 text-purple-400/60 hover:bg-purple-500/15 hover:border-purple-500/25',
+    both: 'bg-primary-500/8 border border-primary-500/15 text-primary-400/60 hover:bg-primary-500/15 hover:border-primary-500/25',
+  };
+
   const activeIconColor = {
     paete: 'text-cyan-400',
     pagsanjan: 'text-purple-400',
     both: 'text-primary-400',
+  };
+
+  const inactiveIconColor = {
+    paete: 'text-cyan-400/50',
+    pagsanjan: 'text-purple-400/50',
+    both: 'text-primary-400/50',
   };
 
   if (compact) {
@@ -43,14 +55,14 @@ export function TalkButton({ target, isActive, onClick, disabled, compact }: Tal
             ? 'bg-gray-800 text-gray-600 border border-gray-700/30 cursor-not-allowed opacity-50'
             : isActive
               ? activeStyles[target]
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-transparent'
+              : inactiveStyles[target]
         }`}
         title={disabled ? 'Disabled during Live Portal' : labels[target]}
       >
         {isActive ? (
           <Mic size={12} className={`sm:w-3.5 sm:h-3.5 ${activeIconColor[target]}`} />
         ) : (
-          <MicOff size={12} className={`sm:w-3.5 sm:h-3.5 ${disabled ? 'text-gray-600' : 'text-gray-500'}`} />
+          <MicOff size={12} className={`sm:w-3.5 sm:h-3.5 ${inactiveIconColor[target]}`} />
         )}
       </button>
     );
@@ -65,14 +77,14 @@ export function TalkButton({ target, isActive, onClick, disabled, compact }: Tal
           ? 'bg-gray-800 text-gray-600 border border-gray-700/30 cursor-not-allowed opacity-50'
           : isActive
             ? activeStyles[target]
-            : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-transparent'
+            : inactiveStyles[target]
       }`}
       title={disabled ? 'Disabled during Live Portal' : undefined}
     >
       {isActive ? (
         <Mic size={13} className={activeIconColor[target]} />
       ) : (
-        <MicOff size={13} className={disabled ? 'text-gray-600' : 'text-gray-500'} />
+        <MicOff size={13} className={inactiveIconColor[target]} />
       )}
       <span className="hidden sm:inline">{labels[target]}</span>
       <span className="sm:hidden">{shortLabels[target]}</span>

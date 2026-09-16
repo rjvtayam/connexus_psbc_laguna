@@ -427,7 +427,7 @@ export function ControlRoom() {
                   </div>
                   <div className="flex flex-col items-center gap-0.5">
                     <TalkButton target="both" isActive={activeTalkTarget === 'both'} onClick={() => handleTalkTo('both')} disabled={portalMode} compact />
-                    <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">ALL</span>
+                    <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">BTH</span>
                   </div>
                 </>
               ) : null}
