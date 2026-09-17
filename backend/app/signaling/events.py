@@ -404,14 +404,51 @@ async def emergency_trigger(sid, data):
     try:
         db = SessionLocal()
         notif_service = NotificationService(db)
-        notif_service.create_for_all(
-            title="Emergency Alert",
-            message=emergency_msg,
-            notif_type="emergency",
-        )
+        triggerer_user_id = session.get("user_id")
+
+        if is_campus_only and campus:
+            notif_service.create_for_campus_except(
+                campus=campus,
+                exclude_user_id=triggerer_user_id,
+                title="Emergency Alert",
+                message=emergency_msg,
+                notif_type="emergency",
+            )
+            members = room_members.get(MAIN_ROOM, set())
+            for member_sid in list(members):
+                try:
+                    member_session = await sio.get_session(member_sid)
+                    if member_session and member_session.get("campus") == campus and member_session.get("user_id") != triggerer_user_id:
+                        await sio.emit("notification_created", {
+                            "title": "Emergency Alert",
+                            "message": emergency_msg,
+                            "type": "emergency",
+                        }, room=member_sid)
+                except (KeyError, Exception):
+                    pass
+        else:
+            notif_service.create_for_all_except(
+                exclude_user_id=triggerer_user_id,
+                title="Emergency Alert",
+                message=emergency_msg,
+                notif_type="emergency",
+            )
+            members = room_members.get(MAIN_ROOM, set())
+            for member_sid in list(members):
+                try:
+                    member_session = await sio.get_session(member_sid)
+                    if member_session and member_session.get("user_id") != triggerer_user_id:
+                        await sio.emit("notification_created", {
+                            "title": "Emergency Alert",
+                            "message": emergency_msg,
+                            "type": "emergency",
+                        }, room=member_sid)
+                except (KeyError, Exception):
+                    pass
+
         db.close()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[Backend] emergency_trigger notification error: {e}")
 
 
 @sio.event

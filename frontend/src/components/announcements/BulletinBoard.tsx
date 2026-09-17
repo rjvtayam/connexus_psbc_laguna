@@ -144,11 +144,26 @@ export function BulletinBoard() {
       });
     };
 
+    const handleNewNotification = (data: { title: string; message: string; type: string }) => {
+      const newNotif: Notification = {
+        id: `socket-${Date.now()}`,
+        title: data.title,
+        message: data.message,
+        type: data.type,
+        is_read: false,
+        link: null,
+        created_at: new Date().toISOString(),
+      };
+      setNotifications((prev) => [newNotif, ...prev]);
+    };
+
     s.on('bulletin_new', handleBulletin);
     s.on('reaction_update', handleReaction);
+    s.on('notification_created', handleNewNotification);
     return () => {
       s.off('bulletin_new', handleBulletin);
       s.off('reaction_update', handleReaction);
+      s.off('notification_created', handleNewNotification);
     };
   }, [user?.full_name]);
 

@@ -33,6 +33,16 @@ class NotificationService:
         for user in users:
             self.create(user.id, title, message, notif_type, link)
 
+    def create_for_all_except(self, exclude_user_id: UUID, title: str, message: str = "", notif_type: str = "info", link: str = None):
+        users = self.db.query(User).filter(User.is_active == True, User.id != exclude_user_id).all()
+        for user in users:
+            self.create(user.id, title, message, notif_type, link)
+
+    def create_for_campus_except(self, campus: str, exclude_user_id: UUID, title: str, message: str = "", notif_type: str = "info", link: str = None):
+        users = self.db.query(User).filter(User.campus == campus, User.is_active == True, User.id != exclude_user_id).all()
+        for user in users:
+            self.create(user.id, title, message, notif_type, link)
+
     def get_unread_count(self, user_id: UUID):
         from sqlalchemy import func
         return self.db.query(func.count(Notification.id)).filter(
