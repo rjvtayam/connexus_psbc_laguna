@@ -46,6 +46,7 @@ export function Sidebar({ isMobile = false }: SidebarProps) {
               label="Home"
               isOpen={true}
               onClick={toggleSidebar}
+              end
             />
             {showUsers && (
               <SidebarLink to="/admin/users" icon={<Users size={18} />} label="Users" isOpen={true} onClick={toggleSidebar} />
@@ -105,6 +106,7 @@ export function Sidebar({ isMobile = false }: SidebarProps) {
           icon={<Home size={18} />}
           label="Home"
           isOpen={isSidebarOpen}
+          end
         />
         {showUsers && (
           <SidebarLink to="/admin/users" icon={<Users size={18} />} label="Users" isOpen={isSidebarOpen} />
@@ -142,10 +144,11 @@ export function Sidebar({ isMobile = false }: SidebarProps) {
   );
 }
 
-function SidebarLink({ to, icon, label, isOpen, onClick }: { to: string; icon: React.ReactNode; label: string; isOpen: boolean; onClick?: () => void }) {
+function SidebarLink({ to, icon, label, isOpen, onClick, end }: { to: string; icon: React.ReactNode; label: string; isOpen: boolean; onClick?: () => void; end?: boolean }) {
   return (
     <NavLink
       to={to}
+      end={end}
       onClick={onClick}
       className={({ isActive }) =>
         `flex items-center gap-3 ${isOpen ? 'px-3 mx-2' : 'justify-center mx-2'} py-2 rounded-lg transition-all duration-200 ${
