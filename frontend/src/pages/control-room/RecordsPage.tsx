@@ -38,7 +38,7 @@ export function RecordsPage() {
 
   const isAdmin = user?.role === 'admin';
 
-  const { data, isLoading: loading } = useRecordings(page, sortBy, sortOrder, search, activeTab === 'trash');
+  const { data, isLoading: loading, error } = useRecordings(page, sortBy, sortOrder, search, activeTab === 'trash');
 
   useEffect(() => {
     const s = getSocket();
@@ -64,10 +64,6 @@ export function RecordsPage() {
     }, 400);
     return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
   }, [searchInput]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [activeTab]);
 
   useEffect(() => {
     setPage(1);
@@ -289,6 +285,18 @@ export function RecordsPage() {
           <div className="flex flex-col items-center justify-center py-20">
             <RefreshCw size={32} className="text-gray-600 animate-spin mb-3" />
             <p className="text-gray-500 text-sm">Loading...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-gray-900/80 rounded-2xl border border-red-500/20">
+            <AlertTriangle size={32} className="text-red-400 mb-3" />
+            <p className="text-red-400 font-medium mb-1">Failed to load recordings</p>
+            <p className="text-gray-600 text-xs">{(error as Error).message || 'Unknown error'}</p>
+            <button
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['recordings'] })}
+              className="mt-4 px-4 py-2 rounded-xl bg-gray-800 text-gray-300 text-xs hover:bg-gray-700 transition-colors"
+            >
+              <RefreshCw size={12} className="inline mr-1.5" /> Retry
+            </button>
           </div>
         ) : !data || data.recordings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-gray-900/80 rounded-2xl border border-gray-800/60">

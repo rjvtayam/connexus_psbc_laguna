@@ -236,7 +236,17 @@ export function useRecordings(
 ) {
   return useQuery<RecordingListResponse>({
     queryKey: queryKeys.recordings(page, sortBy, sortOrder, search, trash),
-    queryFn: () => recordingsApi.list(page, 12, sortBy, sortOrder, search, trash),
+    queryFn: async () => {
+      try {
+        const result = await recordingsApi.list(page, 12, sortBy, sortOrder, search, trash);
+        console.log('[Recordings] Fetched:', result.total, 'recordings');
+        return result;
+      } catch (err: any) {
+        console.error('[Recordings] Fetch failed:', err?.response?.status, err?.response?.data || err?.message);
+        throw err;
+      }
+    },
     staleTime: 30 * 1000,
+    retry: 2,
   });
 }
