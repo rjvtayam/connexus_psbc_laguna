@@ -1,6 +1,8 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePeerStore } from '../stores/peerStore';
+import { useSessionStore } from '../stores/sessionStore';
+import { getSocket } from './useSocket';
 import { recordingsApi } from '../api/recordings.api';
 
 export function useRecording(roomId: string) {
@@ -23,20 +25,64 @@ export function useRecording(roomId: string) {
         return;
       }
 
-      const tracks: MediaStreamTrack[] = [];
+      let combinedStream: MediaStream;
 
-      const videoTracks = localStream.getVideoTracks();
-      videoTracks.forEach((t) => tracks.push(t.clone()));
+      const screenSharerSid = useSessionStore.getState().screenSharerSid;
+      const mySid = getSocket()?.id;
 
-      const audioTracks = localStream.getAudioTracks();
-      audioTracks.forEach((t) => tracks.push(t.clone()));
+      if (screenSharerSid === mySid) {
+        const screenTrack = localStream.getVideoTracks()[0];
+        const audioTracks = localStream.getAudioTracks().map((t) => t.clone());
+        const tracks: MediaStreamTrack[] = [];
+        if (screenTrack) tracks.push(screenTrack.clone());
+        audioTracks.forEach((t) => tracks.push(t));
+        combinedStream = new MediaStream(tracks);
+      } else {
+        try {
+          const displayStream = await navigator.mediaDevices.getDisplayMedia({
+            video: {
+              displaySurface: 'browser',
+              logicalSurface: true,
+              cursor: 'never',
+            } as any,
+          });
 
-      if (tracks.length === 0) {
+          const tracks: MediaStreamTrack[] = [];
+          const videoTracks = displayStream.getVideoTracks();
+          videoTracks.forEach((t) => tracks.push(t));
+
+          const audioTracks = displayStream.getAudioTracks();
+          if (audioTracks.length > 0) {
+            audioTracks.forEach((t) => tracks.push(t));
+          } else {
+            const micTracks = localStream.getAudioTracks().map((t) => t.clone());
+            micTracks.forEach((t) => tracks.push(t));
+          }
+
+          combinedStream = new MediaStream(tracks);
+
+          videoTracks[0]?.addEventListener('ended', () => {
+            console.log('[Recording] Screen share ended by user');
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+              mediaRecorderRef.current.stop();
+            }
+          });
+        } catch (screenErr) {
+          console.warn('[Recording] Screen capture cancelled or denied, falling back to local stream:', screenErr);
+          const tracks: MediaStreamTrack[] = [];
+          const videoTracks = localStream.getVideoTracks();
+          videoTracks.forEach((t) => tracks.push(t.clone()));
+          const audioTracks = localStream.getAudioTracks();
+          audioTracks.forEach((t) => tracks.push(t.clone()));
+          combinedStream = new MediaStream(tracks);
+        }
+      }
+
+      if (combinedStream.getTracks().length === 0) {
         console.error('[Recording] No tracks to record');
         return;
       }
 
-      const combinedStream = new MediaStream(tracks);
       combinedStreamRef.current = combinedStream;
 
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')

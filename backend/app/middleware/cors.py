@@ -96,6 +96,7 @@ def setup_cors(app):
         if o not in origins:
             origins.append(o)
 
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -105,4 +106,3 @@ def setup_cors(app):
         allow_headers=["Authorization", "Content-Type", "If-None-Match", "X-Requested-With", "Cache-Control", "Pragma"],
         expose_headers=["ETag", "Cache-Control"],
     )
-    app.add_middleware(SecurityHeadersMiddleware)
