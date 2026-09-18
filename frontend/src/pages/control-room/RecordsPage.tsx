@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { Button } from '../../components/ui/button';
 import {
@@ -7,8 +8,11 @@ import {
   Calendar, User, RefreshCw, X, AlertTriangle,
   Grid3X3, List, RotateCcw, Trash, Archive
 } from 'lucide-react';
-import { recordingsApi, Recording, RecordingListResponse } from '../../api/recordings.api';
+import { recordingsApi, Recording } from '../../api/recordings.api';
 import { useAuthStore } from '../../stores/authStore';
+import { useRecordings } from '../../hooks/useQueryHooks';
+import { getSocket } from '../../hooks/useSocket';
+import { pushNotification } from '../../components/ui/NotificationToast';
 
 type SortField = 'created_at' | 'duration_seconds' | 'file_size' | 'title';
 type SortOrder = 'asc' | 'desc';
@@ -17,8 +21,7 @@ type TabMode = 'recordings' | 'trash';
 
 export function RecordsPage() {
   const user = useAuthStore((s) => s.user);
-  const [data, setData] = useState<RecordingListResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortField>('created_at');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -35,21 +38,23 @@ export function RecordsPage() {
 
   const isAdmin = user?.role === 'admin';
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const result = await recordingsApi.list(page, 12, sortBy, sortOrder, search, activeTab === 'trash');
-      setData(result);
-    } catch (err) {
-      console.error('Failed to load recordings:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, sortBy, sortOrder, search, activeTab]);
+  const { data, isLoading: loading } = useRecordings(page, sortBy, sortOrder, search, activeTab === 'trash');
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const s = getSocket();
+    if (!s) return;
+    const handler = (payload: { recording: any; uploaded_by: string }) => {
+      queryClient.invalidateQueries({ queryKey: ['recordings'] });
+      pushNotification({
+        title: 'Recording Uploaded',
+        message: `${payload.uploaded_by} saved "${payload.recording.title}"`,
+        type: 'info',
+        created_by: payload.uploaded_by,
+      });
+    };
+    s.on('recording_uploaded', handler);
+    return () => { s.off('recording_uploaded', handler); };
+  }, [queryClient]);
 
   useEffect(() => {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
@@ -59,6 +64,10 @@ export function RecordsPage() {
     }, 400);
     return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
   }, [searchInput]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab]);
 
   useEffect(() => {
     setPage(1);
@@ -87,7 +96,7 @@ export function RecordsPage() {
       }
       setActionId(null);
       setActionType(null);
-      fetchData();
+      queryClient.invalidateQueries({ queryKey: ['recordings'] });
     } catch (err) {
       console.error('Action failed:', err);
     } finally {

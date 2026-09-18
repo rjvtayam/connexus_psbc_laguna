@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './stores/authStore';
 import { EmergencyAlert } from './components/controls/EmergencyButton';
 import { useSessionStore } from './stores/sessionStore';
@@ -10,22 +10,7 @@ import { ControlRoom } from './pages/control-room/ControlRoom';
 import { SettingsPage } from './pages/control-room/SettingsPage';
 import { RecordsPage } from './pages/control-room/RecordsPage';
 import { UserManagement } from './pages/admin/UserManagement';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000,       // 60s — data considered fresh
-      gcTime: 10 * 60 * 1000,     // 10min — garbage collect unused data
-      refetchOnWindowFocus: false, // don't refetch on focus (backend caches)
-      refetchOnReconnect: true,    // refetch when network reconnects
-      retry: 1,                    // retry failed requests once
-      throwOnError: false,         // don't throw, let components handle errors
-    },
-    mutations: {
-      retry: 0,                    // no retry for mutations
-    },
-  },
-});
+import { queryClient } from './lib/queryClient';
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, token } = useAuthStore();

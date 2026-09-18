@@ -6,6 +6,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { SOCKET_URL } from '../lib/constants';
 import { pushNotification } from '../components/ui/NotificationToast';
 import { notificationsApi } from '../api/notifications.api';
+import { queryClient } from '../lib/queryClient';
 
 let socket: Socket | null = null;
 let pendingEvents: Array<{ event: string; data?: any }> = [];
@@ -239,6 +240,17 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
     notificationsApi.getUnreadCount().then((count) => {
       useSessionStore.getState().setNotificationCount(count);
     }).catch(() => {});
+  });
+
+  socket.on('recording_uploaded', (data) => {
+    console.log('[Socket] recording_uploaded:', data.recording?.title);
+    queryClient.invalidateQueries({ queryKey: ['recordings'] });
+    pushNotification({
+      title: 'Recording Uploaded',
+      message: `${data.uploaded_by} saved "${data.recording?.title || 'a recording'}"`,
+      type: 'info',
+      created_by: data.uploaded_by || 'System',
+    });
   });
 
   socket.on('disconnect', (reason) => {

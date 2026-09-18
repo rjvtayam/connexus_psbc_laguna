@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { usePeerStore } from '../stores/peerStore';
 import { recordingsApi } from '../api/recordings.api';
 
@@ -12,6 +13,7 @@ export function useRecording(roomId: string) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<Date | null>(null);
   const combinedStreamRef = useRef<MediaStream | null>(null);
+  const queryClient = useQueryClient();
 
   const startRecording = useCallback(async () => {
     try {
@@ -92,6 +94,7 @@ export function useRecording(roomId: string) {
             now,
           );
           console.log('[Recording] Uploaded successfully');
+          queryClient.invalidateQueries({ queryKey: ['recordings'] });
         } catch (err: any) {
           const msg = err?.response?.data?.detail || err?.message || 'Upload failed';
           console.error('[Recording] Upload failed:', msg);

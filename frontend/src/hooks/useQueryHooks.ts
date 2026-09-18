@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/axios';
+import { recordingsApi, RecordingListResponse } from '../api/recordings.api';
 
 // ─── Query Keys (centralized for cache invalidation) ───
 export const queryKeys = {
@@ -16,6 +17,8 @@ export const queryKeys = {
   auditLogs: ['audit-logs'] as const,
   sessionHistory: ['session-history'] as const,
   roomUsers: (sessionId: string) => ['room-users', sessionId] as const,
+  recordings: (page: number, sortBy: string, sortOrder: string, search: string, trash: boolean) =>
+    ['recordings', { page, sortBy, sortOrder, search, trash }] as const,
 };
 
 // ─── Users ───
@@ -220,5 +223,20 @@ export function useDeactivateUser() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.users });
     },
+  });
+}
+
+// ─── Recordings ───
+export function useRecordings(
+  page: number,
+  sortBy: string,
+  sortOrder: string,
+  search: string,
+  trash: boolean,
+) {
+  return useQuery<RecordingListResponse>({
+    queryKey: queryKeys.recordings(page, sortBy, sortOrder, search, trash),
+    queryFn: () => recordingsApi.list(page, 12, sortBy, sortOrder, search, trash),
+    staleTime: 30 * 1000,
   });
 }

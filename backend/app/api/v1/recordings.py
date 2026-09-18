@@ -12,6 +12,7 @@ from app.models.meeting_recording import MeetingRecording
 from app.schemas.meeting_recording import RecordingOut, RecordingListResponse
 from app.api.deps import get_current_user
 from app.middleware.rate_limit import limiter
+from app.signaling.events import sio
 
 router = APIRouter()
 
@@ -80,7 +81,23 @@ async def upload_recording(
     db.commit()
     db.refresh(recording)
 
-    return _recording_to_out(recording, current_user.full_name)
+    out = _recording_to_out(recording, current_user.full_name)
+    try:
+        await sio.emit("recording_uploaded", {
+            "recording": {
+                "id": str(out.id),
+                "title": out.title,
+                "duration_seconds": out.duration_seconds,
+                "file_size": out.file_size,
+                "created_at": out.created_at.isoformat() if out.created_at else None,
+                "creator_name": out.creator_name,
+            },
+            "uploaded_by": current_user.full_name,
+        })
+    except Exception:
+        pass
+
+    return out
 
 
 @router.get("", response_model=RecordingListResponse)
