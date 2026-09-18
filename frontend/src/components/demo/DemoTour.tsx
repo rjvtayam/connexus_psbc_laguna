@@ -3,7 +3,7 @@ import {
   X, ChevronRight, ChevronLeft, Video, Monitor, Shield,
   Mic, ScreenShare, Bell, Sparkles, AlertTriangle,
   Megaphone, Volume2, MessageSquare, Radio, LogIn, ArrowRight, Check,
-  Building2, EyeOff
+  Building2, EyeOff, Smile, Hand, Circle
 } from 'lucide-react';
 
 interface DemoTourProps {
@@ -99,6 +99,51 @@ const tourSteps: Omit<TourStep, 'mockup'>[] = [
   },
   {
     id: 6,
+    title: 'Emoji Reactions',
+    subtitle: 'Express Yourself in Real-Time',
+    description: 'Send emoji reactions during sessions to express yourself without interrupting. Reactions float over the video feeds for everyone to see.',
+    icon: <Smile size={28} />,
+    color: 'text-yellow-400',
+    bgColor: 'bg-yellow-500/10',
+    borderColor: 'border-yellow-500/30',
+    labels: [
+      { text: 'Reaction Picker', x: '50%', y: '25%', color: 'text-yellow-400', delay: '0.2s' },
+      { text: '👍 ❤️ 😂 🎉', x: '50%', y: '55%', color: 'text-white', delay: '0.5s' },
+      { text: 'Floats on Video', x: '50%', y: '80%', color: 'text-gray-400', delay: '0.8s' },
+    ],
+  },
+  {
+    id: 7,
+    title: 'Raise Hand',
+    subtitle: 'Request Attention',
+    description: 'Raise your hand to signal the speaker or request attention during a session. Your hand status is visible to all participants.',
+    icon: <Hand size={28} />,
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/30',
+    labels: [
+      { text: 'Raise Hand Button', x: '50%', y: '25%', color: 'text-amber-400', delay: '0.2s' },
+      { text: 'Hand Raised ✓', x: '50%', y: '55%', color: 'text-amber-400', delay: '0.5s' },
+      { text: 'Visible to All', x: '50%', y: '80%', color: 'text-gray-400', delay: '0.8s' },
+    ],
+  },
+  {
+    id: 8,
+    title: 'Record Meetings',
+    subtitle: 'Capture for Later Review',
+    description: 'Admins can record video sessions directly in the Control Room. Recordings are saved securely and can be accessed or restored from the Records page.',
+    icon: <Circle size={28} />,
+    color: 'text-red-400',
+    bgColor: 'bg-red-500/10',
+    borderColor: 'border-red-500/30',
+    labels: [
+      { text: 'Record Button', x: '50%', y: '25%', color: 'text-red-400', delay: '0.2s' },
+      { text: '🔴 Recording...', x: '50%', y: '55%', color: 'text-red-400', delay: '0.5s' },
+      { text: 'Admin Only', x: '50%', y: '80%', color: 'text-gray-400', delay: '0.8s' },
+    ],
+  },
+  {
+    id: 9,
     title: 'Talk & Mic Buttons',
     subtitle: 'Independent Audio Channels',
     description: 'The Talk button lets you speak cross-campus to Paete, Pagsanjan, or Both. The Mic button controls your same-campus audio. Both work independently for maximum flexibility.',
@@ -114,7 +159,7 @@ const tourSteps: Omit<TourStep, 'mockup'>[] = [
     ],
   },
   {
-    id: 7,
+    id: 10,
     title: 'Emergency Broadcast',
     subtitle: 'Instant Campus-Wide Alerts',
     description: 'Trigger an emergency to immediately override all screens with a red alert. Every campus display shows the message until the principal dismisses it.',
@@ -129,7 +174,7 @@ const tourSteps: Omit<TourStep, 'mockup'>[] = [
     ],
   },
   {
-    id: 8,
+    id: 11,
     title: 'Bulletin Board',
     subtitle: 'Announcements & Notices',
     description: 'Post announcements visible to both campuses. Bulletins appear as notifications with titles and messages — perfect for schedules, events, and reminders.',
@@ -144,7 +189,7 @@ const tourSteps: Omit<TourStep, 'mockup'>[] = [
     ],
   },
   {
-    id: 9,
+    id: 12,
     title: 'Campus Chat',
     subtitle: 'Real-Time Messaging',
     description: 'Send messages to everyone or filter by campus. The chat supports All, Paete, and Pagsanjan tabs — so you can talk to one campus or both.',
@@ -160,7 +205,7 @@ const tourSteps: Omit<TourStep, 'mockup'>[] = [
     ],
   },
   {
-    id: 10,
+    id: 13,
     title: 'You\'re All Set!',
     subtitle: 'Start Connecting Your Campuses',
     description: 'You now know the essentials. Log in, explore the Control Room, and start communicating between PSBC Paete and PSBC Pagsanjan — instantly.',
@@ -366,11 +411,14 @@ export function DemoTour({ isOpen, onClose }: DemoTourProps) {
               {currentStep === 2 && <ControlRoomMockup labels={step.labels} />}
               {currentStep === 3 && <PortalModeMockup labels={step.labels} />}
               {currentStep === 4 && <ScreenShareMockup labels={step.labels} />}
-              {currentStep === 5 && <AudioMockup labels={step.labels} />}
-              {currentStep === 6 && <EmergencyMockup labels={step.labels} />}
-              {currentStep === 7 && <BulletinMockup labels={step.labels} />}
-              {currentStep === 8 && <ChatMockup labels={step.labels} />}
-              {currentStep === 9 && <FinalMockup />}
+              {currentStep === 5 && <ReactionsMockup labels={step.labels} />}
+              {currentStep === 6 && <RaiseHandMockup labels={step.labels} />}
+              {currentStep === 7 && <RecordingsMockup labels={step.labels} />}
+              {currentStep === 8 && <AudioMockup labels={step.labels} />}
+              {currentStep === 9 && <EmergencyMockup labels={step.labels} />}
+              {currentStep === 10 && <BulletinMockup labels={step.labels} />}
+              {currentStep === 11 && <ChatMockup labels={step.labels} />}
+              {currentStep === 12 && <FinalMockup />}
             </div>
           </div>
         </div>
@@ -652,6 +700,111 @@ function ScreenShareMockup({ labels }: { labels: TourStep['labels'] }) {
   );
 }
 
+function ReactionsMockup({ labels }: { labels: TourStep['labels'] }) {
+  return (
+    <MockupFrame title="Emoji Reactions — Express Yourself">
+      <div className="p-4 space-y-3">
+        <div className="text-center mb-2">
+          <span className="text-[9px] text-gray-500 uppercase tracking-widest">Send Reactions in Real-Time</span>
+        </div>
+        <div className="bg-gray-800 rounded-lg p-3 border border-gray-700/50">
+          <div className="flex items-center gap-2 mb-3">
+            <Smile size={14} className="text-yellow-400" />
+            <span className="text-[10px] text-white font-semibold">Reaction Picker</span>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+            {['👍', '❤️', '😂', '🎉', '👏', '😮', '😢', '🔥'].map((emoji) => (
+              <div key={emoji} className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-700/60 hover:bg-gray-600 text-lg transition-colors cursor-pointer">
+                {emoji}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 flex items-center gap-3">
+          <div className="text-2xl animate-bounce">👍</div>
+          <div>
+            <p className="text-[10px] text-yellow-400 font-semibold">Floats on Video</p>
+            <p className="text-[8px] text-gray-500">Reactions appear over the video feeds</p>
+          </div>
+        </div>
+      </div>
+      {labels.map((l, i) => <MockupLabel key={i} {...l} />)}
+    </MockupFrame>
+  );
+}
+
+function RaiseHandMockup({ labels }: { labels: TourStep['labels'] }) {
+  return (
+    <MockupFrame title="Raise Hand — Request Attention">
+      <div className="p-4 space-y-3">
+        <div className="text-center mb-2">
+          <span className="text-[9px] text-gray-500 uppercase tracking-widest">Signal the Speaker</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-gray-800/60 border border-gray-700/50 rounded-lg p-3 text-center">
+            <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center mx-auto mb-2">
+              <Hand size={16} className="text-gray-400" />
+            </div>
+            <p className="text-[9px] text-gray-400 font-semibold">Hand Lowered</p>
+            <p className="text-[8px] text-gray-600">Click to raise</p>
+          </div>
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-center">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center mx-auto mb-2 animate-pulse">
+              <Hand size={16} className="text-amber-400 fill-amber-400" />
+            </div>
+            <p className="text-[9px] text-amber-400 font-semibold">Hand Raised ✓</p>
+            <p className="text-[8px] text-gray-500">Click to lower</p>
+          </div>
+        </div>
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-center gap-3">
+          <Hand size={16} className="text-amber-400" />
+          <div>
+            <p className="text-[10px] text-amber-400 font-semibold">Visible to All Participants</p>
+            <p className="text-[8px] text-gray-500">Everyone sees your hand status</p>
+          </div>
+        </div>
+      </div>
+      {labels.map((l, i) => <MockupLabel key={i} {...l} />)}
+    </MockupFrame>
+  );
+}
+
+function RecordingsMockup({ labels }: { labels: TourStep['labels'] }) {
+  return (
+    <MockupFrame title="Record Meetings — Admin Only">
+      <div className="p-4 space-y-3">
+        <div className="text-center mb-2">
+          <span className="text-[9px] text-gray-500 uppercase tracking-widest">Capture Sessions for Later</span>
+        </div>
+        <div className="bg-gray-800/60 border border-gray-700/50 rounded-lg p-3">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-red-500/20 border border-red-500/40 flex items-center justify-center">
+              <Circle size={16} className="text-red-500 fill-red-500" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] text-white font-semibold">Recording Controls</p>
+              <p className="text-[8px] text-gray-500">Start/Stop recording from the control bar</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 bg-gray-900/60 rounded-lg px-2.5 py-1.5 border border-gray-700/40">
+            <Circle size={8} className="text-red-500 fill-red-500 animate-pulse" />
+            <span className="text-[9px] text-red-400 font-mono font-medium">00:12:34</span>
+            <span className="text-[8px] text-gray-600">· Recording in progress</span>
+          </div>
+        </div>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center gap-3">
+          <Circle size={16} className="text-red-400" />
+          <div>
+            <p className="text-[10px] text-red-400 font-semibold">Admin Only Feature</p>
+            <p className="text-[8px] text-gray-500">Recordings saved to Records page</p>
+          </div>
+        </div>
+      </div>
+      {labels.map((l, i) => <MockupLabel key={i} {...l} />)}
+    </MockupFrame>
+  );
+}
+
 function AudioMockup({ labels }: { labels: TourStep['labels'] }) {
   return (
     <MockupFrame title="Audio Controls — Independent Channels">
@@ -812,7 +965,7 @@ function FinalMockup() {
       <p className="text-xs text-gray-500 mb-6 max-w-xs mx-auto">
         You've seen all the key features. Now it's time to connect your campuses.
       </p>
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center gap-3 flex-wrap">
         <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
           <Video size={12} className="text-cyan-400" /> Video
         </div>
@@ -821,6 +974,15 @@ function FinalMockup() {
         </div>
         <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
           <ScreenShare size={12} className="text-pink-400" /> Screen
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
+          <Smile size={12} className="text-yellow-400" /> Reactions
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
+          <Hand size={12} className="text-amber-400" /> Hand
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
+          <Circle size={12} className="text-red-400" /> Record
         </div>
         <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
           <Bell size={12} className="text-red-400" /> Alert
