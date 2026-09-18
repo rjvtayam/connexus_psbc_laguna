@@ -285,14 +285,14 @@ export function DemoTour({ isOpen, onClose }: DemoTourProps) {
       />
 
       {/* Modal */}
-      <div className={`relative w-full max-w-4xl mx-4 max-h-[90vh] bg-gray-900 rounded-3xl border border-gray-800/60 shadow-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+      <div className={`relative w-full max-w-4xl mx-2 sm:mx-4 max-h-[95vh] sm:max-h-[90vh] bg-gray-900 rounded-2xl sm:rounded-3xl border border-gray-800/60 shadow-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
         {/* Top gradient accent */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 via-cyan-500 to-purple-500" />
 
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-xl bg-gray-800/80 text-gray-400 hover:text-white hover:bg-gray-700/80 transition-all"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 p-1.5 sm:p-2 rounded-xl bg-gray-800/80 text-gray-400 hover:text-white hover:bg-gray-700/80 transition-all"
         >
           <X size={18} />
         </button>
@@ -305,11 +305,11 @@ export function DemoTour({ isOpen, onClose }: DemoTourProps) {
           />
         </div>
 
-        <div className="flex flex-col lg:flex-row min-h-[500px]">
+        <div className="flex flex-col lg:flex-row min-h-[400px] sm:min-h-[500px]">
           {/* Left panel - Content */}
-          <div className="lg:w-2/5 p-8 flex flex-col h-[500px]">
+          <div className="lg:w-2/5 p-4 sm:p-6 lg:p-8 flex flex-col h-auto sm:h-[500px] max-h-[50vh] sm:max-h-none overflow-y-auto lg:overflow-y-auto">
             {/* Step indicator */}
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-4 sm:mb-6">
               <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">
                 Step {currentStep + 1} of {tourSteps.length}
               </span>
@@ -320,26 +320,26 @@ export function DemoTour({ isOpen, onClose }: DemoTourProps) {
             </div>
 
             {/* Icon */}
-            <div className={`w-16 h-16 rounded-2xl ${step.bgColor} border ${step.borderColor} flex items-center justify-center mb-6 ${step.color}`}>
+            <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl ${step.bgColor} border ${step.borderColor} flex items-center justify-center mb-4 sm:mb-6 ${step.color}`}>
               {step.icon}
             </div>
 
             {/* Title */}
-            <h2 className="font-orbitron text-xl font-bold text-white mb-1">
+            <h2 className="font-orbitron text-lg sm:text-xl font-bold text-white mb-1">
               {step.title}
             </h2>
-            <p className={`text-sm font-medium ${step.color} mb-4`}>
+            <p className={`text-xs sm:text-sm font-medium ${step.color} mb-3 sm:mb-4`}>
               {step.subtitle}
             </p>
 
             {/* Description */}
-            <p className="text-sm text-gray-400 leading-relaxed">
+            <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
               {step.description}
             </p>
 
             {/* Labels legend */}
             {step.labels.length > 0 && (
-              <div className="mt-4 space-y-2">
+              <div className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
                 <span className="text-[10px] text-gray-600 uppercase tracking-widest font-semibold">Labels</span>
                 <div className="flex flex-wrap gap-2">
                   {step.labels.map((label, i) => (
@@ -356,27 +356,27 @@ export function DemoTour({ isOpen, onClose }: DemoTourProps) {
             )}
 
             {/* Navigation — pinned to bottom */}
-            <div className="mt-auto pt-6 border-t border-gray-800/60">
+            <div className="mt-auto pt-4 sm:pt-6 border-t border-gray-800/60">
               <div className="flex items-center justify-between">
                 <button
                   onClick={goPrev}
                   disabled={currentStep === 0}
-                  className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap pl-1"
+                  className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap pl-1"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={14} />
                   Back
                 </button>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   {tourSteps.map((_, i) => (
                     <div
                       key={i}
-                      className={`h-2 rounded-full transition-all duration-300 ${
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
                         i === currentStep
-                          ? 'bg-primary-500 w-5'
+                          ? 'bg-primary-500 w-4'
                           : i < currentStep
-                          ? 'bg-primary-500/50 w-2'
-                          : 'bg-gray-700 w-2'
+                          ? 'bg-primary-500/50 w-1.5'
+                          : 'bg-gray-700 w-1.5'
                       }`}
                     />
                   ))}
@@ -385,18 +385,18 @@ export function DemoTour({ isOpen, onClose }: DemoTourProps) {
                 {currentStep < tourSteps.length - 1 ? (
                   <button
                     onClick={goNext}
-                    className="flex items-center gap-1.5 text-sm text-primary-400 hover:text-primary-300 transition-colors whitespace-nowrap pr-1"
+                    className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-primary-400 hover:text-primary-300 transition-colors whitespace-nowrap pr-1"
                   >
                     Next
-                    <ChevronRight size={16} />
+                    <ChevronRight size={14} />
                   </button>
                 ) : (
                   <button
                     onClick={onClose}
-                    className="flex items-center gap-1.5 text-sm text-green-400 hover:text-green-300 transition-colors whitespace-nowrap pr-1"
+                    className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-green-400 hover:text-green-300 transition-colors whitespace-nowrap pr-1"
                   >
                     Get Started
-                    <ArrowRight size={16} />
+                    <ArrowRight size={14} />
                   </button>
                 )}
               </div>
@@ -404,7 +404,7 @@ export function DemoTour({ isOpen, onClose }: DemoTourProps) {
           </div>
 
           {/* Right panel - Visual mockup */}
-          <div className="lg:w-3/5 bg-gray-950/50 border-l border-gray-800/60 p-8 flex items-center justify-center relative overflow-hidden">
+          <div className="hidden sm:flex lg:w-3/5 bg-gray-950/50 border-l border-gray-800/60 p-6 lg:p-8 items-center justify-center relative overflow-hidden">
             <div className="relative w-full max-w-lg">
               {currentStep === 0 && <WelcomeMockup />}
               {currentStep === 1 && <LoginMockup labels={step.labels} />}
