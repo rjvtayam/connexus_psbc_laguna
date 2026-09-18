@@ -1,7 +1,6 @@
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
+from starlette.datastructures import MutableHeaders
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from app.config import settings
 
 
@@ -25,22 +24,34 @@ def _get_cache_policy(path: str) -> str:
     return "no-store"
 
 
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        response: Response = await call_next(request)
+class SecurityHeadersMiddleware:
+    def __init__(self, app: ASGIApp):
+        self.app = app
 
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=()"
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
 
-        if request.method == "GET":
-            response.headers["Cache-Control"] = _get_cache_policy(request.url.path)
-        else:
-            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        async def send_with_headers(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                headers = MutableHeaders(scope=message)
+                headers["X-Content-Type-Options"] = "nosniff"
+                headers["X-Frame-Options"] = "DENY"
+                headers["X-XSS-Protection"] = "1; mode=block"
+                headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+                headers["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=()"
 
-        return response
+                method = scope.get("method", "GET")
+                path = scope.get("path", "")
+                if method == "GET":
+                    headers["Cache-Control"] = _get_cache_policy(path)
+                else:
+                    headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+
+            await send(message)
+
+        await self.app(scope, receive, send_with_headers)
 
 
 def setup_cors(app):
@@ -54,6 +65,7 @@ def setup_cors(app):
         if o not in origins:
             origins.append(o)
 
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -63,4 +75,3 @@ def setup_cors(app):
         allow_headers=["Authorization", "Content-Type", "If-None-Match", "X-Requested-With"],
         expose_headers=["ETag", "Cache-Control"],
     )
-    app.add_middleware(SecurityHeadersMiddleware)
