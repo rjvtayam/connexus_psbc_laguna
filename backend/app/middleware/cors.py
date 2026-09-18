@@ -68,13 +68,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 headers["ETag"] = f'"{etag}"'
                 # Check If-None-Match for 304 responses
                 if_none_match = request.headers.get("if-none-match")
-            if if_none_match and if_none_match.strip('"') == etag:
-                return StarletteResponse(status_code=304, headers={
-                    "ETag": f'"{etag}"',
-                    "Cache-Control": headers.get("Cache-Control", "no-store"),
-                    "Access-Control-Allow-Origin": headers.get("Access-Control-Allow-Origin", ""),
-                    "Access-Control-Allow-Credentials": headers.get("Access-Control-Allow-Credentials", ""),
-                })
+                if if_none_match and if_none_match.strip('"') == etag:
+                    return StarletteResponse(status_code=304, headers={
+                        "ETag": f'"{etag}"',
+                        "Cache-Control": headers.get("Cache-Control", "no-store"),
+                        "Access-Control-Allow-Origin": headers.get("Access-Control-Allow-Origin", ""),
+                        "Access-Control-Allow-Credentials": headers.get("Access-Control-Allow-Credentials", ""),
+                    })
             return StarletteResponse(
                 content=body,
                 status_code=response.status_code,
@@ -102,7 +102,7 @@ def setup_cors(app):
         allow_origin_regex=r"https://.*\.vercel\.app$",
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "If-None-Match", "X-Requested-With"],
+        allow_headers=["Authorization", "Content-Type", "If-None-Match", "X-Requested-With", "Cache-Control", "Pragma"],
         expose_headers=["ETag", "Cache-Control"],
     )
     app.add_middleware(SecurityHeadersMiddleware)
