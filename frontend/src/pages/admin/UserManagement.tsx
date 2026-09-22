@@ -163,24 +163,24 @@ export function UserManagement() {
   };
 
   const stats = [
-    { label: 'Total Users', value: users.length, icon: Users, color: 'text-primary-400', bg: 'bg-primary-500/10' },
-    { label: 'Active', value: users.filter(u => u.is_active).length, icon: UserCheck, color: 'text-green-400', bg: 'bg-green-500/10' },
-    { label: 'Admins', value: users.filter(u => u.role === 'admin').length, icon: Shield, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { label: 'Teachers', value: users.filter(u => u.role === 'teacher').length, icon: GraduationCap, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+    { label: 'Total Users', value: users.length, icon: Users, color: 'text-primary-400', bg: 'bg-primary-500/10 border-primary-500/25' },
+    { label: 'Active', value: users.filter(u => u.is_active).length, icon: UserCheck, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/25' },
+    { label: 'Admins', value: users.filter(u => u.role === 'admin').length, icon: Shield, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/25' },
+    { label: 'Teachers', value: users.filter(u => u.role === 'teacher').length, icon: GraduationCap, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/25' },
   ];
 
   return (
     <>
-      <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
+      <div className="p-3 sm:p-5 max-w-6xl mx-auto space-y-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-primary-500/20 to-cyan-500/20 border border-primary-500/20 flex items-center justify-center">
-              <Users size={20} className="text-primary-400 sm:w-6 sm:h-6" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500/25 to-cyan-500/25 border border-primary-500/25 flex items-center justify-center">
+              <Users size={16} className="text-primary-400" />
             </div>
             <div>
-              <h1 className="font-orbitron text-xl sm:text-2xl font-bold text-white">User Management</h1>
-              <p className="text-gray-500 text-xs sm:text-sm">
+              <h1 className="font-orbitron text-sm sm:text-base font-bold text-white tracking-wide">User Management</h1>
+              <p className="text-gray-500 text-[10px] sm:text-[11px]">
                 {users.length} registered user(s)
                 {isAdmin && <span className="ml-2 text-primary-400">(Admin)</span>}
                 {isPrincipal && <span className="ml-2 text-amber-400">(Principal)</span>}
@@ -189,40 +189,39 @@ export function UserManagement() {
           </div>
           <button
             onClick={() => { setIsAddingUser(true); setError(''); }}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 hover:from-primary-500 hover:to-cyan-500 text-white text-sm font-medium rounded-xl shadow-lg shadow-primary-500/20 transition-all duration-300 hover:scale-105"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-primary-600 to-cyan-600 hover:from-primary-500 hover:to-cyan-500 text-white text-[11px] font-medium rounded-lg shadow-lg shadow-primary-500/20 transition-all duration-300"
           >
-            <UserPlus size={16} />
+            <UserPlus size={12} />
             <span>Add User</span>
           </button>
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {stats.map((stat, i) => (
             <div
               key={stat.label}
-              className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 p-4 hover:border-gray-700/60 transition-all duration-300"
-              style={{ animationDelay: `${i * 100}ms` }}
+              className="relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 p-3 hover:border-primary-500/30 transition-all duration-300"
+              style={{ animationDelay: `${i * 80}ms` }}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-xs uppercase tracking-wider">{stat.label}</p>
-                  <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.value}</p>
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-600/40 to-transparent" />
+              <div className="flex items-center justify-between mb-2">
+                <div className={`w-6 h-6 rounded-md border flex items-center justify-center ${stat.bg} ${stat.color}`}>
+                  <stat.icon size={12} />
                 </div>
-                <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
-                  <stat.icon size={20} className={stat.color} />
-                </div>
+                <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest font-medium">{stat.label}</span>
               </div>
+              <p className={`text-base sm:text-lg font-bold font-mono leading-none ${stat.color}`}>{stat.value}</p>
             </div>
           ))}
         </div>
 
         {/* Permission Info */}
-        <div className={`flex items-center gap-3 p-4 rounded-2xl border ${isAdmin ? 'bg-primary-500/5 border-primary-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
-          <div className={`w-8 h-8 rounded-xl ${isAdmin ? 'bg-primary-500/15' : 'bg-amber-500/15'} flex items-center justify-center`}>
-            <Shield size={16} className={isAdmin ? 'text-primary-400' : 'text-amber-400'} />
+        <div className={`flex items-center gap-2.5 p-3 rounded-xl border ${isAdmin ? 'bg-primary-500/5 border-primary-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
+          <div className={`w-6 h-6 rounded-md ${isAdmin ? 'bg-primary-500/15' : 'bg-amber-500/15'} flex items-center justify-center`}>
+            <Shield size={12} className={isAdmin ? 'text-primary-400' : 'text-amber-400'} />
           </div>
-          <p className={`text-sm ${isAdmin ? 'text-primary-300' : 'text-amber-300'}`}>
+          <p className={`text-[11px] ${isAdmin ? 'text-primary-300' : 'text-amber-300'}`}>
             {isAdmin ? (
               <>You can create <strong>Principal</strong> and <strong>Teacher</strong> accounts.</>
             ) : (
@@ -233,34 +232,34 @@ export function UserManagement() {
 
         {/* Add User Form - Compact Design */}
         {isAddingUser && (
-          <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 overflow-hidden animate-fade-in-up">
-            <div className="p-4 border-b border-gray-800/60 flex items-center justify-between bg-gradient-to-r from-primary-500/5 to-transparent">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary-500/15 border border-primary-500/20 flex items-center justify-center">
-                  <UserPlus size={14} className="text-primary-400" />
+          <div className="bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 overflow-hidden animate-fade-in-up">
+            <div className="px-3.5 py-2.5 border-b border-gray-800/60 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-[22px] h-[22px] rounded-md bg-primary-500/15 border border-primary-500/25 flex items-center justify-center">
+                  <UserPlus size={12} className="text-primary-400" />
                 </div>
-                <span className="text-sm font-semibold text-white">Create New User</span>
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Create New User</span>
               </div>
               <button
                 onClick={() => { setIsAddingUser(false); setError(''); }}
-                className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-all"
+                className="p-1 rounded-md text-gray-500 hover:text-white hover:bg-gray-800 transition-all"
               >
-                <X size={16} />
+                <X size={14} />
               </button>
             </div>
 
-            <form onSubmit={handleAddUser} className="p-5">
+            <form onSubmit={handleAddUser} className="p-3.5">
               {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm mb-4">
-                  <AlertCircle size={16} />
+                <div className="flex items-center gap-2 p-2.5 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-[11px] mb-3">
+                  <AlertCircle size={12} />
                   {error}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 {/* Full Name */}
                 <div>
-                  <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
+                  <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Full Name</label>
                   <div className="relative">
                     <UserIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input
@@ -268,14 +267,14 @@ export function UserManagement() {
                       onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
                       placeholder="Juan Dela Cruz"
                       required
-                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm placeholder-gray-600 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
+                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg pl-9 pr-4 py-2 text-white text-[11px] placeholder-gray-600 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Email Address</label>
+                  <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Email Address</label>
                   <div className="relative">
                     <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input
@@ -284,16 +283,16 @@ export function UserManagement() {
                       onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                       placeholder="user@psbc.edu.ph"
                       required
-                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm placeholder-gray-600 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
+                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg pl-9 pr-4 py-2 text-white text-[11px] placeholder-gray-600 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                 {/* Password */}
                 <div>
-                  <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Password</label>
+                  <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Password</label>
                   <div className="relative">
                     <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input
@@ -302,7 +301,7 @@ export function UserManagement() {
                       onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                       placeholder="Min 8 chars, mixed case + number"
                       required
-                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl pl-9 pr-10 py-2.5 text-white text-sm placeholder-gray-600 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
+                      className="w-full bg-gray-900/60 border border-gray-800 rounded-lg pl-9 pr-10 py-2 text-white text-[11px] placeholder-gray-600 focus:ring-1 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
                     />
                     <button
                       type="button"
@@ -316,13 +315,13 @@ export function UserManagement() {
 
                 {/* Role */}
                 <div>
-                  <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Role</label>
+                  <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Role</label>
                   <div className="relative">
                     <Shield size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 z-10" />
                     <select
                       value={newUser.role}
                       onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl pl-9 pr-9 py-2.5 text-white text-sm focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all appearance-none cursor-pointer"
+                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg pl-9 pr-9 py-2 text-white text-[11px] focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all appearance-none cursor-pointer"
                     >
                       {availableRoles.map((r) => (
                         <option key={r.value} value={r.value}>{r.label}</option>
@@ -333,17 +332,17 @@ export function UserManagement() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                 {/* Campus */}
                 <div>
-                  <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Campus</label>
+                  <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Campus</label>
                   <div className="relative">
                     <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 z-10" />
                     <select
                       value={newUser.campus}
                       onChange={(e) => setNewUser({ ...newUser, campus: e.target.value as 'paete' | 'pagsanjan' | 'control_room' })}
                       disabled={!isAdmin}
-                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-xl pl-9 pr-9 py-2.5 text-white text-sm focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg pl-9 pr-9 py-2 text-white text-[11px] focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {availableCampuses.map((c) => (
                         <option key={c.value} value={c.value}>{c.label}</option>
@@ -356,20 +355,20 @@ export function UserManagement() {
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-2 pt-3 border-t border-gray-800/60">
+              <div className="flex justify-end gap-2 pt-2.5 border-t border-gray-800/60">
                 <button
                   type="button"
                   onClick={() => { setIsAddingUser(false); setError(''); }}
-                  className="px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-all"
+                  className="px-3 py-1.5 text-[11px] text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 hover:from-primary-500 hover:to-cyan-500 text-white text-sm font-medium rounded-xl shadow-lg shadow-primary-500/20 transition-all duration-300 disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-primary-600 to-cyan-600 hover:from-primary-500 hover:to-cyan-500 text-white text-[11px] font-medium rounded-lg shadow-lg shadow-primary-500/20 transition-all duration-300 disabled:opacity-50"
                 >
-                  {creating ? <RefreshCw size={14} className="animate-spin" /> : <UserPlus size={14} />}
+                  {creating ? <RefreshCw size={12} className="animate-spin" /> : <UserPlus size={12} />}
                   {creating ? 'Creating...' : 'Create'}
                 </button>
               </div>
@@ -378,37 +377,37 @@ export function UserManagement() {
         )}
 
         {/* Search & Filters */}
-        <div className="flex flex-col md:flex-row gap-3">
+        <div className="flex flex-col md:flex-row gap-2">
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search users..."
-              className="w-full bg-gray-900/80 backdrop-blur-xl border border-gray-800/60 rounded-xl pl-9 pr-10 py-2.5 text-white text-sm placeholder-gray-600 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
+              className="w-full bg-gray-950/70 border border-gray-800 rounded-lg pl-8 pr-8 py-2 text-white text-[11px] placeholder-gray-600 focus:ring-1 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
-                <X size={14} />
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
+                <X size={12} />
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap pb-0.5">
             {roleFilters.map((filter) => (
               <button
                 key={filter.value}
                 onClick={() => setActiveRoleFilter(filter.value)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium border transition-all duration-200 ${
                   activeRoleFilter === filter.value
-                    ? 'bg-primary-500/15 text-primary-400 border border-primary-500/30'
-                    : 'bg-gray-800/60 text-gray-500 border border-gray-800/60 hover:bg-gray-800 hover:text-gray-300'
+                    ? 'bg-primary-500/15 text-primary-400 border-primary-500/30'
+                    : 'bg-gray-900/60 text-gray-500 border-gray-800 hover:text-white hover:border-gray-700'
                 }`}
               >
                 {filter.label}
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                  activeRoleFilter === filter.value ? 'bg-primary-500/20' : 'bg-gray-700/50'
+                <span className={`text-[9px] px-1 py-0.5 rounded font-mono ${
+                  activeRoleFilter === filter.value ? 'bg-primary-500/20' : 'bg-gray-800/60'
                 }`}>
                   {filter.count}
                 </span>
@@ -418,26 +417,26 @@ export function UserManagement() {
         </div>
 
         {/* Users List */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* List Header */}
           <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <Users size={14} className="text-gray-500" />
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Users</span>
+            <div className="flex items-center gap-1.5">
+              <Users size={12} className="text-gray-600" />
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Users</span>
             </div>
-            <span className="text-[11px] text-gray-600">
+            <span className="text-[10px] text-gray-600 font-mono">
               {filteredUsers.length} of {users.length}
             </span>
           </div>
 
           {/* User Cards Grid */}
           {paginatedUsers.length === 0 ? (
-            <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 px-5 py-12 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-gray-800/60 border border-gray-700/40 flex items-center justify-center mx-auto mb-3">
-                <Users size={20} className="text-gray-600" />
+            <div className="bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 px-4 py-10 text-center">
+              <div className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center mx-auto mb-2.5">
+                <Users size={16} className="text-gray-600" />
               </div>
-              <p className="text-gray-500 text-sm font-medium">No users found</p>
-              <p className="text-gray-600 text-xs mt-1">{searchQuery ? 'Try a different search' : 'Create your first user'}</p>
+              <p className="text-gray-400 text-[12px] font-medium">No users found</p>
+              <p className="text-gray-600 text-[11px] mt-1">{searchQuery ? 'Try a different search' : 'Create your first user'}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -458,7 +457,7 @@ export function UserManagement() {
                 return (
                   <div
                     key={user.id}
-                    className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5"
+                    className="group relative rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5"
                     style={{
                       background: `linear-gradient(160deg, rgba(20,27,45,0.97) 0%, rgba(10,15,25,0.99) 100%)`,
                       border: `1px solid ${c}20`,
@@ -470,14 +469,13 @@ export function UserManagement() {
                     <div className="absolute top-0 left-0 right-0 h-[1.5px]" style={{ background: `linear-gradient(90deg, transparent, ${c}50, transparent)` }} />
 
                     {/* Corner accent */}
-                    <div className="absolute top-0 right-0 w-8 h-8 border-t border-r rounded-tr-2xl pointer-events-none opacity-40 group-hover:opacity-70 transition-opacity" style={{ borderColor: `${c}40` }} />
+                    <div className="absolute top-0 right-0 w-8 h-8 border-t border-r rounded-tr-xl pointer-events-none opacity-40 group-hover:opacity-70 transition-opacity" style={{ borderColor: `${c}40` }} />
 
-                    <div className="p-4">
-                      {/* Top: Avatar + Status */}
-                      <div className="flex items-start justify-between mb-3">
+                    <div className="p-3">
+                      <div className="flex items-center justify-between mb-1">
                         <div className="relative">
                           <div
-                            className="w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300"
+                            className="w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-300"
                             style={{
                               background: `linear-gradient(135deg, ${c}20, ${c}08)`,
                               border: `1.5px solid ${c}30`,
@@ -486,23 +484,23 @@ export function UserManagement() {
                             {user.avatar_url ? (
                               <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-sm font-bold" style={{ color: c }}>{user.full_name?.charAt(0)?.toUpperCase() || '?'}</span>
+                              <span className="text-xs font-bold" style={{ color: c }}>{user.full_name?.charAt(0)?.toUpperCase() || '?'}</span>
                             )}
                           </div>
                           {/* Online dot */}
-                          <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-900 ${user.is_active ? 'bg-green-400' : 'bg-gray-600'}`} />
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-gray-900 ${user.is_active ? 'bg-emerald-400' : 'bg-gray-600'}`} />
                         </div>
 
                         {/* Role badge */}
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold border ${role.bg} ${role.color}`}>
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border ${role.bg} ${role.color}`}>
                           {role.icon}
                           {role.label}
                         </span>
                       </div>
 
                       {/* Name + Email */}
-                      <h3 className="text-white text-sm font-semibold truncate mb-0.5">{user.full_name}</h3>
-                      <p className="text-gray-500 text-[11px] truncate mb-3">{user.email}</p>
+                      <h3 className="text-white text-[12px] font-semibold truncate mb-0.5">{user.full_name}</h3>
+                      <p className="text-gray-500 text-[10px] truncate mb-2.5">{user.email}</p>
 
                       {/* Campus + Status row */}
                       <div className="flex items-center justify-between">
@@ -510,16 +508,16 @@ export function UserManagement() {
                           <Building2 size={10} />
                           {user.campus?.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
                         </span>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
-                          user.is_active ? 'text-green-400 bg-green-500/10' : 'text-gray-500 bg-gray-800'
+                        <span className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded ${
+                          user.is_active ? 'text-emerald-400 bg-emerald-500/10' : 'text-gray-500 bg-gray-900'
                         }`}>
-                          <span className={`w-1 h-1 rounded-full ${user.is_active ? 'bg-green-400' : 'bg-gray-600'}`} />
+                          <span className={`w-1 h-1 rounded-full ${user.is_active ? 'bg-emerald-400' : 'bg-gray-600'}`} />
                           {user.is_active ? 'Active' : 'Off'}
                         </span>
                       </div>
 
                       {/* Delete button - shows on hover */}
-                      <div className="mt-3 pt-3 border-t border-gray-800/50 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="mt-2.5 pt-2.5 border-t border-gray-800/50 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <button
                           onClick={() => handleDeleteUser(user.id)}
                           className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-medium text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all"
@@ -540,23 +538,23 @@ export function UserManagement() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-1.5 pt-2">
+            <div className="flex items-center justify-center gap-1 pt-2">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={safeCurrentPage === 1}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 bg-gray-800/60 border border-gray-700/40 text-gray-400 hover:bg-gray-700/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-medium transition-all duration-200 bg-gray-950/80 border border-gray-800 text-gray-500 hover:text-white hover:border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <ChevronLeft size={14} />
+                <ChevronLeft size={13} />
               </button>
 
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  className={`flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-medium transition-all duration-200 ${
                     page === safeCurrentPage
-                      ? 'bg-primary-500/20 border border-primary-500/40 text-primary-400 shadow-lg shadow-primary-500/10'
-                      : 'bg-gray-800/60 border border-gray-700/40 text-gray-400 hover:bg-gray-700/60 hover:text-white'
+                      ? 'bg-primary-500/15 border border-primary-500/40 text-primary-400'
+                      : 'bg-gray-950/80 border border-gray-800 text-gray-500 hover:text-white hover:border-gray-700'
                   }`}
                 >
                   {page}
@@ -566,9 +564,9 @@ export function UserManagement() {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={safeCurrentPage === totalPages}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-xs font-medium transition-all duration-200 bg-gray-800/60 border border-gray-700/40 text-gray-400 hover:bg-gray-700/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex items-center justify-center w-7 h-7 rounded-md text-[11px] font-medium transition-all duration-200 bg-gray-950/80 border border-gray-800 text-gray-500 hover:text-white hover:border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <ChevronRight size={14} />
+                <ChevronRight size={13} />
               </button>
             </div>
           )}

@@ -204,7 +204,7 @@ export function AuditLogs() {
           <div className="w-12 h-12 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center mb-3">
             <Inbox size={20} className="text-gray-600" />
           </div>
-          <p className="text-white text-sm font-medium mb-1">No audit logs found</p>
+          <p className="text-white text-[12px] font-medium mb-1">No audit logs found</p>
           <p className="text-[11px]">{searchQuery || actionFilter !== 'all' ? 'Try adjusting your search or filters.' : 'Events will appear here as users interact with the system.'}</p>
         </div>
       ) : (

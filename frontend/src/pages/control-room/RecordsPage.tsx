@@ -137,7 +137,7 @@ export function RecordsPage() {
 
   const getActionConfig = () => {
     if (actionType === 'delete') return {
-      icon: <Trash2 size={18} className="text-amber-400" />,
+      icon: <Trash2 size={14} className="text-amber-400" />,
       bg: 'bg-amber-500/15 border-amber-500/20',
       title: 'Move to Trash',
       message: 'This recording will be moved to trash. You can restore it later.',
@@ -145,7 +145,7 @@ export function RecordsPage() {
       confirmVariant: 'danger' as const,
     };
     if (actionType === 'restore') return {
-      icon: <RotateCcw size={18} className="text-green-400" />,
+      icon: <RotateCcw size={14} className="text-green-400" />,
       bg: 'bg-green-500/15 border-green-500/20',
       title: 'Restore Recording',
       message: 'This recording will be restored to your recordings list.',
@@ -153,7 +153,7 @@ export function RecordsPage() {
       confirmVariant: 'success' as const,
     };
     if (actionType === 'permanent') return {
-      icon: <AlertTriangle size={18} className="text-red-400" />,
+      icon: <AlertTriangle size={14} className="text-red-400" />,
       bg: 'bg-red-500/15 border-red-500/20',
       title: 'Permanently Delete',
       message: 'This action cannot be undone. The file will be permanently removed from the server.',
@@ -167,93 +167,94 @@ export function RecordsPage() {
 
   if (!isAdmin) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center min-h-[60vh]">
-        <AlertTriangle size={48} className="text-amber-400 mb-4" />
-        <h2 className="text-white font-semibold text-lg mb-2">Access Denied</h2>
-        <p className="text-gray-400 text-sm">Only administrators can access meeting recordings.</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <AlertTriangle size={28} className="text-amber-400 mb-3" />
+        <h2 className="text-white font-semibold text-sm mb-1">Access Denied</h2>
+        <p className="text-gray-400 text-[11px]">Only administrators can access meeting recordings.</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-4">
       {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/20 flex items-center justify-center">
-              <Film size={20} className="text-red-400" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-rose-500/25 to-amber-500/25 border border-rose-500/25 flex items-center justify-center">
+              <Film size={16} className="text-rose-400" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </div>
             <div>
-              <h1 className="font-orbitron text-xl sm:text-2xl font-bold text-white">
+              <h1 className="font-orbitron text-sm sm:text-base font-bold text-white tracking-wide">
                 {activeTab === 'trash' ? 'Trash' : 'Meeting Recordings'}
               </h1>
-              <p className="text-gray-500 text-xs sm:text-sm">
-                {data ? `${data.total} item${data.total !== 1 ? 's' : ''}` : 'Loading...'}
+              <p className="text-gray-500 text-[10px] sm:text-[11px]">
+                {data ? `${data.total} item${data.total !== 1 ? 's' : ''}` : 'Loading…'}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-gray-900/80 rounded-lg border border-gray-800/60 p-0.5">
+            <div className="flex items-center bg-gray-950/80 rounded-lg border border-gray-800 p-0.5">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-primary-600/20 text-primary-400' : 'text-gray-500 hover:text-gray-300'}`}
               >
-                <Grid3X3 size={14} />
+                <Grid3X3 size={13} />
               </button>
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-primary-600/20 text-primary-400' : 'text-gray-500 hover:text-gray-300'}`}
               >
-                <List size={14} />
+                <List size={13} />
               </button>
             </div>
           </div>
         </div>
 
         {/* Tabs + Search + Sort */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5 pb-0.5">
             <button
               onClick={() => setActiveTab('recordings')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border ${
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all border ${
                 activeTab === 'recordings'
                   ? 'bg-primary-600/15 text-primary-400 border-primary-500/30'
-                  : 'bg-gray-900/80 text-gray-500 border-gray-800/60 hover:text-gray-300 hover:border-gray-700'
+                  : 'bg-gray-950/70 text-gray-500 border-gray-800 hover:text-white hover:border-gray-700'
               }`}
             >
-              <Archive size={13} /> Recordings
+              <Archive size={11} /> Recordings
             </button>
             <button
               onClick={() => setActiveTab('trash')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border ${
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all border ${
                 activeTab === 'trash'
-                  ? 'bg-red-500/15 text-red-400 border-red-500/30'
-                  : 'bg-gray-900/80 text-gray-500 border-gray-800/60 hover:text-gray-300 hover:border-gray-700'
+                  ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                  : 'bg-gray-950/70 text-gray-500 border-gray-800 hover:text-white hover:border-gray-700'
               }`}
             >
-              <Trash size={13} /> Trash
+              <Trash size={11} /> Trash
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
               <input
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder={`Search ${activeTab === 'trash' ? 'trashed' : ''} recordings...`}
-                className="w-full bg-gray-900/80 border border-gray-800/60 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
+                placeholder={`Search ${activeTab === 'trash' ? 'trashed' : ''} recordings…`}
+                className="w-full bg-gray-950/70 border border-gray-800 rounded-lg pl-8 pr-8 py-2 text-white text-[11px] placeholder-gray-600 focus:ring-1 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
               />
               {searchInput && (
                 <button
                   onClick={() => { setSearchInput(''); setSearch(''); setPage(1); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors"
                 >
-                  <X size={14} />
+                  <X size={12} />
                 </button>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               {([
                 { field: 'created_at' as SortField, label: 'Date' },
                 { field: 'duration_seconds' as SortField, label: 'Duration' },
@@ -262,10 +263,10 @@ export function RecordsPage() {
                 <button
                   key={field}
                   onClick={() => handleSort(field)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all border ${
                     sortBy === field
                       ? 'bg-primary-600/15 text-primary-400 border-primary-500/30'
-                      : 'bg-gray-900/80 text-gray-500 border-gray-800/60 hover:text-gray-300 hover:border-gray-700'
+                      : 'bg-gray-950/70 text-gray-500 border-gray-800 hover:text-white hover:border-gray-700'
                   }`}
                 >
                   {label}
@@ -278,37 +279,37 @@ export function RecordsPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <RefreshCw size={32} className="text-gray-600 animate-spin mb-3" />
-            <p className="text-gray-500 text-sm">Loading...</p>
+          <div className="flex flex-col items-center justify-center py-16">
+            <RefreshCw size={22} className="text-gray-600 animate-spin mb-2.5" />
+            <p className="text-gray-500 text-[11px]">Loading…</p>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-gray-900/80 rounded-2xl border border-red-500/20">
-            <AlertTriangle size={32} className="text-red-400 mb-3" />
-            <p className="text-red-400 font-medium mb-1">Failed to load recordings</p>
-            <p className="text-gray-600 text-xs">{(error as Error).message || 'Unknown error'}</p>
+          <div className="flex flex-col items-center justify-center py-16 bg-gray-950/70 rounded-xl border border-rose-500/20">
+            <AlertTriangle size={22} className="text-rose-400 mb-2.5" />
+            <p className="text-rose-400 text-[12px] font-medium mb-1">Failed to load recordings</p>
+            <p className="text-gray-600 text-[11px]">{(error as Error).message || 'Unknown error'}</p>
             <button
               onClick={() => queryClient.invalidateQueries({ queryKey: ['recordings'] })}
-              className="mt-4 px-4 py-2 rounded-xl bg-gray-800 text-gray-300 text-xs hover:bg-gray-700 transition-colors"
+              className="mt-3 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 text-gray-300 text-[11px] hover:border-gray-700 transition-colors"
             >
-              <RefreshCw size={12} className="inline mr-1.5" /> Retry
+              <RefreshCw size={11} className="inline mr-1.5" /> Retry
             </button>
           </div>
         ) : !data || data.recordings.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-gray-900/80 rounded-2xl border border-gray-800/60">
-            <div className="w-16 h-16 rounded-2xl bg-gray-800/60 border border-gray-700/40 flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center justify-center py-16 bg-gray-950/70 rounded-xl border border-gray-800/80">
+            <div className="w-12 h-12 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center mb-3">
               {activeTab === 'trash'
-                ? <Trash size={28} className="text-gray-600" />
-                : <Film size={28} className="text-gray-600" />
+                ? <Trash size={18} className="text-gray-600" />
+                : <Film size={18} className="text-gray-600" />
               }
             </div>
-            <p className="text-gray-400 font-medium mb-1">
+            <p className="text-gray-300 text-[12px] font-medium mb-1">
               {search
                 ? 'No results found'
                 : activeTab === 'trash' ? 'Trash is empty' : 'No recordings yet'
               }
             </p>
-            <p className="text-gray-600 text-xs">
+            <p className="text-gray-600 text-[11px]">
               {search
                 ? 'Try a different search term'
                 : activeTab === 'trash'
@@ -318,11 +319,11 @@ export function RecordsPage() {
             </p>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {data.recordings.map((rec) => (
               <div
                 key={rec.id}
-                className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 overflow-hidden group hover:border-gray-700/80 transition-all"
+                className="relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 overflow-hidden group hover:border-rose-500/30 transition-all"
               >
                 {/* Thumbnail */}
                 <div
@@ -347,31 +348,31 @@ export function RecordsPage() {
                       <Trash size={24} className="text-gray-500" />
                     </div>
                   )}
-                  <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm rounded text-[10px] text-white font-medium">
+                  <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm rounded text-[9px] text-white font-mono">
                     {formatDuration(rec.duration_seconds)}
                   </div>
                 </div>
                 {/* Info */}
                 <div className="p-3">
-                  <h3 className="text-white text-sm font-medium truncate">{rec.title}</h3>
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                    <span className="flex items-center gap-1 text-[10px] text-gray-400">
+                  <h3 className="text-white text-[12px] font-medium truncate">{rec.title}</h3>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="flex items-center gap-1 text-[10px] text-gray-600">
                       <Calendar size={9} />
                       {new Date(rec.created_at).toLocaleDateString()}
                     </span>
-                    <span className="flex items-center gap-1 text-[10px] text-gray-400">
+                    <span className="flex items-center gap-1 text-[10px] text-gray-600">
                       <HardDrive size={9} />
                       {formatSize(rec.file_size)}
                     </span>
                     {rec.creator_name && (
-                      <span className="flex items-center gap-1 text-[10px] text-gray-400">
+                      <span className="flex items-center gap-1 text-[10px] text-gray-600">
                         <User size={9} />
                         {rec.creator_name}
                       </span>
                     )}
                   </div>
                   {/* Actions */}
-                  <div className="flex items-center gap-1 mt-3 pt-3 border-t border-gray-800/60">
+                  <div className="flex items-center gap-1 mt-2.5 pt-2.5 border-t border-gray-800/60">
                     {activeTab === 'trash' ? (
                       <>
                         <button
@@ -416,22 +417,22 @@ export function RecordsPage() {
           </div>
         ) : (
           /* List View */
-          <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 overflow-hidden">
+          <div className="bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead>
+<thead>
                   <tr className="border-b border-gray-800/60">
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Recording</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Date</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Duration</th>
-                    <th className="text-left px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Size</th>
-                    <th className="text-right px-4 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Recording</th>
+                    <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-widest hidden sm:table-cell">Date</th>
+                    <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-widest hidden md:table-cell">Duration</th>
+                    <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-widest hidden md:table-cell">Size</th>
+                    <th className="text-right px-4 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800/60">
                   {data.recordings.map((rec) => (
                     <tr key={rec.id} className="hover:bg-gray-800/20 transition-colors group">
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2.5">
                         <div className="flex items-center gap-3">
                           <div
                             className="relative w-16 h-9 rounded-lg overflow-hidden bg-gray-800 flex-shrink-0 cursor-pointer"
@@ -449,25 +450,25 @@ export function RecordsPage() {
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-white text-sm font-medium truncate max-w-[200px] sm:max-w-none">{rec.title}</p>
+                            <p className="text-white text-[12px] font-medium truncate max-w-[200px] sm:max-w-none">{rec.title}</p>
                             {rec.creator_name && (
-                              <p className="text-gray-500 text-[11px] mt-0.5 flex items-center gap-1">
+                              <p className="text-gray-600 text-[10px] mt-0.5 flex items-center gap-1">
                                 <User size={9} /> {rec.creator_name}
                               </p>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 hidden sm:table-cell">
-                        <span className="text-gray-400 text-xs">{new Date(rec.created_at).toLocaleDateString()}</span>
+                      <td className="px-4 py-2.5 hidden sm:table-cell">
+                        <span className="text-gray-500 text-[11px]">{new Date(rec.created_at).toLocaleDateString()}</span>
                       </td>
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <span className="text-gray-400 text-xs font-mono">{formatDuration(rec.duration_seconds)}</span>
+                      <td className="px-4 py-2.5 hidden md:table-cell">
+                        <span className="text-gray-500 text-[11px] font-mono">{formatDuration(rec.duration_seconds)}</span>
                       </td>
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <span className="text-gray-400 text-xs">{formatSize(rec.file_size)}</span>
+                      <td className="px-4 py-2.5 hidden md:table-cell">
+                        <span className="text-gray-500 text-[11px]">{formatSize(rec.file_size)}</span>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {activeTab === 'trash' ? (
                             <>
@@ -503,17 +504,17 @@ export function RecordsPage() {
 
         {/* Pagination */}
         {data && data.total_pages > 1 && (
-          <div className="flex items-center justify-between">
-            <p className="text-gray-500 text-xs">
-              Showing {((page - 1) * data.page_size) + 1}–{Math.min(page * data.page_size, data.total)} of {data.total}
+<div className="flex items-center justify-between">
+            <p className="text-gray-600 text-[10px] font-mono">
+              {((page - 1) * data.page_size) + 1}–{Math.min(page * data.page_size, data.total)} / {data.total}
             </p>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-md text-gray-500 hover:text-white hover:bg-gray-900 border border-transparent hover:border-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={13} />
               </button>
               {Array.from({ length: Math.min(5, data.total_pages) }, (_, i) => {
                 let pageNum: number;
@@ -530,22 +531,22 @@ export function RecordsPage() {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
+                    className={`w-7 h-7 rounded-md text-[11px] font-medium transition-all ${
                       page === pageNum
                         ? 'bg-primary-600/20 text-primary-400 border border-primary-500/30'
-                        : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'
+                        : 'text-gray-500 hover:text-white hover:bg-gray-900 border border-transparent hover:border-gray-800'
                     }`}
                   >
                     {pageNum}
                   </button>
                 );
               })}
-              <button
+<button
                 onClick={() => setPage((p) => Math.min(data.total_pages, p + 1))}
                 disabled={page === data.total_pages}
-                className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-md text-gray-500 hover:text-white hover:bg-gray-900 border border-transparent hover:border-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={13} />
               </button>
             </div>
           </div>
@@ -554,16 +555,16 @@ export function RecordsPage() {
         {/* Video Player Modal */}
       {playingId && (
         <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setPlayingId(null)}>
-          <div className="bg-gray-900 rounded-2xl border border-gray-800/60 overflow-hidden max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
             {(() => {
               const rec = data?.recordings.find((r) => r.id === playingId);
               if (!rec) return null;
               return (
                 <>
-                  <div className="p-4 border-b border-gray-800/60 flex items-center justify-between">
+                  <div className="p-3 border-b border-gray-800/60 flex items-center justify-between">
                     <div>
-                      <h3 className="text-white font-semibold text-sm">{rec.title}</h3>
-                      <p className="text-gray-500 text-[11px] mt-0.5">
+                      <h3 className="text-white font-semibold text-[13px]">{rec.title}</h3>
+                      <p className="text-gray-600 text-[10px] mt-0.5 font-mono">
                         {formatDuration(rec.duration_seconds)} · {formatSize(rec.file_size)} · {new Date(rec.created_at).toLocaleString()}
                       </p>
                     </div>
@@ -598,17 +599,17 @@ export function RecordsPage() {
       {/* Action Confirmation Modal */}
       {actionId && actionType && actionConfig && (
         <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setActionId(null); setActionType(null); }}>
-          <div className="bg-gray-900 rounded-2xl border border-gray-800/60 p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${actionConfig.bg}`}>
+          <div className="bg-gray-950 rounded-xl border border-gray-800 p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${actionConfig.bg}`}>
                 {actionConfig.icon}
               </div>
               <div>
-                <h3 className="text-white font-semibold text-sm">{actionConfig.title}</h3>
-                <p className="text-gray-500 text-xs">Please confirm</p>
+                <h3 className="text-white font-semibold text-[13px]">{actionConfig.title}</h3>
+                <p className="text-gray-600 text-[10px]">Please confirm</p>
               </div>
             </div>
-            <p className="text-gray-400 text-sm mb-5">{actionConfig.message}</p>
+            <p className="text-gray-400 text-[11px] mb-4">{actionConfig.message}</p>
             <div className="flex justify-end gap-2">
               <Button variant="secondary" size="sm" onClick={() => { setActionId(null); setActionType(null); }}>Cancel</Button>
               <Button variant={actionConfig.confirmVariant} size="sm" onClick={handleAction} disabled={actionLoading}>
