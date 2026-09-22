@@ -28,14 +28,14 @@ function SettingRow({ icon, iconBg, label, description, children }: {
   icon: React.ReactNode; iconBg: string; label: string; description: string; children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between py-3">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
+    <div className="flex items-center justify-between py-2.5">
+      <div className="flex items-center gap-2.5">
+        <div className={`w-7 h-7 rounded-md flex items-center justify-center ${iconBg}`}>
           {icon}
         </div>
         <div>
-          <p className="text-white font-medium text-sm">{label}</p>
-          <p className="text-gray-500 text-xs">{description}</p>
+          <p className="text-white font-medium text-[12px]">{label}</p>
+          <p className="text-gray-500 text-[10px]">{description}</p>
         </div>
       </div>
       {children}
@@ -82,31 +82,31 @@ export function SettingsPage() {
   return (
     <DashboardLayout>
       <SettingsToast />
-      <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
+      <div className="p-3 sm:p-5 max-w-4xl mx-auto space-y-4 animate-fade-in-up">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-500/15 border border-primary-500/20 flex items-center justify-center">
-              <Shield size={20} className="text-primary-400" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-primary-500/15 border border-primary-500/25 flex items-center justify-center">
+              <Shield size={16} className="text-primary-400" />
             </div>
             <div>
-              <h1 className="font-orbitron text-xl sm:text-2xl font-bold text-white">Settings</h1>
-              <p className="text-gray-500 text-xs sm:text-sm">Manage your account and preferences</p>
+              <h1 className="font-orbitron text-sm sm:text-base font-bold text-white tracking-wide">Settings</h1>
+              <p className="text-gray-500 text-[10px] sm:text-[11px]">Manage your account and preferences</p>
             </div>
           </div>
           <Badge variant="info">{user?.role?.toUpperCase()}</Badge>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 bg-gray-900/80 backdrop-blur-xl rounded-xl border border-gray-800/60 overflow-x-auto">
+        <div className="flex gap-1 p-1 bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 overflow-x-auto">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[10px] font-medium transition-all whitespace-nowrap ${
                 activeTab === tab.key
                   ? 'bg-primary-600/20 text-primary-400 border border-primary-500/30'
-                  : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'
+                  : 'text-gray-500 hover:text-white hover:bg-gray-900'
               }`}
             >
               {tab.icon}
@@ -139,8 +139,8 @@ export function SettingsPage() {
                 {saved ? 'Saved!' : 'Save Profile'}
               </Button>
             ) : (
-              <span className="flex items-center gap-1.5 text-xs text-green-400 bg-green-500/10 border border-green-500/20 px-3 py-2 rounded-lg">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span className="flex items-center gap-1.5 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1.5 rounded-lg">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Applied in real-time
               </span>
             )}
@@ -184,28 +184,29 @@ function ProfileSection({ user, updateUser, activeSubTab, onSubTabChange }: {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 animate-fade-in-up">
       {/* Profile Header Card */}
-      <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 overflow-hidden">
-        <div className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
+      <div className="relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-600/40 to-transparent" />
+        <div className="p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <div className="relative group">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500/30 to-cyan-500/30 border-2 border-gray-700/50 flex items-center justify-center overflow-hidden">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500/30 to-cyan-500/30 border border-gray-700/50 flex items-center justify-center overflow-hidden">
               {user?.avatar_url ? (
                 <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" />
               ) : (
-                <User size={32} className="text-primary-400" />
+                <User size={22} className="text-primary-400" />
               )}
               {uploading && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <RefreshCw size={20} className="text-white animate-spin" />
+                  <RefreshCw size={16} className="text-white animate-spin" />
                 </div>
               )}
             </div>
             <div
-              className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer gap-2"
+              className="absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer gap-1.5"
               onClick={() => fileInputRef.current?.click()}
             >
-              <Camera size={16} className="text-white" />
+              <Camera size={13} className="text-white" />
               <span className="text-[10px] text-white font-medium">Change</span>
             </div>
             <input
@@ -217,32 +218,32 @@ function ProfileSection({ user, updateUser, activeSubTab, onSubTabChange }: {
             />
           </div>
           <div className="flex-1">
-            <h2 className="text-white font-semibold text-lg">{user?.full_name}</h2>
-            <p className="text-gray-400 text-sm">{user?.email}</p>
-            <div className="flex items-center gap-2 mt-2">
+            <h2 className="text-white font-semibold text-[13px]">{user?.full_name}</h2>
+            <p className="text-gray-400 text-[11px]">{user?.email}</p>
+            <div className="flex items-center gap-2 mt-1.5">
               <Badge variant={user?.role === 'principal' ? 'success' : user?.role === 'admin' ? 'info' : 'default'}>
                 {user?.role?.toUpperCase()}
               </Badge>
-              <span className="text-gray-600 text-xs">|</span>
-              <span className="text-gray-500 text-xs flex items-center gap-1">
-                <Building2 size={11} />
+              <span className="text-gray-700 text-[10px]">|</span>
+              <span className="text-gray-500 text-[10px] flex items-center gap-1">
+                <Building2 size={10} />
                 {user?.campus?.replace('_', ' ').toUpperCase()}
               </span>
               {user?.two_factor_enabled && (
                 <>
-                  <span className="text-gray-600 text-xs">|</span>
-                  <span className="text-green-400 text-[10px] flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded">
-                    <Shield size={9} /> 2FA
+                  <span className="text-gray-700 text-[10px]">|</span>
+                  <span className="text-emerald-400 text-[9px] flex items-center gap-1 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                    <Shield size={8} /> 2FA
                   </span>
                 </>
               )}
             </div>
           </div>
-          <div className="sm:text-right text-xs text-gray-600">
+          <div className="sm:text-right text-[10px] text-gray-600">
             <p>Member since</p>
             <p className="text-gray-400">{user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</p>
             {user?.avatar_url && (
-              <button onClick={handleAvatarRemove} className="text-red-400 hover:text-red-300 mt-2 text-[10px]">
+              <button onClick={handleAvatarRemove} className="text-rose-400 hover:text-rose-300 mt-1.5 text-[9px]">
                 Remove photo
               </button>
             )}
@@ -250,15 +251,15 @@ function ProfileSection({ user, updateUser, activeSubTab, onSubTabChange }: {
         </div>
 
         {/* Sub-tabs */}
-        <div className="px-4 sm:px-6 pb-3 flex gap-1 overflow-x-auto">
+        <div className="px-3.5 pb-2.5 flex gap-1 overflow-x-auto border-t border-gray-800/50 pt-2">
           {PROFILE_SUB_TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => onSubTabChange(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
                 activeSubTab === tab.key
                   ? 'bg-primary-600/20 text-primary-400 border border-primary-500/30'
-                  : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'
+                  : 'text-gray-500 hover:text-white hover:bg-gray-900'
               }`}
             >
               {tab.icon}
@@ -312,89 +313,89 @@ function PersonalInfoTab({ user, updateUser }: { user: UserType | null; updateUs
   const hasChanges = fullName !== user?.full_name || email !== user?.email || phone !== (user?.phone || '');
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 overflow-hidden">
-      <div className="p-4 border-b border-gray-800/60 flex items-center gap-2">
-        <Edit3 size={16} className="text-primary-400" />
-        <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Personal Information</span>
+    <div className="bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 overflow-hidden animate-fade-in-up">
+      <div className="px-3.5 py-2.5 border-b border-gray-800/60 flex items-center gap-2">
+        <Edit3 size={13} className="text-primary-400" />
+        <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Personal Information</span>
       </div>
-      <div className="p-4 sm:p-5 space-y-4">
+      <div className="p-3.5 space-y-3">
         {success && (
-          <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 text-sm">
-            <CheckCircle2 size={16} />
+          <div className="flex items-center gap-2 p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-[11px]">
+            <CheckCircle2 size={12} />
             {success}
           </div>
         )}
         {error && (
-          <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
-            <AlertCircle size={16} />
+          <div className="flex items-center gap-2 p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-lg text-rose-400 text-[11px]">
+            <AlertCircle size={12} />
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
+            <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Full Name</label>
             <div className="relative">
-              <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <User size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
               <input
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
+                className="w-full bg-gray-900/60 border border-gray-800 rounded-lg pl-8 pr-4 py-2 text-white text-[11px] focus:ring-1 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Email Address</label>
+            <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Email Address</label>
             <div className="relative">
-              <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <Mail size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
+                className="w-full bg-gray-900/60 border border-gray-800 rounded-lg pl-8 pr-4 py-2 text-white text-[11px] focus:ring-1 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
               />
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Phone Number</label>
+            <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Phone Number</label>
             <div className="relative">
-              <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <Phone size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+63 XXX XXX XXXX"
-                className="w-full bg-gray-800/80 border border-gray-700/50 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm placeholder-gray-600 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
+                className="w-full bg-gray-900/60 border border-gray-800 rounded-lg pl-8 pr-4 py-2 text-white text-[11px] placeholder-gray-600 focus:ring-1 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Campus</label>
-            <div className="flex items-center gap-2 bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-2.5">
-              <Building2 size={14} className="text-gray-500" />
-              <span className="text-gray-300 text-sm">{user?.campus?.replace('_', ' ').toUpperCase()}</span>
-              <span className="ml-auto text-[10px] text-gray-600 bg-gray-800 px-1.5 py-0.5 rounded">READ ONLY</span>
+            <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Campus</label>
+            <div className="flex items-center gap-2 bg-gray-900/50 border border-gray-800 rounded-lg px-3 py-2">
+              <Building2 size={12} className="text-gray-600" />
+              <span className="text-gray-300 text-[11px]">{user?.campus?.replace('_', ' ').toUpperCase()}</span>
+              <span className="ml-auto text-[9px] text-gray-600 bg-gray-900 px-1.5 py-0.5 rounded">READ ONLY</span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Role</label>
-            <div className="flex items-center gap-2 bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-2.5">
-              <Shield size={14} className="text-gray-500" />
-              <span className="text-gray-300 text-sm">{user?.role?.toUpperCase()}</span>
-              <span className="ml-auto text-[10px] text-gray-600 bg-gray-800 px-1.5 py-0.5 rounded">READ ONLY</span>
+            <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Role</label>
+            <div className="flex items-center gap-2 bg-gray-900/50 border border-gray-800 rounded-lg px-3 py-2">
+              <Shield size={12} className="text-gray-600" />
+              <span className="text-gray-300 text-[11px]">{user?.role?.toUpperCase()}</span>
+              <span className="ml-auto text-[9px] text-gray-600 bg-gray-900 px-1.5 py-0.5 rounded">READ ONLY</span>
             </div>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Last Login</label>
-            <div className="flex items-center gap-2 bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-2.5">
-              <LogIn size={14} className="text-gray-500" />
-              <span className="text-gray-300 text-sm">
+            <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1">Last Login</label>
+            <div className="flex items-center gap-2 bg-gray-900/50 border border-gray-800 rounded-lg px-3 py-2">
+              <LogIn size={12} className="text-gray-600" />
+              <span className="text-gray-300 text-[11px]">
                 {user?.last_login_at ? new Date(user.last_login_at).toLocaleString() : 'N/A'}
               </span>
             </div>
@@ -402,10 +403,10 @@ function PersonalInfoTab({ user, updateUser }: { user: UserType | null; updateUs
         </div>
 
         {hasChanges && (
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end pt-1.5">
             <Button onClick={handleSave} size="sm" disabled={saving} className="inline-flex items-center whitespace-nowrap bg-gradient-to-r from-primary-600 to-cyan-600 hover:from-primary-500 hover:to-cyan-500">
-              {saving ? <RefreshCw size={12} className="mr-1.5 animate-spin" /> : <Save size={12} className="mr-1.5" />}
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? <RefreshCw size={11} className="mr-1.5 animate-spin" /> : <Save size={11} className="mr-1.5" />}
+              {saving ? 'Saving…' : 'Save Changes'}
             </Button>
           </div>
         )}

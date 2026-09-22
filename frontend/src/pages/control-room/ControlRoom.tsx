@@ -193,9 +193,9 @@ export function ControlRoom() {
     <DashboardLayout>
       <div className="h-full flex flex-col p-1.5 sm:p-3 md:p-4">
         {/* Header */}
-        <header className="flex items-center justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-3 md:mb-4">
+        <header className="flex items-center justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-3 md:mb-4 animate-fade-in-up">
           <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-wrap">
-            <h1 className="font-orbitron text-base sm:text-xl md:text-2xl font-bold text-white truncate">Control Room</h1>
+            <h1 className="font-orbitron text-sm sm:text-base font-bold text-white tracking-wide truncate">Control Room</h1>
             <span className="flex items-center gap-1 text-green-400 font-medium text-[10px] sm:text-xs">
               <Wifi size={10} className="sm:w-3 sm:h-3" /> <span className="hidden sm:inline">SYSTEM ONLINE</span>
             </span>
@@ -237,7 +237,7 @@ export function ControlRoom() {
               {showOnlinePanel && (
                 <div className="absolute right-0 top-full mt-2 w-60 sm:w-72 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
                   <div className="px-3 py-2 border-b border-gray-700 flex items-center justify-between">
-                    <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider">Online ({roomUsers.length})</p>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Online ({roomUsers.length})</p>
                     <div className="flex items-center gap-1.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                       <span className="text-[10px] text-green-400 font-medium">LIVE</span>
@@ -265,11 +265,11 @@ export function ControlRoom() {
                             {u.user?.charAt(0)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[11px] sm:text-sm text-white truncate">
+                            <p className="text-[11px] text-white truncate">
                               {u.user}
-                              {isMe && <span className="ml-1 text-[9px] sm:text-[10px] text-primary-400 font-semibold">(You)</span>}
+                              {isMe && <span className="ml-1 text-[9px] text-primary-400 font-semibold">(You)</span>}
                             </p>
-                            <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase truncate">{u.campus?.replace('_', ' ')} · {u.role}</p>
+                            <p className="text-[9px] text-gray-600 uppercase truncate">{u.campus?.replace('_', ' ')} · {u.role}</p>
                           </div>
                           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 flex-shrink-0" />
                         </div>
@@ -307,7 +307,7 @@ export function ControlRoom() {
         )}
 
         {/* Video Grid */}
-        <div className="flex-1 mb-1.5 sm:mb-3 md:mb-4 min-h-0" data-demo="remote-area">
+        <div className="flex-1 mb-1.5 sm:mb-3 md:mb-4 min-h-0 animate-fade-in-up" data-demo="remote-area">
           {screenSharerSid ? (
             <div className="h-full flex flex-col gap-1.5 sm:gap-3">
               {(() => {
@@ -379,15 +379,15 @@ export function ControlRoom() {
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center bg-gray-900/50 rounded-xl border border-gray-800/40">
-              <Users size={24} className="text-gray-600 mb-1.5 sm:mb-2" />
-              <p className="text-gray-500 font-medium text-xs sm:text-sm">Waiting for connections...</p>
-              <p className="text-gray-600 text-[10px] sm:text-xs mt-1 hidden sm:block">Other users will appear here when they join</p>
+              <Users size={18} className="text-gray-600 mb-1.5" />
+              <p className="text-gray-500 font-medium text-[11px]">Waiting for connections…</p>
+              <p className="text-gray-600 text-[10px] mt-0.5 hidden sm:block">Other users will appear here when they join</p>
             </div>
           )}
         </div>
 
         {/* Your Feed + Controls — stacked on mobile, side-by-side on tablet+ */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 md:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 md:gap-4 animate-fade-in-up">
           {/* Local Feed */}
           <div className="w-full sm:w-20 md:w-36 lg:w-48 flex-shrink-0" data-demo="local-video">
             <VideoCard
