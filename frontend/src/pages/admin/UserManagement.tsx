@@ -201,15 +201,15 @@ export function UserManagement() {
           {stats.map((stat, i) => (
             <div
               key={stat.label}
-              className="relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 p-3 hover:border-primary-500/30 transition-all duration-300"
+              className="relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 p-2.5 hover:border-primary-500/30 transition-all duration-300"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-600/40 to-transparent" />
-              <div className="flex items-center justify-between mb-2">
-                <div className={`w-6 h-6 rounded-md border flex items-center justify-center ${stat.bg} ${stat.color}`}>
+              <div className="flex items-center gap-1.5 mb-2">
+                <div className={`w-6 h-6 shrink-0 rounded-md border flex items-center justify-center ${stat.bg} ${stat.color}`}>
                   <stat.icon size={12} />
                 </div>
-                <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest font-medium">{stat.label}</span>
+                <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest font-medium truncate">{stat.label}</span>
               </div>
               <p className={`text-base sm:text-lg font-bold font-mono leading-none ${stat.color}`}>{stat.value}</p>
             </div>

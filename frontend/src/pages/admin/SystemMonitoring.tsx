@@ -466,14 +466,12 @@ function StatusCard({ icon, accent, label, value, subValue, progress, status }: 
   const s = ACCENT_STYLES[accent];
   return (
     <div className={`group relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 p-3 transition-all duration-300 ${s.glow}`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className={`w-6 h-6 rounded-md border flex items-center justify-center ${s.icon}`}>
+      <div className="flex items-center gap-1.5 mb-2">
+        <div className={`w-6 h-6 shrink-0 rounded-md border flex items-center justify-center ${s.icon}`}>
           {icon}
         </div>
-        <div className="flex items-center gap-1.5">
-          {status && <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[status]}`} />}
-          <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest font-medium">{label}</span>
-        </div>
+        <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest font-medium truncate">{label}</span>
+        {status && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />}
       </div>
       <p className="text-white text-base sm:text-lg font-bold font-mono leading-none">{value}</p>
       {subValue && <p className="text-gray-600 text-[9px] mt-1 truncate">{subValue}</p>}

@@ -131,7 +131,7 @@ export function SessionHistory() {
       </div>
 
       {/* Search + Filters */}
-      <div className="bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 p-3 pb-4 space-y-3 relative overflow-hidden">
+      <div className="bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 p-3 pb-5 space-y-3 relative">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-600/40 to-transparent" />
         <div className="relative">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
