@@ -10,6 +10,8 @@ import { ControlRoom } from './pages/control-room/ControlRoom';
 import { SettingsPage } from './pages/control-room/SettingsPage';
 import { RecordsPage } from './pages/control-room/RecordsPage';
 import { UserManagement } from './pages/admin/UserManagement';
+import { SessionHistory } from './pages/admin/SessionHistory';
+import { AuditLogs } from './pages/admin/AuditLogs';
 import { queryClient } from './lib/queryClient';
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
@@ -78,6 +80,24 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['principal', 'admin']}>
                 <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/audit-logs"
+            element={
+              <ProtectedRoute allowedRoles={['principal', 'admin']}>
+                <AuditLogs />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/session-history"
+            element={
+              <ProtectedRoute allowedRoles={['principal', 'admin']}>
+                <SessionHistory />
               </ProtectedRoute>
             }
           />

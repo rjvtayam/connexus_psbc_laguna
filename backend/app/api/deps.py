@@ -80,9 +80,9 @@ async def get_current_user_optional(
 
 
 async def require_principal(current_user=Depends(get_current_user)):
-    if current_user.role != "principal":
+    if current_user.role not in ["principal", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Principal access required",
+            detail="Principal or admin access required",
         )
     return current_user

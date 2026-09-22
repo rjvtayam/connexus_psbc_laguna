@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from app.database import get_db
-from app.api.deps import get_current_user, require_principal
+from app.api.deps import get_current_user, require_admin
 from app.services.session_service import SessionService
 from app.services.emergency_service import EmergencyService
 from app.services.user_service import UserService
+from app.models.audit_log import AuditLog
 
 router = APIRouter()
 
@@ -67,8 +69,35 @@ def get_dashboard_stats(db: Session = Depends(get_db), _=Depends(get_current_use
 def trigger_emergency(
     message: dict = {},
     db: Session = Depends(get_db),
-    user=Depends(require_principal),
+    user=Depends(require_admin),
 ):
     emergency_service = EmergencyService(db)
     emergency = emergency_service.trigger_emergency(user.id, message.get("message"))
     return {"message": "Emergency triggered", "emergency_id": str(emergency.id)}
+
+
+@router.get("/audit-logs")
+def get_audit_logs(
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    _=Depends(require_admin),
+):
+    logs = (
+        db.query(AuditLog)
+        .order_by(desc(AuditLog.timestamp))
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": str(log.id),
+            "user_id": str(log.user_id),
+            "action": log.action,
+            "details": log.details,
+            "ip_address": log.ip_address,
+            "timestamp": log.timestamp.isoformat() if log.timestamp else None,
+        }
+        for log in logs
+    ]

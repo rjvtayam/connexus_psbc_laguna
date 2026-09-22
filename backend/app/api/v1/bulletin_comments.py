@@ -35,14 +35,20 @@ def get_comments(announcement_id: UUID, db: Session = Depends(get_db), _=Depends
         .order_by(BulletinComment.created_at.asc())
         .all()
     )
+    if not comments:
+        return []
+
+    user_ids = {c.user_id for c in comments}
+    users = db.query(User).filter(User.id.in_(user_ids)).all()
+    user_map = {str(u.id): u.full_name for u in users}
+
     results = []
     for c in comments:
-        user = db.query(User).filter(User.id == c.user_id).first()
         results.append(CommentOut(
             id=c.id,
             announcement_id=c.announcement_id,
             user_id=c.user_id,
-            user_name=user.full_name if user else "Unknown",
+            user_name=user_map.get(str(c.user_id), "Unknown"),
             message=c.message,
             created_at=c.created_at.isoformat() if c.created_at else "",
         ))
