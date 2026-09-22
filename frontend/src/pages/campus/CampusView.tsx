@@ -18,6 +18,8 @@ import { usePeerStore } from '../../stores/peerStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useAuthStore } from '../../stores/authStore';
 import { ROOMS } from '../../lib/constants';
+import { RoomUser } from '../../types/session';
+import { buildSelfUser, cardKey, partitionCampusColumns, SELF_CARD_KEY } from '../../lib/campusLayout';
 import { Users, Wifi, MessageSquare, MonitorUp, AlertTriangle, X } from 'lucide-react';
 import { PortalStatusIndicator } from '../../components/indicators/PortalStatusIndicator';
 import { MicTalkingIndicator } from '../../components/indicators/MicTalkingIndicator';
@@ -130,12 +132,46 @@ export function CampusView() {
     return true;
   });
 
-  const getGridClass = (count: number) => {
-    if (count <= 1) return 'grid-cols-1';
-    if (count === 2) return 'grid-cols-1 sm:grid-cols-2';
-    if (count <= 4) return 'grid-cols-1 sm:grid-cols-2';
-    if (count <= 6) return 'grid-cols-2 lg:grid-cols-3';
-    return 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+  const selfUser = buildSelfUser({
+    sid: mySid,
+    name: user?.full_name || 'You',
+    campus: campusName || user?.campus,
+    role: user?.role,
+    stream: localStream,
+  });
+
+  const displayUsers: RoomUser[] = [...visibleUsers, selfUser];
+  const campusColumns = partitionCampusColumns(displayUsers);
+
+  const renderParticipantCard = (u: RoomUser) => {
+    if (u === selfUser) {
+      return (
+        <VideoCard
+          key={cardKey(u, true)}
+          stream={localStream}
+          name={u.user}
+          campus={u.campus}
+          isLocal={true}
+          isMuted={!localMicActive}
+          isVideoOff={isVideoOff}
+          peerSid={mySid}
+        />
+      );
+    }
+
+    return (
+      <VideoCard
+        key={u.sid}
+        stream={u.stream || null}
+        name={u.user}
+        campus={u.campus}
+        isMuted={remoteAudioMuted[u.sid] || false}
+        isVideoOff={remoteVideoOff[u.sid] || false}
+        isPortalLive={remotePortalModes[u.sid] ?? false}
+        portalStatus={remoteMeetingModes[u.sid] ? 'meeting' : (remotePortalModes[u.sid] ? 'portal' : 'live')}
+        peerSid={u.sid}
+      />
+    );
   };
 
   const campusLabel = campusName?.toUpperCase() || 'CAMPUS';
@@ -296,40 +332,70 @@ export function CampusView() {
                 }
                 return null;
               })()}
-              {visibleUsers.filter((u) => u.sid !== screenSharerSid).length > 0 && (
+              {displayUsers.filter((u) => {
+                if (screenSharerSid && u.sid === screenSharerSid) return false;
+                if (screenSharerSid === mySid && u === selfUser) return false;
+                return true;
+              }).length > 0 && (
                 <div className="flex gap-1.5 sm:gap-2 h-16 sm:h-24 md:h-28 flex-shrink-0 overflow-x-auto">
-                  {visibleUsers.filter((u) => u.sid !== screenSharerSid).map((u) => (
-                    <div key={u.sid} className="w-24 sm:w-32 md:w-40 flex-shrink-0">
-                      <VideoCard
-                        stream={u.stream || null}
-                        name={u.user}
-                        campus={u.campus}
-                        isSmall={true}
-                        isMuted={remoteAudioMuted[u.sid] || false}
-                        isVideoOff={remoteVideoOff[u.sid] || false}
-                        isPortalLive={remotePortalModes[u.sid] ?? false}
-                        portalStatus={remoteMeetingModes[u.sid] ? 'meeting' : (remotePortalModes[u.sid] ? 'portal' : 'live')}
-                        peerSid={u.sid}
-                      />
-                    </div>
-                  ))}
+                  {displayUsers.filter((u) => {
+                    if (screenSharerSid && u.sid === screenSharerSid) return false;
+                    if (screenSharerSid === mySid && u === selfUser) return false;
+                    return true;
+                  }).map((u) => {
+                    const isSelf = u === selfUser;
+                    if (isSelf) {
+                      return (
+                        <div key={SELF_CARD_KEY} className="w-24 sm:w-32 md:w-40 flex-shrink-0">
+                          <VideoCard
+                            stream={localStream}
+                            name={u.user}
+                            campus={u.campus}
+                            isLocal={true}
+                            isSmall={true}
+                            isMuted={!localMicActive}
+                            isVideoOff={isVideoOff}
+                            peerSid={mySid}
+                          />
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={u.sid} className="w-24 sm:w-32 md:w-40 flex-shrink-0">
+                        <VideoCard
+                          stream={u.stream || null}
+                          name={u.user}
+                          campus={u.campus}
+                          isSmall={true}
+                          isMuted={remoteAudioMuted[u.sid] || false}
+                          isVideoOff={remoteVideoOff[u.sid] || false}
+                          isPortalLive={remotePortalModes[u.sid] ?? false}
+                          portalStatus={remoteMeetingModes[u.sid] ? 'meeting' : (remotePortalModes[u.sid] ? 'portal' : 'live')}
+                          peerSid={u.sid}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
-          ) : visibleUsers.length > 0 ? (
-            <div className={`grid ${getGridClass(visibleUsers.length)} gap-1.5 sm:gap-3 h-full`}>
-              {visibleUsers.map((u) => (
-                <VideoCard
-                  key={u.sid}
-                  stream={u.stream || null}
-                  name={u.user}
-                  campus={u.campus}
-                  isMuted={remoteAudioMuted[u.sid] || false}
-                  isVideoOff={remoteVideoOff[u.sid] || false}
-                  isPortalLive={remotePortalModes[u.sid] ?? false}
-                  portalStatus={remoteMeetingModes[u.sid] ? 'meeting' : (remotePortalModes[u.sid] ? 'portal' : 'live')}
-                  peerSid={u.sid}
-                />
+          ) : campusColumns.length > 0 ? (
+            <div className="h-full flex flex-col sm:flex-row gap-1.5 sm:gap-3 overflow-y-auto sm:overflow-hidden">
+              {campusColumns.map((col) => (
+                <div key={col.campus} className="flex flex-col gap-1 sm:gap-1.5 sm:flex-1 sm:min-w-0 sm:min-h-0">
+                  <div className="flex-shrink-0 flex items-center justify-center">
+                    <span className={`text-[9px] sm:text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-md border ${col.badge}`}>
+                      {col.label}
+                    </span>
+                    <span className="ml-1.5 text-[9px] text-gray-500 font-medium">{col.users.length}</span>
+                  </div>
+                  <div
+                    className="grid gap-1.5 sm:gap-3 sm:flex-1 sm:min-h-0"
+                    style={{ gridTemplateRows: `repeat(${col.users.length}, minmax(11rem, 1fr))` }}
+                  >
+                    {col.users.map((u) => renderParticipantCard(u))}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
@@ -340,22 +406,9 @@ export function CampusView() {
           )}
         </div>
 
-        {/* Local Feed + Controls — stacked on mobile, side-by-side on tablet+ */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 md:gap-4">
-          <div className="w-full sm:w-20 md:w-36 lg:w-48 flex-shrink-0" data-demo="local-video">
-            <VideoCard
-              stream={localStream}
-              name={user?.full_name || 'You'}
-              campus={campusName || 'paete'}
-              isLocal={true}
-              isSmall={true}
-              isMuted={!localMicActive}
-              isVideoOff={isVideoOff}
-              peerSid={mySid}
-            />
-          </div>
-
-          <div className="flex-1 bg-gray-900/80 backdrop-blur-xl rounded-xl border border-gray-800/60 p-1.5 sm:p-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1.5 sm:gap-2">
+        {/* Controls — self card lives in the campus grid above */}
+        <div className="animate-fade-in-up">
+          <div className="bg-gray-900/80 backdrop-blur-xl rounded-xl border border-gray-800/60 p-1.5 sm:p-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1.5 sm:gap-2">
             <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
               <span className={`text-[9px] sm:text-[10px] md:text-xs px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg border ${campusName === 'paete' ? 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30' : 'text-purple-300 bg-purple-500/10 border-purple-500/30'}`} data-demo="campus-badge">
                 <span className="opacity-60 hidden sm:inline">Campus :</span> <span className="font-bold">{campusLabel}</span>
