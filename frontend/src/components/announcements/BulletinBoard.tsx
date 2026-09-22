@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Announcement } from '../../types/announcement';
 import { announcementsApi } from '../../api/announcements.api';
 import { notificationsApi, Notification } from '../../api/notifications.api';
@@ -429,10 +430,12 @@ export function BulletinBoard() {
         )}
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40 transition-opacity" onClick={() => setIsOpen(false)} />
-      )}
-      <div className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-gray-900 border-l border-gray-700/60 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      {createPortal(
+        <>
+          {isOpen && (
+            <div className="fixed inset-0 bg-black/40 z-40 transition-opacity" onClick={() => setIsOpen(false)} />
+          )}
+          <div className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-gray-900 border-l border-gray-700/60 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700/60 bg-gray-900/80 backdrop-blur-sm flex-shrink-0">
               <div className="flex items-center gap-2">
@@ -942,39 +945,42 @@ export function BulletinBoard() {
                 </div>
               )}
             </div>
-      </div>
-
-      {/* Delete Confirmation Modal */}
-      {deleteConfirmId && (
-        <>
-          <div className="fixed inset-0 bg-black/50 z-[60]" onClick={() => setDeleteConfirmId(null)} />
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 bg-gray-900 border border-gray-700/60 rounded-2xl shadow-2xl z-[61] p-5 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
-                <Trash2 size={18} className="text-red-400" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Delete Bulletin</h3>
-                <p className="text-[11px] text-gray-500">This action cannot be undone.</p>
-              </div>
-            </div>
-            <p className="text-xs text-gray-400">This bulletin will be permanently removed from the board.</p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setDeleteConfirmId(null)}
-                className="px-3 py-1.5 text-[11px] rounded-lg bg-gray-700 text-gray-400 hover:bg-gray-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleSoftDelete(deleteConfirmId)}
-                className="px-3 py-1.5 text-[11px] rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 transition-colors font-medium"
-              >
-                Delete
-              </button>
-            </div>
           </div>
-        </>
+
+          {/* Delete Confirmation Modal */}
+          {deleteConfirmId && (
+            <>
+              <div className="fixed inset-0 bg-black/50 z-[60]" onClick={() => setDeleteConfirmId(null)} />
+              <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 bg-gray-900 border border-gray-700/60 rounded-2xl shadow-2xl z-[61] p-5 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                    <Trash2 size={18} className="text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Delete Bulletin</h3>
+                    <p className="text-[11px] text-gray-500">This action cannot be undone.</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400">This bulletin will be permanently removed from the board.</p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setDeleteConfirmId(null)}
+                    className="px-3 py-1.5 text-[11px] rounded-lg bg-gray-700 text-gray-400 hover:bg-gray-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleSoftDelete(deleteConfirmId)}
+                    className="px-3 py-1.5 text-[11px] rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 transition-colors font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </>,
+        document.body
       )}
     </>
   );
