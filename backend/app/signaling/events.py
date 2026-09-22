@@ -62,31 +62,42 @@ async def disconnect(sid, reason=""):
     try:
         session = await sio.get_session(sid)
     except (KeyError, Exception):
-        return
+        session = None
 
-    user_id = session.get("user_id")
-    room_id = session.get("current_room")
     system_metrics_subscribers.discard(sid)
+    room_id = session.get("current_room") if session else None
+    if not room_id:
+        for rid, members in list(room_members.items()):
+            if sid in members:
+                room_id = rid
+                break
+
     if room_id:
         if room_id in room_members and sid in room_members[room_id]:
             room_members[room_id].discard(sid)
 
-        try:
-            await sio.emit("peer_left", {
-                "sid": sid,
-                "user": session.get("full_name"),
-                "campus": session.get("campus"),
-                "role": session.get("role"),
-            }, room=room_id)
-            await sio.leave_room(sid, room_id)
-        except Exception:
-            pass
+        if session:
+            try:
+                await sio.emit("peer_left", {
+                    "sid": sid,
+                    "user": session.get("full_name"),
+                    "campus": session.get("campus"),
+                    "role": session.get("role"),
+                }, room=room_id)
+                await sio.leave_room(sid, room_id)
+            except Exception:
+                pass
+        else:
+            try:
+                await sio.leave_room(sid, room_id)
+            except Exception:
+                pass
 
         await _broadcast_room_users(room_id)
 
-    if user_id:
+    if session and session.get("user_id"):
         try:
-            await sio.leave_room(sid, f"user_{user_id}")
+            await sio.leave_room(sid, f"user_{session.get('user_id')}")
         except Exception:
             pass
 
@@ -113,12 +124,14 @@ async def join_room(sid, data):
     user_id = session.get("user_id")
     stale_sids = []
     for existing_sid in list(room_members[room_id]):
+        if existing_sid == sid:
+            continue
         try:
             existing_session = await sio.get_session(existing_sid)
             if existing_session and existing_session.get("user_id") == user_id:
                 stale_sids.append(existing_sid)
         except (KeyError, Exception):
-            stale_sids.append(existing_sid)
+            pass
 
     for stale_sid in stale_sids:
         room_members[room_id].discard(stale_sid)
@@ -133,6 +146,7 @@ async def join_room(sid, data):
     session["current_room"] = room_id
     session["portal_active"] = True
     session["portal_meeting"] = False
+    await sio.save_session(sid, session)
 
     await sio.emit("peer_joined", {
         "sid": sid,
@@ -142,6 +156,7 @@ async def join_room(sid, data):
     }, room=room_id, skip_sid=sid)
 
     await _broadcast_room_users(room_id)
+    await sio.emit("room_users", await _build_room_users_payload(room_id), room=sid)
 
     for existing_sid in list(room_members[room_id]):
         if existing_sid == sid:
@@ -226,7 +241,7 @@ async def leave_room(sid, data):
     await _broadcast_room_users(room_id)
 
 
-async def _broadcast_room_users(room_id: str):
+async def _build_room_users_payload(room_id: str) -> dict:
     members = room_members.get(room_id, set())
     room_users = []
     portal_states = {}
@@ -246,9 +261,33 @@ async def _broadcast_room_users(room_id: str):
                 }
         except (KeyError, Exception):
             room_members.get(room_id, set()).discard(member_sid)
+    return {"users": room_users, "portal_states": portal_states}
 
-    print(f"[Backend] Broadcasting room_users ({len(room_users)} users) to room={room_id}: {[u['user'] for u in room_users]}")
-    await sio.emit("room_users", {"users": room_users, "portal_states": portal_states}, room=room_id)
+
+async def _broadcast_room_users(room_id: str):
+    payload = await _build_room_users_payload(room_id)
+    print(f"[Backend] Broadcasting room_users ({len(payload['users'])} users) to room={room_id}: {[u['user'] for u in payload['users']]}")
+    await sio.emit("room_users", payload, room=room_id)
+
+
+@sio.event
+async def sync_room(sid, data=None):
+    try:
+        session = await sio.get_session(sid)
+    except (KeyError, Exception):
+        return
+    room_id = session.get("current_room")
+    if not room_id:
+        room_id = data.get("room_id") if isinstance(data, dict) else None
+    if not room_id:
+        return
+    if room_id not in room_members:
+        room_members[room_id] = set()
+    room_members[room_id].add(sid)
+    await sio.enter_room(sid, room_id)
+    session["current_room"] = room_id
+    await sio.save_session(sid, session)
+    await sio.emit("room_users", await _build_room_users_payload(room_id), room=sid)
 
 
 @sio.event

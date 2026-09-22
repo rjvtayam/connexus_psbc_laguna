@@ -37,12 +37,12 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
     }).catch(() => {});
 
     const autoReconnect = useSettingsStore.getState().autoReconnect;
-    if (autoReconnect) {
-      const roomId = localStorage.getItem('current_room_id');
-      if (roomId) {
-        console.log('[Socket] Auto-rejoining room:', roomId);
-        socket?.emit('join_room', { room_id: roomId });
-      }
+    const roomId = localStorage.getItem('current_room_id');
+    if (roomId) {
+      console.log('[Socket] (Re)joining room:', roomId);
+      socket?.emit('join_room', { room_id: roomId });
+    } else if (autoReconnect) {
+      console.log('[Socket] Auto-reconnect on, but no room id stored');
     }
   });
 

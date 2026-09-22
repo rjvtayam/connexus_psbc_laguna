@@ -61,18 +61,22 @@ export function CampusView() {
 
   useEffect(() => {
     const init = async () => {
+      localStorage.setItem('current_room_id', roomId);
+      emit('join_room', { room_id: roomId });
+      emit('portal_mode_changed', { active: portalMode, meeting: false });
       try {
-        localStorage.setItem('current_room_id', roomId);
         await startLocalStream();
-        emit('join_room', { room_id: roomId });
-        emit('portal_mode_changed', { active: portalMode, meeting: false });
       } catch (err: any) {
         console.error('[CampusView] Error in init:', err);
         setCameraError(err?.message || 'Could not access camera/microphone. Please allow permissions and reload.');
       }
     };
     init();
+    const syncTimer = window.setInterval(() => {
+      emit('sync_room', { room_id: roomId });
+    }, 10000);
     return () => {
+      window.clearInterval(syncTimer);
       localStorage.removeItem('current_room_id');
     };
   }, []);
