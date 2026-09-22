@@ -419,11 +419,11 @@ export function BulletinBoard() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="relative p-1.5 sm:p-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+        className="relative p-1 sm:p-1.5 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
       >
         <Bell size={12} className="sm:w-3.5 sm:h-3.5" />
         {totalUnread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center px-1 animate-badge-pulse">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[14px] sm:min-w-[16px] h-3.5 sm:h-4 bg-red-500 rounded-full text-[8px] sm:text-[10px] font-bold flex items-center justify-center px-0.5 sm:px-1 animate-badge-pulse">
             {totalUnread > 99 ? '99+' : totalUnread}
           </span>
         )}
