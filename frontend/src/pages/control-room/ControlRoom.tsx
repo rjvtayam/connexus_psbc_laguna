@@ -111,9 +111,9 @@ export function ControlRoom() {
     if (portalMode) {
       setTalkTarget(null);
       setLocalMicActive(false);
-      localStream.getVideoTracks().forEach((track) => { track.enabled = false; });
-      usePeerStore.setState({ isVideoOff: true });
-      emit('mute_video', { video_off: true });
+      localStream.getVideoTracks().forEach((track) => { track.enabled = true; });
+      usePeerStore.setState({ isVideoOff: false });
+      emit('mute_video', { video_off: false });
       emit('mute_audio', { muted: true });
       emit('talk_to', { target: null });
     }
@@ -445,7 +445,7 @@ export function ControlRoom() {
                 onToggleHand={handleToggleHand}
                 onReact={handleReact}
                 audioDisabled={portalMode}
-                videoDisabled={portalMode}
+                videoDisabled={false}
                 screenShareDisabled={portalMode}
                 handDisabled={portalMode}
                 reactionDisabled={portalMode}

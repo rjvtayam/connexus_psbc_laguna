@@ -33,8 +33,7 @@ export function useWebRTC(_roomId: string) {
       const portalOn = useSessionStore.getState().portalMode;
       if (portalOn) {
         stream.getAudioTracks().forEach((track) => { track.enabled = false; });
-        stream.getVideoTracks().forEach((track) => { track.enabled = false; });
-        usePeerStore.setState({ localMicActive: false, isAudioMuted: true, isVideoOff: true });
+        usePeerStore.setState({ localMicActive: false, isAudioMuted: true, isVideoOff: false });
       } else {
         usePeerStore.setState({ localMicActive: true, isAudioMuted: false });
       }
