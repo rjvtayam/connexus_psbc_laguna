@@ -392,7 +392,7 @@ export function BulletinBoard() {
       case 'emergency':
         return <AlertTriangle size={14} className="text-red-400" />;
       case 'bulletin':
-        return <Megaphone size={14} className="text-blue-400" />;
+        return <Megaphone size={12} className="text-blue-400" />;
       default:
         return <Info size={14} className="text-gray-400" />;
     }
@@ -421,7 +421,7 @@ export function BulletinBoard() {
         onClick={() => setIsOpen(true)}
         className="relative p-1.5 sm:p-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
       >
-        <Bell size={16} className="sm:w-5 sm:h-5" />
+        <Bell size={12} className="sm:w-3.5 sm:h-3.5" />
         {totalUnread > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center px-1 animate-badge-pulse">
             {totalUnread > 99 ? '99+' : totalUnread}
@@ -437,7 +437,7 @@ export function BulletinBoard() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700/60 bg-gray-900/80 backdrop-blur-sm flex-shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
-                  <Bell size={15} className="text-amber-400" />
+                  <Bell size={12} className="text-amber-400" />
                 </div>
                 <div>
                   <h2 className="text-sm font-bold text-white leading-tight">Notifications</h2>
@@ -598,7 +598,7 @@ export function BulletinBoard() {
                 notifications.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-3">
-                      <Bell size={20} className="text-gray-600" />
+                      <Bell size={16} className="text-gray-600" />
                     </div>
                     <p className="text-gray-500 text-xs font-medium">No notifications yet</p>
                     <p className="text-gray-600 text-[10px] mt-1">Bulletins and alerts will appear here</p>
@@ -670,7 +670,7 @@ export function BulletinBoard() {
                   {announcements.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-3">
-                        <Megaphone size={20} className="text-gray-600" />
+                        <Megaphone size={16} className="text-gray-600" />
                       </div>
                       <p className="text-gray-500 text-xs font-medium">No bulletins</p>
                       <p className="text-gray-600 text-[10px] mt-1">Announcements from admins will appear here</p>

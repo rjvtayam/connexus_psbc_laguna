@@ -284,10 +284,10 @@ export function ControlRoom() {
             <div className="hidden md:flex"><MicTalkingIndicator /></div>
             <button
               onClick={() => { setShowChat(true); clearUnreadChat(); }}
-              className="relative p-1.5 sm:p-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+              className="relative p-1 sm:p-1.5 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
               data-demo="btn-chat"
             >
-              <MessageSquare size={16} className="sm:w-5 sm:h-5" />
+              <MessageSquare size={12} className="sm:w-3.5 sm:h-3.5" />
               {(unreadAllCount + unreadCampusCount) > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 min-w-[14px] sm:min-w-[16px] h-3.5 sm:h-4 bg-blue-500 rounded-full text-[8px] sm:text-[10px] font-bold flex items-center justify-center px-0.5 sm:px-1 animate-badge-pulse">
                   {(unreadAllCount + unreadCampusCount) > 99 ? '99+' : (unreadAllCount + unreadCampusCount)}
@@ -379,7 +379,7 @@ export function ControlRoom() {
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center bg-gray-900/50 rounded-xl border border-gray-800/40">
-              <Users size={18} className="text-gray-600 mb-1.5" />
+              <Users size={14} className="text-gray-600 mb-1.5" />
               <p className="text-gray-500 font-medium text-[11px]">Waiting for connections…</p>
               <p className="text-gray-600 text-[10px] mt-0.5 hidden sm:block">Other users will appear here when they join</p>
             </div>
