@@ -46,7 +46,6 @@ export function useRecording(roomId: string) {
           if ('getDisplayMedia' in navigator.mediaDevices) {
             // Test if browser supports displaySurface
             try {
-              const testConstraints = { video: { displaySurface: 'browser' } };
               // We can't easily test, so we'll use a fallback approach
               videoConstraints.displaySurface = 'browser';
             } catch {}

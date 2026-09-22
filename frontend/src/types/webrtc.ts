@@ -43,4 +43,5 @@ function buildRTCConfig(): RTCConfig {
   return { iceServers };
 }
 
-export { defaultRTCConfig, buildRTCConfig };
+export const defaultRTCConfig = buildRTCConfig();
+export { buildRTCConfig };

@@ -3,7 +3,7 @@ import { useSocket, getSocket } from './useSocket';
 import { usePeerStore } from '../stores/peerStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { buildRTCConfig, defaultRTCConfig } from '../types/webrtc';
+import { buildRTCConfig } from '../types/webrtc';
 
 export function useWebRTC(_roomId: string) {
   const localStreamRef = useRef<MediaStream | null>(null);
