@@ -53,7 +53,7 @@ export function ControlRoom() {
   const talkResponseStatus = useSessionStore((s) => s.talkResponseStatus);
 
   useEffect(() => {
-    if (talkResponseStatus === 'accepted' && activeTalkTarget) {
+    if (talkResponseStatus === 'accepted' && activeTalkTarget && !useSessionStore.getState().portalMode) {
       setTalkTarget(activeTalkTarget);
     }
   }, [talkResponseStatus, activeTalkTarget, setTalkTarget]);
@@ -107,21 +107,17 @@ export function ControlRoom() {
   }, []);
 
   useEffect(() => {
-    if (!isAdmin || !localStream) return;
+    if (!localStream) return;
     if (portalMode) {
+      setTalkTarget(null);
+      setLocalMicActive(false);
       localStream.getVideoTracks().forEach((track) => { track.enabled = false; });
-      localStream.getAudioTracks().forEach((track) => { track.enabled = false; });
-      usePeerStore.setState({ isVideoOff: true, localMicActive: false });
+      usePeerStore.setState({ isVideoOff: true });
       emit('mute_video', { video_off: true });
       emit('mute_audio', { muted: true });
-    } else {
-      localStream.getVideoTracks().forEach((track) => { track.enabled = true; });
-      localStream.getAudioTracks().forEach((track) => { track.enabled = true; });
-      usePeerStore.setState({ isVideoOff: false, localMicActive: true });
-      emit('mute_video', { video_off: false });
-      emit('mute_audio', { muted: false });
+      emit('talk_to', { target: null });
     }
-  }, [portalMode, isAdmin, localStream, emit]);
+  }, [portalMode, localStream, emit, setTalkTarget, setLocalMicActive]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -448,16 +444,16 @@ export function ControlRoom() {
                 isHandRaised={isHandRaised}
                 onToggleHand={handleToggleHand}
                 onReact={handleReact}
-                audioDisabled={isAdmin && portalMode}
-                videoDisabled={isAdmin && portalMode}
-                screenShareDisabled={isAdmin && portalMode}
-                handDisabled={isAdmin && portalMode}
-                reactionDisabled={isAdmin && portalMode}
+                audioDisabled={portalMode}
+                videoDisabled={portalMode}
+                screenShareDisabled={portalMode}
+                handDisabled={portalMode}
+                reactionDisabled={portalMode}
                 isRecording={isRecording}
                 recordingUploading={recordingUploading}
                 recordingTime={isRecording ? formatRecordingTime(elapsedTime) : undefined}
                 onToggleRecording={isAdmin ? (isRecording ? stopRecording : startRecording) : undefined}
-                recordingDisabled={!isAdmin || (isAdmin && portalMode)}
+                recordingDisabled={!isAdmin || portalMode}
               />
               <EmergencyButton onClick={() => setShowEmergencyConfirm(true)} onDismiss={() => { emit('emergency_dismiss'); }} disabled={portalMode} />
             </div>

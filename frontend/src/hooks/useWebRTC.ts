@@ -30,7 +30,14 @@ export function useWebRTC(_roomId: string) {
       });
       localStreamRef.current = stream;
       setLocalStream(stream);
-      usePeerStore.setState({ localMicActive: true });
+      const portalOn = useSessionStore.getState().portalMode;
+      if (portalOn) {
+        stream.getAudioTracks().forEach((track) => { track.enabled = false; });
+        stream.getVideoTracks().forEach((track) => { track.enabled = false; });
+        usePeerStore.setState({ localMicActive: false, isAudioMuted: true, isVideoOff: true });
+      } else {
+        usePeerStore.setState({ localMicActive: true, isAudioMuted: false });
+      }
       setStreamReady(true);
       return stream;
     } catch (error) {

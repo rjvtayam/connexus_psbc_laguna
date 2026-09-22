@@ -430,14 +430,14 @@ export function BulletinBoard() {
       </button>
 
       {isOpen && (
-        <>
-          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setIsOpen(false)} />
-          <div className="fixed top-0 right-0 h-full w-full sm:w-96 bg-gray-900 border-l border-gray-700/60 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out translate-x-0">
+        <div className="fixed inset-0 bg-black/40 z-40 transition-opacity" onClick={() => setIsOpen(false)} />
+      )}
+      <div className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-gray-900 border-l border-gray-700/60 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700/60 bg-gray-900/80 backdrop-blur-sm flex-shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
-                  <Bell size={12} className="text-amber-400" />
+                  <Bell size={15} className="text-amber-400" />
                 </div>
                 <div>
                   <h2 className="text-sm font-bold text-white leading-tight">Notifications</h2>
@@ -593,15 +593,15 @@ export function BulletinBoard() {
             )}
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto px-6 py-3">
               {activeTab === 'notifications' ? (
                 notifications.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-3">
-                      <Bell size={16} className="text-gray-600" />
+                    <div className="w-12 h-12 rounded-2xl bg-gray-800/80 flex items-center justify-center mx-auto mb-3">
+                      <Bell size={20} className="text-gray-600" />
                     </div>
-                    <p className="text-gray-500 text-xs font-medium">No notifications yet</p>
-                    <p className="text-gray-600 text-[10px] mt-1">Bulletins and alerts will appear here</p>
+                    <p className="text-gray-500 text-xs font-medium mb-1">No notifications yet</p>
+                    <p className="text-gray-600 text-[10px]">Bulletins and alerts will appear here</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -669,11 +669,11 @@ export function BulletinBoard() {
 
                   {announcements.length === 0 ? (
                     <div className="text-center py-12">
-                      <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-3">
-                        <Megaphone size={16} className="text-gray-600" />
+                      <div className="w-12 h-12 rounded-2xl bg-gray-800/80 flex items-center justify-center mx-auto mb-3">
+                        <Megaphone size={20} className="text-gray-600" />
                       </div>
-                      <p className="text-gray-500 text-xs font-medium">No bulletins</p>
-                      <p className="text-gray-600 text-[10px] mt-1">Announcements from admins will appear here</p>
+                      <p className="text-gray-500 text-xs font-medium mb-1">No bulletins</p>
+                      <p className="text-gray-600 text-[10px]">Announcements from admins will appear here</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -942,9 +942,7 @@ export function BulletinBoard() {
                 </div>
               )}
             </div>
-          </div>
-        </>
-      )}
+      </div>
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (

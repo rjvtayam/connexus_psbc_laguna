@@ -78,6 +78,19 @@ export function CampusView() {
   }, []);
 
   useEffect(() => {
+    if (!localStream) return;
+    if (portalMode) {
+      setTalkTarget(null);
+      setLocalMicActive(false);
+      localStream.getVideoTracks().forEach((track) => { track.enabled = false; });
+      usePeerStore.setState({ isVideoOff: true });
+      emit('mute_video', { video_off: true });
+      emit('mute_audio', { muted: true });
+      emit('talk_to', { target: null });
+    }
+  }, [portalMode, localStream, emit, setTalkTarget, setLocalMicActive]);
+
+  useEffect(() => {
     const handleJoin = (e: Event) => {
       const { user, campus, role } = (e as CustomEvent).detail;
       if (role !== 'admin') {
