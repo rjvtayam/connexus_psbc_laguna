@@ -9,12 +9,31 @@ from app.middleware.cors import setup_cors
 from app.middleware.rate_limit import limiter
 from app.signaling.events import sio
 from app.database import engine, warmup_db
+import json
+
+
+# Cache parsed origins to avoid json.loads on every error response
+_cached_origins: list[str] | None = None
+
+
+def _get_allowed_origins() -> list[str]:
+    global _cached_origins
+    if _cached_origins is None:
+        try:
+            _cached_origins = json.loads(settings.ALLOWED_ORIGINS)
+        except Exception:
+            _cached_origins = []
+    return _cached_origins
 
 
 def _add_cors_headers(request: Request, response: JSONResponse) -> JSONResponse:
     """Add CORS headers to error responses."""
     origin = request.headers.get("origin")
-    if origin and any(origin.startswith(o.rstrip("*")) for o in settings.origins_list):
+    if not origin:
+        return response
+
+    allowed = _get_allowed_origins()
+    if any(origin.startswith(o.rstrip("*")) for o in allowed):
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
