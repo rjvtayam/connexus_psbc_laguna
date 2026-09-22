@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { User } from '../../types/user';
 import { api } from '../../api/axios';
@@ -171,7 +170,7 @@ export function UserManagement() {
   ];
 
   return (
-    <DashboardLayout>
+    <>
       <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -587,6 +586,6 @@ export function UserManagement() {
         onConfirm={confirmDeleteUser}
         onCancel={() => { setShowDeleteConfirm(false); setUserIdToDelete(null); }}
       />
-    </DashboardLayout>
+    </>
   );
 }

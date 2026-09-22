@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { Session } from '../../types/session';
 import { sessionsApi } from '../../api/sessions.api';
 import { formatDate, formatTime } from '../../lib/utils';
@@ -88,9 +87,8 @@ export function SessionHistory() {
   ];
 
   return (
-    <DashboardLayout>
-      <div className="h-full flex flex-col p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="h-full flex flex-col p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-green-500/20 border border-cyan-500/20 flex items-center justify-center">
@@ -297,9 +295,8 @@ export function SessionHistory() {
                 <ChevronRight size={15} />
               </button>
             </div>
-          </div>
+</div>
         )}
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

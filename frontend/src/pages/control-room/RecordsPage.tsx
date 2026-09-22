@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { Button } from '../../components/ui/button';
 import {
   Film, HardDrive, Play, Trash2, Download, Search,
@@ -168,20 +167,17 @@ export function RecordsPage() {
 
   if (!isAdmin) {
     return (
-      <DashboardLayout>
-        <div className="p-6 flex flex-col items-center justify-center min-h-[60vh]">
-          <AlertTriangle size={48} className="text-amber-400 mb-4" />
-          <h2 className="text-white font-semibold text-lg mb-2">Access Denied</h2>
-          <p className="text-gray-400 text-sm">Only administrators can access meeting recordings.</p>
-        </div>
-      </DashboardLayout>
+      <div className="p-6 flex flex-col items-center justify-center min-h-[60vh]">
+        <AlertTriangle size={48} className="text-amber-400 mb-4" />
+        <h2 className="text-white font-semibold text-lg mb-2">Access Denied</h2>
+        <p className="text-gray-400 text-sm">Only administrators can access meeting recordings.</p>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/20 flex items-center justify-center">
@@ -553,10 +549,9 @@ export function RecordsPage() {
               </button>
             </div>
           </div>
-        )}
-      </div>
+)}
 
-      {/* Video Player Modal */}
+        {/* Video Player Modal */}
       {playingId && (
         <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setPlayingId(null)}>
           <div className="bg-gray-900 rounded-2xl border border-gray-800/60 overflow-hidden max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
@@ -624,6 +619,6 @@ export function RecordsPage() {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </div>
   );
 }

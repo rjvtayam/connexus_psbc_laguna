@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useUIStore } from '../../stores/uiStore';
 import { Home, Settings, Users, LogOut, ChevronsLeft, ChevronsRight, X, Film, ClipboardList, History, Activity } from 'lucide-react';
@@ -49,19 +49,19 @@ export function Sidebar({ isMobile = false }: SidebarProps) {
               end
             />
             {showUsers && (
-              <SidebarLink to="/admin/users" icon={<Users size={18} />} label="Users" isOpen={true} onClick={toggleSidebar} />
+              <SidebarLink to="/admin?tab=users" icon={<Users size={18} />} label="Users" isOpen={true} onClick={toggleSidebar} />
             )}
             {showUsers && (
-              <SidebarLink to="/control-room/recordings" icon={<Film size={18} />} label="Recordings" isOpen={true} onClick={toggleSidebar} />
+              <SidebarLink to="/admin?tab=recordings" icon={<Film size={18} />} label="Recordings" isOpen={true} onClick={toggleSidebar} />
             )}
             {showUsers && (
-              <SidebarLink to="/admin/session-history" icon={<History size={18} />} label="Session History" isOpen={true} onClick={toggleSidebar} />
+              <SidebarLink to="/admin?tab=session-history" icon={<History size={18} />} label="Session History" isOpen={true} onClick={toggleSidebar} />
             )}
             {showUsers && (
-              <SidebarLink to="/admin/audit-logs" icon={<ClipboardList size={18} />} label="Audit Logs" isOpen={true} onClick={toggleSidebar} />
+              <SidebarLink to="/admin?tab=audit-logs" icon={<ClipboardList size={18} />} label="Audit Logs" isOpen={true} onClick={toggleSidebar} />
             )}
             {showUsers && (
-              <SidebarLink to="/admin/system" icon={<Activity size={18} />} label="System Monitor" isOpen={true} onClick={toggleSidebar} />
+              <SidebarLink to="/admin?tab=system" icon={<Activity size={18} />} label="System Monitor" isOpen={true} onClick={toggleSidebar} />
             )}
             {(user?.role === 'admin' || user?.role === 'teacher' || user?.role === 'staff' || user?.role === 'principal') && (
               <SidebarLink to="/control-room/settings" icon={<Settings size={18} />} label="Settings" isOpen={true} onClick={toggleSidebar} />
@@ -117,21 +117,21 @@ export function Sidebar({ isMobile = false }: SidebarProps) {
           isOpen={isSidebarOpen}
           end
         />
-        {showUsers && (
-          <SidebarLink to="/admin/users" icon={<Users size={18} />} label="Users" isOpen={isSidebarOpen} />
-        )}
-        {showUsers && (
-          <SidebarLink to="/control-room/recordings" icon={<Film size={18} />} label="Recordings" isOpen={isSidebarOpen} />
-        )}
-        {showUsers && (
-          <SidebarLink to="/admin/session-history" icon={<History size={18} />} label="Session History" isOpen={isSidebarOpen} />
-        )}
 {showUsers && (
-              <SidebarLink to="/admin/audit-logs" icon={<ClipboardList size={18} />} label="Audit Logs" isOpen={isSidebarOpen} />
-            )}
-            {showUsers && (
-              <SidebarLink to="/admin/system" icon={<Activity size={18} />} label="System Monitor" isOpen={isSidebarOpen} />
-            )}
+          <SidebarLink to="/admin?tab=users" icon={<Users size={18} />} label="Users" isOpen={isSidebarOpen} />
+        )}
+        {showUsers && (
+          <SidebarLink to="/admin?tab=recordings" icon={<Film size={18} />} label="Recordings" isOpen={isSidebarOpen} />
+        )}
+        {showUsers && (
+          <SidebarLink to="/admin?tab=session-history" icon={<History size={18} />} label="Session History" isOpen={isSidebarOpen} />
+        )}
+        {showUsers && (
+          <SidebarLink to="/admin?tab=audit-logs" icon={<ClipboardList size={18} />} label="Audit Logs" isOpen={isSidebarOpen} />
+        )}
+        {showUsers && (
+          <SidebarLink to="/admin?tab=system" icon={<Activity size={18} />} label="System Monitor" isOpen={isSidebarOpen} />
+        )}
             {(user?.role === 'admin' || user?.role === 'teacher' || user?.role === 'staff' || user?.role === 'principal') && (
           <SidebarLink to="/control-room/settings" icon={<Settings size={18} />} label="Settings" isOpen={isSidebarOpen} />
         )}
@@ -163,12 +163,21 @@ export function Sidebar({ isMobile = false }: SidebarProps) {
 }
 
 function SidebarLink({ to, icon, label, isOpen, onClick, end }: { to: string; icon: React.ReactNode; label: string; isOpen: boolean; onClick?: () => void; end?: boolean }) {
+  const location = useLocation();
+  const target = to.split('?')[0];
+  const targetQuery = to.split('?')[1] ?? '';
+  const isActive = end
+    ? location.pathname === target
+    : location.pathname === target &&
+      (targetQuery
+        ? location.search.includes(targetQuery)
+        : true);
   return (
     <NavLink
       to={to}
       end={end}
       onClick={onClick}
-      className={({ isActive }) =>
+      className={() =>
         `flex items-center gap-3 ${isOpen ? 'px-3 mx-2' : 'justify-center mx-2'} py-2 rounded-lg transition-all duration-200 ${
           isActive
             ? 'bg-primary-600/15 text-primary-400'

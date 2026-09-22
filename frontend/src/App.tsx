@@ -8,11 +8,7 @@ import { Login } from './pages/Login';
 import { CampusView } from './pages/campus/CampusView';
 import { ControlRoom } from './pages/control-room/ControlRoom';
 import { SettingsPage } from './pages/control-room/SettingsPage';
-import { RecordsPage } from './pages/control-room/RecordsPage';
-import { UserManagement } from './pages/admin/UserManagement';
-import { SessionHistory } from './pages/admin/SessionHistory';
-import { AuditLogs } from './pages/admin/AuditLogs';
-import { SystemMonitoring } from './pages/admin/SystemMonitoring';
+import { AdminPage } from './pages/admin/AdminPage';
 import { queryClient } from './lib/queryClient';
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
@@ -68,49 +64,20 @@ export default function App() {
           />
 
           <Route
-            path="/control-room/recordings"
+            path="/admin"
             element={
               <ProtectedRoute allowedRoles={['principal', 'admin']}>
-                <RecordsPage />
+                <AdminPage />
               </ProtectedRoute>
             }
           />
 
-          <Route
-            path="/admin/users"
-            element={
-              <ProtectedRoute allowedRoles={['principal', 'admin']}>
-                <UserManagement />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/audit-logs"
-            element={
-              <ProtectedRoute allowedRoles={['principal', 'admin']}>
-                <AuditLogs />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/session-history"
-            element={
-              <ProtectedRoute allowedRoles={['principal', 'admin']}>
-                <SessionHistory />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/system"
-            element={
-              <ProtectedRoute allowedRoles={['principal', 'admin']}>
-                <SystemMonitoring />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/admin/users" element={<Navigate to="/admin?tab=users" replace />} />
+          <Route path="/admin/recordings" element={<Navigate to="/admin?tab=recordings" replace />} />
+          <Route path="/admin/audit-logs" element={<Navigate to="/admin?tab=audit-logs" replace />} />
+          <Route path="/admin/session-history" element={<Navigate to="/admin?tab=session-history" replace />} />
+          <Route path="/admin/system" element={<Navigate to="/admin?tab=system" replace />} />
+          <Route path="/control-room/recordings" element={<Navigate to="/admin?tab=recordings" replace />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
