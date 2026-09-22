@@ -254,6 +254,8 @@ async def _build_room_users_payload(room_id: str) -> dict:
                     "user": member_session.get("full_name"),
                     "campus": member_session.get("campus"),
                     "role": member_session.get("role"),
+                    "muted": member_session.get("audio_muted", False),
+                    "video_off": member_session.get("video_off", False),
                 })
                 portal_states[member_sid] = {
                     "active": member_session.get("portal_active", True),
@@ -339,12 +341,15 @@ async def mute_audio(sid, data):
         session = await sio.get_session(sid)
     except (KeyError, Exception):
         return
+    muted = data.get("muted", True)
+    session["audio_muted"] = muted
+    await sio.save_session(sid, session)
     room_id = session.get("current_room")
     if room_id:
         await sio.emit("peer_muted", {
             "sid": sid,
             "user": session.get("full_name"),
-            "muted": data.get("muted", True),
+            "muted": muted,
         }, room=room_id, skip_sid=sid)
 
 
@@ -354,12 +359,15 @@ async def mute_video(sid, data):
         session = await sio.get_session(sid)
     except (KeyError, Exception):
         return
+    video_off = data.get("video_off", True)
+    session["video_off"] = video_off
+    await sio.save_session(sid, session)
     room_id = session.get("current_room")
     if room_id:
         await sio.emit("peer_video_toggled", {
             "sid": sid,
             "user": session.get("full_name"),
-            "video_off": data.get("video_off", True),
+            "video_off": video_off,
         }, room=room_id, skip_sid=sid)
 
 

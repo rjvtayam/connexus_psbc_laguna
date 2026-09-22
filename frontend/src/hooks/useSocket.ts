@@ -65,6 +65,14 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
       }
     }
 
+    {
+      const state = useSessionStore.getState();
+      for (const u of users) {
+        if (typeof u.muted === 'boolean') state.setRemoteAudioMuted(u.sid, u.muted);
+        if (typeof u.video_off === 'boolean') state.setRemoteVideoOff(u.sid, u.video_off);
+      }
+    }
+
     const currentSharer = useSessionStore.getState().screenSharerSid;
     if (currentSharer && !users.find((u: any) => u.sid === currentSharer)) {
       useSessionStore.getState().setScreenSharer(null);
