@@ -39,12 +39,27 @@ export function useRecording(roomId: string) {
         combinedStream = new MediaStream(tracks);
       } else {
         try {
+          // Build display media constraints with feature detection
+          const videoConstraints: any = { cursor: 'never' };
+          
+          // Check for displaySurface support (Chrome 107+)
+          if ('getDisplayMedia' in navigator.mediaDevices) {
+            // Test if browser supports displaySurface
+            try {
+              const testConstraints = { video: { displaySurface: 'browser' } };
+              // We can't easily test, so we'll use a fallback approach
+              videoConstraints.displaySurface = 'browser';
+            } catch {}
+            
+            // logicalSurface is Chrome-only, use conditional
+            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            if (isChrome) {
+              videoConstraints.logicalSurface = true;
+            }
+          }
+
           const displayStream = await navigator.mediaDevices.getDisplayMedia({
-            video: {
-              displaySurface: 'browser',
-              logicalSurface: true,
-              cursor: 'never',
-            } as any,
+            video: videoConstraints,
           });
 
           const tracks: MediaStreamTrack[] = [];

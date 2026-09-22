@@ -3,14 +3,16 @@ import { useSocket, getSocket } from './useSocket';
 import { usePeerStore } from '../stores/peerStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { defaultRTCConfig } from '../types/webrtc';
+import { buildRTCConfig, defaultRTCConfig } from '../types/webrtc';
 
 export function useWebRTC(_roomId: string) {
   const localStreamRef = useRef<MediaStream | null>(null);
   const peersRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const connectedSidsRef = useRef<Set<string>>(new Set());
   const connectTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const retryCountRef = useRef<Map<string, number>>(new Map());
   const [streamReady, setStreamReady] = useState(false);
+  const MAX_RETRIES = 3;
   const { emit, socket } = useSocket();
   const { addPeer, removePeer, updatePeerStream, setLocalStream } = usePeerStore();
   const { updateUserStream, roomUsers } = useSessionStore();
@@ -28,6 +30,7 @@ export function useWebRTC(_roomId: string) {
       });
       localStreamRef.current = stream;
       setLocalStream(stream);
+      usePeerStore.setState({ localMicActive: true });
       setStreamReady(true);
       return stream;
     } catch (error) {
@@ -44,7 +47,8 @@ export function useWebRTC(_roomId: string) {
         peersRef.current.delete(targetSid);
       }
 
-      const pc = new RTCPeerConnection(defaultRTCConfig);
+      const rtcConfig = buildRTCConfig();
+      const pc = new RTCPeerConnection(rtcConfig);
 
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => {
@@ -85,10 +89,12 @@ export function useWebRTC(_roomId: string) {
           removePeer(targetSid);
           peersRef.current.delete(targetSid);
           connectedSidsRef.current.delete(targetSid);
+          retryCountRef.current.delete(targetSid);
           const timer = connectTimersRef.current.get(targetSid);
           if (timer) { clearTimeout(timer); connectTimersRef.current.delete(targetSid); }
         }
         if (pc.connectionState === 'connected') {
+          retryCountRef.current.delete(targetSid);
           const timer = connectTimersRef.current.get(targetSid);
           if (timer) { clearTimeout(timer); connectTimersRef.current.delete(targetSid); }
         }
@@ -116,17 +122,26 @@ export function useWebRTC(_roomId: string) {
 
   const createOffer = useCallback(
     async (targetSid: string) => {
+      const currentRetries = retryCountRef.current.get(targetSid) || 0;
+      if (currentRetries >= MAX_RETRIES) {
+        console.log(`[WebRTC] Max retries (${MAX_RETRIES}) reached for ${targetSid}, giving up`);
+        connectedSidsRef.current.delete(targetSid);
+        retryCountRef.current.delete(targetSid);
+        return;
+      }
+
       if (connectedSidsRef.current.has(targetSid)) {
         console.log(`[WebRTC] Already connected to ${targetSid}, skipping offer`);
         return;
       }
       connectedSidsRef.current.add(targetSid);
+      retryCountRef.current.set(targetSid, currentRetries + 1);
 
       try {
         const pc = createPeerConnection(targetSid);
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        console.log(`[WebRTC] Created offer for ${targetSid}, SDP type=${offer.type}`);
+        console.log(`[WebRTC] Created offer for ${targetSid}, SDP type=${offer.type} (retry ${currentRetries + 1}/${MAX_RETRIES})`);
         emit('webrtc_offer', {
           target_sid: targetSid,
           offer: pc.localDescription?.toJSON(),
@@ -135,7 +150,7 @@ export function useWebRTC(_roomId: string) {
         const failTimer = setTimeout(() => {
           connectTimersRef.current.delete(targetSid);
           if (!peersRef.current.get(targetSid) || peersRef.current.get(targetSid)?.connectionState !== 'connected') {
-            console.log(`[WebRTC] Offer to ${targetSid} timed out, clearing for retry`);
+            console.log(`[WebRTC] Offer to ${targetSid} timed out, will retry (${currentRetries + 1}/${MAX_RETRIES})`);
             connectedSidsRef.current.delete(targetSid);
           }
         }, 10000);
@@ -143,6 +158,7 @@ export function useWebRTC(_roomId: string) {
       } catch (err) {
         console.error(`[WebRTC] Failed to create offer for ${targetSid}:`, err);
         connectedSidsRef.current.delete(targetSid);
+        retryCountRef.current.delete(targetSid);
       }
     },
     [createPeerConnection, emit]

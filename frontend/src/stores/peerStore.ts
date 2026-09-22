@@ -63,9 +63,6 @@ export const usePeerStore = create<PeerState>((set, get) => ({
     }),
 
   setLocalStream: (stream) => {
-    if (stream) {
-      stream.getAudioTracks().forEach((track) => { track.enabled = false; });
-    }
     set({ localStream: stream });
   },
 

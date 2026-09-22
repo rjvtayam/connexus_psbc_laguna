@@ -25,6 +25,7 @@ class User(Base):
     last_login_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
 
     sessions = relationship("SessionParticipant", back_populates="user")
     announcements = relationship("Announcement", back_populates="creator")

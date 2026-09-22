@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     TURN_SERVER: str = ""
     TURN_USERNAME: str = ""
     TURN_CREDENTIAL: str = ""
+    UPLOAD_DIR: str = "uploads/recordings"
     MAX_UPLOAD_SIZE: int = 5 * 1024 * 1024
     MAX_CHAT_MESSAGE_LENGTH: int = 500
     RATE_LIMIT_AUTH: str = "10/minute"

@@ -10,6 +10,7 @@ import { queryClient } from '../lib/queryClient';
 
 let socket: Socket | null = null;
 let pendingEvents: Array<{ event: string; data?: any }> = [];
+const MAX_PENDING_EVENTS = 50;
 
 export function getSocket(): Socket | null {
   return socket;
@@ -259,6 +260,11 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
 
   socket.on('connect_error', (err) => {
     console.error('[Socket] Connection error:', err.message);
+    // Clear pending events on connection error to prevent unbounded growth
+    if (pendingEvents.length > MAX_PENDING_EVENTS) {
+      console.warn('[Socket] Clearing excess pending events');
+      pendingEvents = pendingEvents.slice(-MAX_PENDING_EVENTS);
+    }
   });
 
   return socket;

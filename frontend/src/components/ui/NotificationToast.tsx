@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AlertTriangle, Megaphone, Info, X } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 
@@ -11,7 +11,7 @@ export interface NotificationEvent {
 }
 
 let globalId = 0;
-let listeners: Array<(e: NotificationEvent) => void> = [];
+let listeners: Set<(e: NotificationEvent) => void> = new Set();
 
 export function pushNotification(event: Omit<NotificationEvent, 'id'>) {
   if (!useSettingsStore.getState().notifications) return;
@@ -21,6 +21,7 @@ export function pushNotification(event: Omit<NotificationEvent, 'id'>) {
 
 export function NotificationToast() {
   const [events, setEvents] = useState<NotificationEvent[]>([]);
+  const listenerRef = useRef<(e: NotificationEvent) => void>();
 
   const addEvent = useCallback((e: NotificationEvent) => {
     setEvents((prev) => [...prev.slice(-4), e]);
@@ -30,9 +31,10 @@ export function NotificationToast() {
   }, []);
 
   useEffect(() => {
-    listeners.push(addEvent);
+    listenerRef.current = addEvent;
+    listeners.add(addEvent);
     return () => {
-      listeners = listeners.filter((fn) => fn !== addEvent);
+      listeners.delete(addEvent);
     };
   }, [addEvent]);
 

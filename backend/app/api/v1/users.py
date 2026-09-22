@@ -64,9 +64,37 @@ def deactivate_user(user_id: UUID, db: Session = Depends(get_db), current_user=D
         raise HTTPException(status_code=403, detail="Not authorized")
     service = UserService(db)
     try:
-        service.deactivate_user(user_id)
+        service.deactivate_user(user_id, current_user.id)
         invalidate(get_user_list_cache(), "users")
         invalidate(get_profile_cache(), "profile")
         return {"message": "User deactivated"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/{user_id}/permanent")
+def permanent_delete_user(user_id: UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can permanently delete users")
+    service = UserService(db)
+    try:
+        service.soft_delete_user(user_id, current_user.id)
+        invalidate(get_user_list_cache(), "users")
+        invalidate(get_profile_cache(), "profile")
+        return {"message": "User permanently deleted (soft delete)"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{user_id}/restore")
+def restore_user(user_id: UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    if current_user.role not in ("admin", "principal"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    service = UserService(db)
+    try:
+        service.restore_user(user_id, current_user.id)
+        invalidate(get_user_list_cache(), "users")
+        invalidate(get_profile_cache(), "profile")
+        return {"message": "User restored"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

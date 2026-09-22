@@ -2,6 +2,7 @@ import os
 import uuid
 import math
 from datetime import datetime
+from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -13,11 +14,12 @@ from app.schemas.meeting_recording import RecordingOut, RecordingListResponse
 from app.api.deps import get_current_user
 from app.middleware.rate_limit import limiter
 from app.signaling.events import sio
+from app.config import settings
 
 router = APIRouter()
 
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "uploads", "recordings")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+UPLOAD_DIR = Path(settings.UPLOAD_DIR) if hasattr(settings, 'UPLOAD_DIR') else Path(__file__).resolve().parents[4] / "uploads" / "recordings"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_RECORDING_SIZE = 500 * 1024 * 1024  # 500MB
 
@@ -43,9 +45,14 @@ async def upload_recording(
     if len(content) > MAX_RECORDING_SIZE:
         raise HTTPException(status_code=413, detail="Recording file too large (max 500MB)")
 
+    # Validate file type
+    allowed_mime_types = ["video/webm", "video/mp4", "video/ogg", "video/x-matroska"]
+    if file.content_type and file.content_type not in allowed_mime_types:
+        raise HTTPException(status_code=400, detail=f"Invalid file type. Allowed: {', '.join(allowed_mime_types)}")
+
     ext = os.path.splitext(file.filename or "recording.webm")[1] or ".webm"
     safe_filename = f"{uuid.uuid4()}{ext}"
-    filepath = os.path.join(UPLOAD_DIR, safe_filename)
+    filepath = UPLOAD_DIR / safe_filename
 
     with open(filepath, "wb") as f:
         f.write(content)
@@ -135,10 +142,15 @@ async def list_recordings(
     total_pages = math.ceil(total / page_size) if total > 0 else 1
     recordings = query.offset((page - 1) * page_size).limit(page_size).all()
 
+    # Batch fetch creators to avoid N+1 query
+    creator_ids = {r.created_by for r in recordings}
+    creators = db.query(User).filter(User.id.in_(creator_ids)).all() if creator_ids else []
+    creator_map = {str(c.id): c.full_name for c in creators}
+
     items = []
     for r in recordings:
-        creator = db.query(User).filter(User.id == r.created_by).first()
-        items.append(_recording_to_out(r, creator.full_name if creator else "Unknown"))
+        creator_name = creator_map.get(str(r.created_by), "Unknown")
+        items.append(_recording_to_out(r, creator_name))
 
     return RecordingListResponse(
         recordings=items,
@@ -162,8 +174,8 @@ async def stream_recording(
     if not recording:
         raise HTTPException(status_code=404, detail="Recording not found")
 
-    filepath = os.path.join(UPLOAD_DIR, recording.filename)
-    if not os.path.exists(filepath):
+    filepath = UPLOAD_DIR / recording.filename
+    if not filepath.exists():
         raise HTTPException(status_code=404, detail="Recording file not found")
 
     return FileResponse(
@@ -230,9 +242,9 @@ async def permanent_delete_recording(
     if not recording:
         raise HTTPException(status_code=404, detail="Recording not found")
 
-    filepath = os.path.join(UPLOAD_DIR, recording.filename)
-    if os.path.exists(filepath):
-        os.remove(filepath)
+    filepath = UPLOAD_DIR / recording.filename
+    if filepath.exists():
+        filepath.unlink()
 
     db.delete(recording)
     db.commit()
