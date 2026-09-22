@@ -110,12 +110,16 @@ export function ControlRoom() {
     if (!isAdmin || !localStream) return;
     if (portalMode) {
       localStream.getVideoTracks().forEach((track) => { track.enabled = false; });
-      usePeerStore.setState({ isVideoOff: true });
+      localStream.getAudioTracks().forEach((track) => { track.enabled = false; });
+      usePeerStore.setState({ isVideoOff: true, localMicActive: false });
       emit('mute_video', { video_off: true });
+      emit('mute_audio', { muted: true });
     } else {
       localStream.getVideoTracks().forEach((track) => { track.enabled = true; });
-      usePeerStore.setState({ isVideoOff: false });
+      localStream.getAudioTracks().forEach((track) => { track.enabled = true; });
+      usePeerStore.setState({ isVideoOff: false, localMicActive: true });
       emit('mute_video', { video_off: false });
+      emit('mute_audio', { muted: false });
     }
   }, [portalMode, isAdmin, localStream, emit]);
 
