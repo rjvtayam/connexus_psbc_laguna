@@ -50,29 +50,37 @@ interface MetricPoint {
 }
 
 const METRIC_COLORS = {
-  cpu: '#f44336',
-  memory: '#2196f3',
-  activeSessions: '#4caf50',
-  onlineUsers: '#ff9800',
-  cacheEntries: '#9c27b0',
-  processMemory: '#00bcd4',
+  cpu: '#f472b6',
+  memory: '#22d3ee',
+  activeSessions: '#34d399',
+  onlineUsers: '#a78bfa',
+  cacheEntries: '#fbbf24',
+  processMemory: '#38bdf8',
+};
+
+const TOOLTIP_STYLE = {
+  backgroundColor: 'rgba(8, 12, 24, 0.95)',
+  border: '1px solid rgba(34, 211, 238, 0.25)',
+  borderRadius: '10px',
+  fontSize: '11px',
+  color: '#e2e8f0',
+  boxShadow: '0 0 20px rgba(34, 211, 238, 0.08)',
 };
 
 export function SystemMonitoring() {
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';
-  
+
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [history, setHistory] = useState<MetricPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [clearingCache, setClearingCache] = useState(false);
   const [timeRange, setTimeRange] = useState<'5m' | '30m' | '1h' | '2h'>('30m');
-  
+
   const historyRef = useRef<MetricPoint[]>([]);
   const metricsRef = useRef<SystemMetrics | null>(null);
   const mountedRef = useRef(true);
 
-  // Format timestamp for display
   const formatTime = (iso: string) => {
     const date = new Date(iso);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -88,21 +96,18 @@ export function SystemMonitoring() {
     }
   };
 
-  // Convert history to chart data
   const chartData = history.slice(-getTimeRangePoints(timeRange)).map((point, index) => ({
     ...point,
     index,
     timeLabel: formatTime(point.time),
   }));
 
-  // Handle incoming system metrics
   const handleMetrics = useCallback((data: SystemMetrics) => {
     if (!mountedRef.current) return;
-    
+
     metricsRef.current = data;
     setMetrics(data);
-    
-    // Convert to chart point
+
     const point: MetricPoint = {
       time: data.timestamp,
       cpu: data.system.cpu_percent,
@@ -112,18 +117,16 @@ export function SystemMonitoring() {
       cacheEntries: data.cache.total_entries,
       processMemory: data.application.process_memory_mb,
     };
-    
-    // Update history
+
     historyRef.current = [...historyRef.current, point].slice(-120);
     setHistory([...historyRef.current]);
-    
+
     if (loading) setLoading(false);
   }, [loading]);
 
-  // Handle metrics history response
   const handleMetricsResponse = useCallback((data: SystemMetrics & { history?: SystemMetrics[] }) => {
     if (!mountedRef.current) return;
-    
+
     if (data.history) {
       const points: MetricPoint[] = data.history.map(m => ({
         time: m.timestamp,
@@ -137,10 +140,10 @@ export function SystemMonitoring() {
       historyRef.current = points;
       setHistory(points);
     }
+    setMetrics(data);
     setLoading(false);
   }, []);
 
-  // Handle cache cleared
   const handleCacheCleared = useCallback((data: { cleared_by: string; timestamp: string }) => {
     pushNotification({
       title: 'Cache Cleared',
@@ -151,19 +154,16 @@ export function SystemMonitoring() {
     setClearingCache(false);
   }, []);
 
-  // Request metrics from server
   const requestMetrics = useCallback(() => {
     getSocket()?.emit('request_system_metrics', {});
   }, []);
 
-  // Clear cache
   const handleClearCache = useCallback(() => {
     if (!confirm('Clear all system caches? This may temporarily slow down the system while caches rebuild.')) return;
     setClearingCache(true);
     getSocket()?.emit('clear_cache', {});
   }, []);
 
-  // WebSocket event handlers
   useEffect(() => {
     const s = getSocket();
     if (!s) return;
@@ -172,7 +172,6 @@ export function SystemMonitoring() {
     s.on('system_metrics_response', handleMetricsResponse);
     s.on('cache_cleared', handleCacheCleared);
 
-    // Request initial metrics
     requestMetrics();
 
     return () => {
@@ -182,7 +181,6 @@ export function SystemMonitoring() {
     };
   }, [handleMetrics, handleMetricsResponse, handleCacheCleared, requestMetrics]);
 
-  // Cleanup on unmount
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
@@ -191,197 +189,204 @@ export function SystemMonitoring() {
   if (!isAdmin) {
     return (
       <div className="p-6 flex flex-col items-center justify-center min-h-[60vh]">
-        <Shield className="w-16 h-16 text-gray-600 mb-4" />
-        <h2 className="text-white font-semibold text-lg mb-2">Admin Access Required</h2>
-        <p className="text-gray-400 text-sm">System monitoring is only available to administrators.</p>
+        <Shield className="w-12 h-12 text-gray-600 mb-3" />
+        <h2 className="text-white font-semibold text-sm mb-1">Admin Access Required</h2>
+        <p className="text-gray-500 text-xs">System monitoring is only available to administrators.</p>
       </div>
     );
   }
 
+  const cpu = metrics?.system.cpu_percent;
+  const mem = metrics?.system.memory_percent;
+  const disk = metrics?.system.disk_percent;
+
   return (
-    <div className="h-full flex flex-col p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="h-full flex flex-col p-3 sm:p-5 max-w-7xl mx-auto space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/20 flex items-center justify-center">
-            <Activity size={20} className="text-purple-400" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2.5">
+          <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500/25 to-violet-500/25 border border-cyan-500/25 flex items-center justify-center">
+            <Activity size={16} className="text-cyan-400" />
+            <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </div>
           <div>
-            <h1 className="font-orbitron text-xl sm:text-2xl font-bold text-white">System Monitor</h1>
-            <p className="text-gray-500 text-xs sm:text-sm">Real-time system health, performance metrics & cache management</p>
+            <h1 className="font-orbitron text-sm sm:text-base font-bold text-white tracking-wide">System Monitor</h1>
+            <p className="text-gray-500 text-[10px] sm:text-[11px]">Real-time telemetry · performance · cache control</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">Live</span>
+          </div>
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as typeof timeRange)}
-            className="bg-gray-900/80 border border-gray-700/50 rounded-xl px-3 py-2 text-white text-sm focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/40 focus:outline-none transition-all"
+            className="bg-gray-950/80 border border-gray-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:ring-1 focus:ring-cyan-500/40 focus:border-cyan-500/40 focus:outline-none transition-all"
           >
-            <option value="5m">Last 5 minutes</option>
-            <option value="30m">Last 30 minutes</option>
+            <option value="5m">Last 5 min</option>
+            <option value="30m">Last 30 min</option>
             <option value="1h">Last 1 hour</option>
             <option value="2h">Last 2 hours</option>
           </select>
           <button
             onClick={handleClearCache}
             disabled={clearingCache}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/30 hover:bg-red-500/30 text-red-400 text-sm font-medium rounded-xl transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 text-rose-400 text-[11px] font-medium rounded-lg transition-all disabled:opacity-50"
           >
-            <Trash2 size={16} />
-            <span>{clearingCache ? 'Clearing...' : 'Clear Cache'}</span>
+            <Trash2 size={12} />
+            <span>{clearingCache ? 'Clearing…' : 'Clear Cache'}</span>
           </button>
         </div>
       </div>
 
       {/* Status Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         <StatusCard
-          icon={<Cpu size={20} />}
-          iconBg="bg-red-500/10 border-red-500/20"
-          label="CPU Usage"
-          value={metrics?.system.cpu_percent !== undefined ? `${metrics.system.cpu_percent.toFixed(1)}%` : '—'}
-          trend={metrics?.system.cpu_percent !== undefined ? (metrics.system.cpu_percent > 80 ? 'high' : metrics.system.cpu_percent > 50 ? 'medium' : 'low') : null}
+          icon={<Cpu size={14} />}
+          accent="cyan"
+          label="CPU"
+          value={cpu !== undefined ? `${cpu.toFixed(1)}%` : '—'}
+          progress={cpu}
+          status={cpu !== undefined ? (cpu > 80 ? 'high' : cpu > 50 ? 'medium' : 'low') : null}
         />
         <StatusCard
-          icon={<MemoryStick size={20} />}
-          iconBg="bg-blue-500/10 border-blue-500/20"
-          label="Memory Usage"
-          value={metrics?.system.memory_percent !== undefined ? `${metrics.system.memory_percent.toFixed(1)}%` : '—'}
+          icon={<MemoryStick size={14} />}
+          accent="violet"
+          label="Memory"
+          value={mem !== undefined ? `${mem.toFixed(1)}%` : '—'}
           subValue={metrics?.system.memory_used_mb !== undefined ? `${metrics.system.memory_used_mb.toFixed(0)} / ${metrics.system.memory_total_mb.toFixed(0)} MB` : null}
-          trend={metrics?.system.memory_percent !== undefined ? (metrics.system.memory_percent > 85 ? 'high' : metrics.system.memory_percent > 60 ? 'medium' : 'low') : null}
+          progress={mem}
+          status={mem !== undefined ? (mem > 85 ? 'high' : mem > 60 ? 'medium' : 'low') : null}
         />
         <StatusCard
-          icon={<Activity size={20} />}
-          iconBg="bg-green-500/10 border-green-500/20"
-          label="Active Sessions"
+          icon={<Activity size={14} />}
+          accent="emerald"
+          label="Sessions"
           value={metrics?.application.active_sessions !== undefined ? metrics.application.active_sessions.toString() : '—'}
         />
         <StatusCard
-          icon={<Wifi size={20} />}
-          iconBg="bg-cyan-500/10 border-cyan-500/20"
-          label="Online Users"
+          icon={<Wifi size={14} />}
+          accent="sky"
+          label="Online"
           value={metrics?.application.online_users !== undefined ? metrics.application.online_users.toString() : '—'}
         />
         <StatusCard
-          icon={<Database size={20} />}
-          iconBg="bg-purple-500/10 border-purple-500/20"
-          label="Cache Entries"
+          icon={<Database size={14} />}
+          accent="amber"
+          label="Cache"
           value={metrics?.cache.total_entries !== undefined ? metrics.cache.total_entries.toLocaleString() : '—'}
-          subValue={metrics?.cache.caches ? Object.entries(metrics.cache.caches).map(([k, v]) => `${k}: ${v}`).join(', ') : null}
+          subValue={metrics?.cache.caches ? `${Object.keys(metrics.cache.caches).length} stores` : null}
         />
         <StatusCard
-          icon={<Zap size={20} />}
-          iconBg="bg-amber-500/10 border-amber-500/20"
-          label="Process Memory"
+          icon={<Zap size={14} />}
+          accent="rose"
+          label="Proc. Mem"
           value={metrics?.application.process_memory_mb !== undefined ? `${metrics.application.process_memory_mb.toFixed(0)} MB` : '—'}
-          subValue={metrics?.application.process_cpu_percent !== undefined ? `CPU: ${metrics.application.process_cpu_percent.toFixed(1)}%` : null}
+          subValue={metrics?.application.process_cpu_percent !== undefined ? `CPU ${metrics.application.process_cpu_percent.toFixed(1)}%` : null}
         />
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* CPU & Memory Chart */}
-        <ChartCard title="System Resources" icon={<Activity size={16} className="text-purple-400" />}>
-          <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={chartData}>
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <ChartCard title="System Resources" accent="violet">
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={chartData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
               <defs>
                 <linearGradient id="cpuGradient" x1="0" y1="0" y2="1">
-                  <stop offset="5%" stopColor={METRIC_COLORS.cpu} stopOpacity={0.3}/>
+                  <stop offset="5%" stopColor={METRIC_COLORS.cpu} stopOpacity={0.35}/>
                   <stop offset="95%" stopColor={METRIC_COLORS.cpu} stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="memoryGradient" x1="0" y1="0" y2="1">
-                  <stop offset="5%" stopColor={METRIC_COLORS.memory} stopOpacity={0.3}/>
+                  <stop offset="5%" stopColor={METRIC_COLORS.memory} stopOpacity={0.35}/>
                   <stop offset="95%" stopColor={METRIC_COLORS.memory} stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <XAxis dataKey="timeLabel" tick={{ fill: '#6b7280', fontSize: 10 }} interval="preserveStartEnd" tickCount={8} />
-              <YAxis 
-                tick={{ fill: '#6b7280', fontSize: 10 }} 
-                domain={[0, 100]} 
+              <XAxis dataKey="timeLabel" tick={{ fill: '#64748b', fontSize: 9 }} interval="preserveStartEnd" tickCount={6} axisLine={{ stroke: '#1e293b' }} tickLine={false} />
+              <YAxis
+                tick={{ fill: '#64748b', fontSize: 9 }}
+                domain={[0, 100]}
                 tickCount={5}
-                label={{ value: '%', angle: -90, position: 'insideLeft', fill: '#6b7280', fontSize: 10, dy: -30 }}
+                axisLine={false}
+                tickLine={false}
               />
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <Tooltip 
+              <CartesianGrid strokeDasharray="2 4" stroke="#1e293b" vertical={false} />
+              <Tooltip
                 formatter={(value, name) => [
                   typeof value === 'number' ? `${value.toFixed(1)}%` : String(value ?? ''),
                   typeof name === 'string' ? name : String(name ?? ''),
                 ]}
                 labelFormatter={(time) => String(time ?? '')}
-                contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                contentStyle={TOOLTIP_STYLE}
               />
-              <Legend />
-              <Area type="monotone" dataKey="cpu" name="CPU %" stroke={METRIC_COLORS.cpu} fillOpacity={1} fill="url(#cpuGradient)" />
-              <Area type="monotone" dataKey="memory" name="Memory %" stroke={METRIC_COLORS.memory} fillOpacity={1} fill="url(#memoryGradient)" />
+              <Legend wrapperStyle={{ fontSize: '10px', color: '#94a3b8', paddingTop: 4 }} iconSize={8} />
+              <Area type="monotone" dataKey="cpu" name="CPU %" stroke={METRIC_COLORS.cpu} strokeWidth={1.5} fillOpacity={1} fill="url(#cpuGradient)" dot={false} />
+              <Area type="monotone" dataKey="memory" name="Memory %" stroke={METRIC_COLORS.memory} strokeWidth={1.5} fillOpacity={1} fill="url(#memoryGradient)" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        {/* Application Metrics Chart */}
-        <ChartCard title="Application Metrics" icon={<Activity size={16} className="text-green-400" />}>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={chartData}>
-              <XAxis dataKey="timeLabel" tick={{ fill: '#6b7280', fontSize: 10 }} interval="preserveStartEnd" tickCount={8} />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} tickCount={5} />
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <Tooltip 
+        <ChartCard title="Application Metrics" accent="emerald">
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={chartData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+              <XAxis dataKey="timeLabel" tick={{ fill: '#64748b', fontSize: 9 }} interval="preserveStartEnd" tickCount={6} axisLine={{ stroke: '#1e293b' }} tickLine={false} />
+              <YAxis tick={{ fill: '#64748b', fontSize: 9 }} tickCount={5} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="2 4" stroke="#1e293b" vertical={false} />
+              <Tooltip
                 formatter={(value, name) => [
                   typeof value === 'number' ? value.toLocaleString() : String(value ?? ''),
                   typeof name === 'string' ? name : String(name ?? ''),
                 ]}
                 labelFormatter={(time) => String(time ?? '')}
-                contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                contentStyle={TOOLTIP_STYLE}
               />
-              <Legend />
-              <Line type="monotone" dataKey="activeSessions" name="Active Sessions" stroke={METRIC_COLORS.activeSessions} strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="onlineUsers" name="Online Users" stroke={METRIC_COLORS.onlineUsers} strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="cacheEntries" name="Cache Entries" stroke={METRIC_COLORS.cacheEntries} strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="processMemory" name="Process Memory (MB)" stroke={METRIC_COLORS.processMemory} strokeWidth={2} dot={false} />
+              <Legend wrapperStyle={{ fontSize: '10px', color: '#94a3b8', paddingTop: 4 }} iconSize={8} />
+              <Line type="monotone" dataKey="activeSessions" name="Sessions" stroke={METRIC_COLORS.activeSessions} strokeWidth={1.5} dot={false} />
+              <Line type="monotone" dataKey="onlineUsers" name="Online" stroke={METRIC_COLORS.onlineUsers} strokeWidth={1.5} dot={false} />
+              <Line type="monotone" dataKey="cacheEntries" name="Cache" stroke={METRIC_COLORS.cacheEntries} strokeWidth={1.5} dot={false} />
+              <Line type="monotone" dataKey="processMemory" name="Proc Mem (MB)" stroke={METRIC_COLORS.processMemory} strokeWidth={1.5} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
 
-      {/* Detailed Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* System Resources */}
+      {/* Detail Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <MetricDetailCard
           title="System Resources"
-          icon={<Server size={18} className="text-purple-400" />}
-          iconBg="bg-purple-500/10 border-purple-500/20"
+          icon={<Server size={13} />}
+          accent="violet"
           metrics={[
-            { label: 'CPU Usage', value: metrics?.system.cpu_percent !== undefined ? `${metrics.system.cpu_percent.toFixed(1)}%` : '—', color: metrics?.system.cpu_percent ? (metrics.system.cpu_percent > 80 ? 'text-red-400' : metrics.system.cpu_percent > 50 ? 'text-amber-400' : 'text-green-400') : 'text-gray-500' },
-            { label: 'Memory Usage', value: metrics?.system.memory_percent !== undefined ? `${metrics.system.memory_percent.toFixed(1)}%` : '—', color: metrics?.system.memory_percent ? (metrics.system.memory_percent > 85 ? 'text-red-400' : metrics.system.memory_percent > 60 ? 'text-amber-400' : 'text-green-400') : 'text-gray-500' },
+            { label: 'CPU', value: cpu !== undefined ? `${cpu.toFixed(1)}%` : '—', color: cpu ? (cpu > 80 ? 'text-rose-400' : cpu > 50 ? 'text-amber-400' : 'text-emerald-400') : 'text-gray-500' },
+            { label: 'Memory', value: mem !== undefined ? `${mem.toFixed(1)}%` : '—', color: mem ? (mem > 85 ? 'text-rose-400' : mem > 60 ? 'text-amber-400' : 'text-emerald-400') : 'text-gray-500' },
             { label: 'Memory Used', value: metrics?.system.memory_used_mb !== undefined ? `${metrics.system.memory_used_mb.toFixed(0)} / ${metrics.system.memory_total_mb.toFixed(0)} MB` : '—' },
-            { label: 'Disk Usage', value: metrics?.system.disk_percent !== undefined ? `${metrics.system.disk_percent.toFixed(1)}%` : '—', color: metrics?.system.disk_percent ? (metrics.system.disk_percent > 85 ? 'text-red-400' : metrics.system.disk_percent > 70 ? 'text-amber-400' : 'text-green-400') : 'text-gray-500' },
+            { label: 'Disk', value: disk !== undefined ? `${disk.toFixed(1)}%` : '—', color: disk ? (disk > 85 ? 'text-rose-400' : disk > 70 ? 'text-amber-400' : 'text-emerald-400') : 'text-gray-500' },
             { label: 'Disk Space', value: metrics?.system.disk_used_gb !== undefined ? `${metrics.system.disk_used_gb.toFixed(1)} / ${metrics.system.disk_total_gb.toFixed(1)} GB` : '—' },
           ]}
         />
 
-        {/* Application Metrics */}
         <MetricDetailCard
           title="Application Health"
-          icon={<Monitor size={18} className="text-green-400" />}
-          iconBg="bg-green-500/10 border-green-500/20"
+          icon={<Monitor size={13} />}
+          accent="cyan"
           metrics={[
             { label: 'Active Sessions', value: metrics?.application.active_sessions !== undefined ? metrics.application.active_sessions.toString() : '—' },
             { label: 'Total Users', value: metrics?.application.total_users !== undefined ? metrics.application.total_users.toLocaleString() : '—' },
             { label: 'Online Users', value: metrics?.application.online_users !== undefined ? metrics.application.online_users.toString() : '—' },
-            { label: 'Recent Activity (5m)', value: metrics?.application.recent_activity_5m !== undefined ? metrics.application.recent_activity_5m.toString() : '—' },
+            { label: 'Activity (5m)', value: metrics?.application.recent_activity_5m !== undefined ? metrics.application.recent_activity_5m.toString() : '—' },
             { label: 'Process Memory', value: metrics?.application.process_memory_mb !== undefined ? `${metrics.application.process_memory_mb.toFixed(0)} MB` : '—' },
             { label: 'Process CPU', value: metrics?.application.process_cpu_percent !== undefined ? `${metrics.application.process_cpu_percent.toFixed(1)}%` : '—' },
           ]}
         />
 
-        {/* Cache Status */}
         <MetricDetailCard
-          title="Cache Status"
-          icon={<Database size={18} className="text-purple-400" />}
-          iconBg="bg-purple-500/10 border-purple-500/20"
+          title="Cache Matrix"
+          icon={<Database size={13} />}
+          accent="amber"
           metrics={[
             { label: 'Total Entries', value: metrics?.cache.total_entries !== undefined ? metrics.cache.total_entries.toLocaleString() : '—' },
             ...(metrics?.cache.caches ? Object.entries(metrics.cache.caches).map(([name, count]) => ({
-              label: `${name.charAt(0).toUpperCase() + name.slice(1)} Cache`,
+              label: `${name.charAt(0).toUpperCase() + name.slice(1)}`,
               value: count.toLocaleString(),
             })) : []),
           ]}
@@ -389,87 +394,97 @@ export function SystemMonitoring() {
             <button
               onClick={handleClearCache}
               disabled={clearingCache}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-500/20 border border-red-500/30 hover:bg-red-500/30 text-red-400 text-sm font-medium rounded-xl transition-all disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 text-rose-400 text-[11px] font-medium rounded-lg transition-all disabled:opacity-50"
             >
-              <Trash2 size={14} />
-              <span>{clearingCache ? 'Clearing...' : 'Clear All Caches'}</span>
+              <Trash2 size={11} />
+              <span>{clearingCache ? 'Clearing…' : 'Flush All Caches'}</span>
             </button>
           }
         />
       </div>
 
       {/* Control Room Status */}
-      <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 p-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-800/60">
           <div className="flex items-center gap-2">
-            <Monitor size={18} className="text-cyan-400" />
-            <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Control Room Status</span>
+            <Monitor size={13} className="text-cyan-400" />
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Control Room</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${metrics?.control_room.active ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-            <span className={`text-sm font-medium ${metrics?.control_room.active ? 'text-green-400' : 'text-red-400'}`}>
-              {metrics?.control_room.active ? 'ACTIVE' : 'INACTIVE'}
+          <div className="flex items-center gap-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${metrics?.control_room.active ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}`} />
+            <span className={`text-[10px] font-semibold tracking-wider ${metrics?.control_room.active ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {metrics?.control_room.active ? 'ACTIVE' : 'OFFLINE'}
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div className="p-3 bg-gray-800/50 rounded-xl">
-            <p className="text-2xl font-bold text-cyan-400">{metrics?.control_room.connected_participants || 0}</p>
-            <p className="text-gray-500 text-xs">Connected</p>
-          </div>
-          <div className="p-3 bg-gray-800/50 rounded-xl">
-            <p className="text-2xl font-bold text-green-400">{metrics?.application.active_sessions || 0}</p>
-            <p className="text-gray-500 text-xs">Active Sessions</p>
-          </div>
-          <div className="p-3 bg-gray-800/50 rounded-xl">
-            <p className="text-2xl font-bold text-purple-400">{metrics?.cache.total_entries || 0}</p>
-            <p className="text-gray-500 text-xs">Cache Entries</p>
-          </div>
-          <div className="p-3 bg-gray-800/50 rounded-xl">
-            <p className="text-2xl font-bold text-amber-400">{metrics?.application.recent_activity_5m || 0}</p>
-            <p className="text-gray-500 text-xs">Activity (5m)</p>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-800/50">
+          <HudStat label="Connected" value={metrics?.control_room.connected_participants || 0} accent="text-cyan-400" />
+          <HudStat label="Sessions" value={metrics?.application.active_sessions || 0} accent="text-emerald-400" />
+          <HudStat label="Cache Entries" value={metrics?.cache.total_entries || 0} accent="text-violet-400" />
+          <HudStat label="Activity 5m" value={metrics?.application.recent_activity_5m || 0} accent="text-amber-400" />
         </div>
       </div>
+
+      {loading && (
+        <p className="text-center text-[10px] text-gray-600 pb-2">Establishing telemetry link…</p>
+      )}
     </div>
   );
 }
 
 // ─── Helper Components ───
 
+type Accent = 'cyan' | 'violet' | 'emerald' | 'sky' | 'amber' | 'rose';
+
+const ACCENT_STYLES: Record<Accent, { icon: string; bar: string; glow: string }> = {
+  cyan:   { icon: 'bg-cyan-500/10 border-cyan-500/25 text-cyan-400',   bar: 'bg-cyan-400',   glow: 'hover:border-cyan-500/40 hover:shadow-[0_0_18px_rgba(34,211,238,0.08)]' },
+  violet: { icon: 'bg-violet-500/10 border-violet-500/25 text-violet-400', bar: 'bg-violet-400', glow: 'hover:border-violet-500/40 hover:shadow-[0_0_18px_rgba(167,139,250,0.08)]' },
+  emerald:{ icon: 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400', bar: 'bg-emerald-400', glow: 'hover:border-emerald-500/40 hover:shadow-[0_0_18px_rgba(52,211,153,0.08)]' },
+  sky:    { icon: 'bg-sky-500/10 border-sky-500/25 text-sky-400',     bar: 'bg-sky-400',     glow: 'hover:border-sky-500/40 hover:shadow-[0_0_18px_rgba(56,189,248,0.08)]' },
+  amber:  { icon: 'bg-amber-500/10 border-amber-500/25 text-amber-400', bar: 'bg-amber-400',  glow: 'hover:border-amber-500/40 hover:shadow-[0_0_18px_rgba(251,191,36,0.08)]' },
+  rose:   { icon: 'bg-rose-500/10 border-rose-500/25 text-rose-400',   bar: 'bg-rose-400',   glow: 'hover:border-rose-500/40 hover:shadow-[0_0_18px_rgba(251,113,133,0.08)]' },
+};
+
+const STATUS_DOT: Record<string, string> = {
+  low: 'bg-emerald-400',
+  medium: 'bg-amber-400',
+  high: 'bg-rose-500',
+};
+
 interface StatusCardProps {
   icon: React.ReactNode;
-  iconBg: string;
+  accent: Accent;
   label: string;
   value: string;
   subValue?: string | null;
-  trend?: 'low' | 'medium' | 'high' | null;
+  progress?: number | null;
+  status?: 'low' | 'medium' | 'high' | null;
 }
 
-function StatusCard({ icon, iconBg, label, value, subValue, trend }: StatusCardProps) {
-  const trendColors = {
-    low: 'text-green-400',
-    medium: 'text-amber-400',
-    high: 'text-red-400',
-  };
-
+function StatusCard({ icon, accent, label, value, subValue, progress, status }: StatusCardProps) {
+  const s = ACCENT_STYLES[accent];
   return (
-    <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 p-4 hover:border-gray-700/60 transition-all">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${iconBg}`}>
-            {icon}
-          </div>
-          <span className="text-gray-500 text-[10px] sm:text-xs uppercase tracking-wider">{label}</span>
+    <div className={`group relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 p-3 transition-all duration-300 ${s.glow}`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className={`w-6 h-6 rounded-md border flex items-center justify-center ${s.icon}`}>
+          {icon}
         </div>
-        {trend && (
-          <span className={`w-2 h-2 rounded-full ${trendColors[trend]}`} />
-        )}
+        <div className="flex items-center gap-1.5">
+          {status && <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[status]}`} />}
+          <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest font-medium">{label}</span>
+        </div>
       </div>
-      <div className="mt-3">
-        <p className="text-white text-xl sm:text-2xl font-bold">{value}</p>
-        {subValue && <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">{subValue}</p>}
-      </div>
+      <p className="text-white text-base sm:text-lg font-bold font-mono leading-none">{value}</p>
+      {subValue && <p className="text-gray-600 text-[9px] mt-1 truncate">{subValue}</p>}
+      {progress !== undefined && progress !== null && (
+        <div className="mt-2 h-1 rounded-full bg-gray-800/80 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-700 ${s.bar}`}
+            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -477,29 +492,31 @@ function StatusCard({ icon, iconBg, label, value, subValue, trend }: StatusCardP
 interface MetricDetailCardProps {
   title: string;
   icon: React.ReactNode;
-  iconBg: string;
+  accent: Accent;
   metrics: Array<{ label: string; value: string; color?: string }>;
   action?: React.ReactNode;
 }
 
-function MetricDetailCard({ title, icon, iconBg, metrics, action }: MetricDetailCardProps) {
+function MetricDetailCard({ title, icon, accent, metrics, action }: MetricDetailCardProps) {
+  const s = ACCENT_STYLES[accent];
   return (
-    <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 overflow-hidden">
-      <div className="p-4 border-b border-gray-800/60 flex items-center gap-2">
-        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${iconBg}`}>
+    <div className="relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-600/40 to-transparent" />
+      <div className="px-3.5 py-2.5 border-b border-gray-800/60 flex items-center gap-2">
+        <div className={`w-[22px] h-[22px] rounded-md border flex items-center justify-center ${s.icon}`}>
           {icon}
         </div>
-        <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{title}</span>
+        <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">{title}</span>
       </div>
-      <div className="p-4 space-y-3">
+      <div className="px-3.5 py-2.5 space-y-0">
         {metrics.map((m, i) => (
-          <div key={i} className="flex items-center justify-between py-2 border-b border-gray-800/30 last:border-0">
-            <span className="text-gray-400 text-sm">{m.label}</span>
-            <span className={`text-white text-sm font-mono ${m.color || ''}`}>{m.value}</span>
+          <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/40 last:border-0">
+            <span className="text-gray-500 text-[11px]">{m.label}</span>
+            <span className={`text-gray-200 text-[11px] font-mono font-medium ${m.color || ''}`}>{m.value}</span>
           </div>
         ))}
         {action && (
-          <div className="pt-3 border-t border-gray-800/60">
+          <div className="pt-2.5 mt-1 border-t border-gray-800/60">
             {action}
           </div>
         )}
@@ -510,20 +527,40 @@ function MetricDetailCard({ title, icon, iconBg, metrics, action }: MetricDetail
 
 interface ChartCardProps {
   title: string;
-  icon: React.ReactNode;
+  accent: Accent;
   children: React.ReactNode;
 }
 
-function ChartCard({ title, icon, children }: ChartCardProps) {
+function ChartCard({ title, accent, children }: ChartCardProps) {
+  const s = ACCENT_STYLES[accent];
   return (
-    <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800/60 overflow-hidden">
-      <div className="p-4 border-b border-gray-800/60 flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-          {icon}
+    <div className="relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-600/40 to-transparent" />
+      <div className="px-3.5 py-2.5 border-b border-gray-800/60 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className={`w-[22px] h-[22px] rounded-md border flex items-center justify-center ${s.icon}`}>
+            <Activity size={11} />
+          </div>
+          <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">{title}</span>
         </div>
-        <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{title}</span>
+        <span className="text-[9px] text-gray-600 font-mono uppercase">realtime</span>
       </div>
-      <div className="p-4">{children}</div>
+      <div className="p-3 pt-4">{children}</div>
+    </div>
+  );
+}
+
+interface HudStatProps {
+  label: string;
+  value: number;
+  accent: string;
+}
+
+function HudStat({ label, value, accent }: HudStatProps) {
+  return (
+    <div className="px-4 py-3 text-center">
+      <p className={`text-lg font-bold font-mono leading-none ${accent}`}>{value}</p>
+      <p className="text-gray-600 text-[9px] uppercase tracking-widest mt-1.5">{label}</p>
     </div>
   );
 }
