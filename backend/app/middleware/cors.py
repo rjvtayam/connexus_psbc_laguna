@@ -2,6 +2,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from app.config import settings
+import json
 
 
 # ─── Cache policies per endpoint prefix ───
@@ -55,7 +56,12 @@ class SecurityHeadersMiddleware:
 
 
 def setup_cors(app):
-    origins = list(settings.origins_list)
+    # Safely parse allowed origins from settings, with fallback
+    try:
+        origins = list(settings.origins_list)
+    except Exception:
+        origins = []
+
     extras = [
         "https://frontend-seven-kappa-41.vercel.app",
         "https://frontend-rj-verdan-tayam.vercel.app",
