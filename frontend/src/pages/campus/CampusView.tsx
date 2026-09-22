@@ -33,7 +33,7 @@ export function CampusView() {
   const { startLocalStream, toggleVideo, shareScreen } = useWebRTC(roomId);
   const { emit } = useSocket();
   useSettingsSync();
-  const { localStream, isVideoOff, localMicActive } = usePeerStore();
+  const { localStream, isVideoOff, localMicActive, isAudioMuted } = usePeerStore();
   const { roomUsers, isEmergency, emergencyTriggeredBy, remotePortalModes, remoteMeetingModes, remoteVideoOff, remoteAudioMuted, screenSharerSid, portalMode, unreadAllCount, unreadCampusCount, clearUnreadChat } = useSessionStore();
   const { user } = useAuthStore();
   const [showChat, setShowChat] = useState(false);
@@ -43,6 +43,18 @@ export function CampusView() {
   const onlinePanelRef = useRef<HTMLDivElement>(null);
   const mySid = useSocket().socket?.id;
   const { setTalkTarget, setLocalMicActive } = usePeerStore();
+  const talkResponseStatus = useSessionStore((s) => s.talkResponseStatus);
+
+  useEffect(() => {
+    if (talkResponseStatus === 'accepted' && activeTalkTarget && !useSessionStore.getState().portalMode) {
+      setTalkTarget(activeTalkTarget);
+      setLocalMicActive(true);
+    }
+    if (talkResponseStatus === 'rejected') {
+      setActiveTalkTarget(null);
+      useSessionStore.getState().clearTalkRequest();
+    }
+  }, [talkResponseStatus, activeTalkTarget, setTalkTarget, setLocalMicActive]);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showLiveDemo, setShowLiveDemo] = useState(false);
   const [demoData, setDemoData] = useState<{ userId: string; name: string; campus: string; role: string } | null>(null);
@@ -152,7 +164,7 @@ export function CampusView() {
             name={u.user}
             campus={u.campus}
             isLocal={true}
-            isMuted={!localMicActive}
+            isMuted={isAudioMuted}
             isVideoOff={isVideoOff}
             peerSid={mySid}
           />
@@ -181,7 +193,13 @@ export function CampusView() {
   const handleTalkToggle = () => {
     setActiveTalkTarget((prev) => {
       const next = prev === oppositeCampus ? null : oppositeCampus;
-      setTalkTarget(next);
+      if (next) {
+        emit('talk_request', { target_campus: next });
+        useSessionStore.getState().setTalkResponseStatus('pending');
+      } else {
+        useSessionStore.getState().clearTalkRequest();
+        setTalkTarget(null);
+      }
       return next;
     });
   };
@@ -354,7 +372,7 @@ export function CampusView() {
                             campus={u.campus}
                             isLocal={true}
                             isSmall={true}
-                            isMuted={!localMicActive}
+                            isMuted={isAudioMuted}
                             isVideoOff={isVideoOff}
                             peerSid={mySid}
                           />
@@ -428,10 +446,13 @@ export function CampusView() {
             </div>
             <div className="flex items-center gap-1 sm:gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-end">
               <VideoControls
-                isAudioMuted={!localMicActive}
+                isAudioMuted={isAudioMuted}
                 isVideoOff={isVideoOff}
                 isScreenSharing={false}
-                onToggleAudio={() => !portalMode && setLocalMicActive(!localMicActive)}
+                onToggleAudio={() => {
+                  if (portalMode) return;
+                  setLocalMicActive(!localMicActive);
+                }}
                 onToggleVideo={toggleVideo}
                 onToggleScreenShare={() => !portalMode && shareScreen().catch(() => {})}
                 isHandRaised={isHandRaised}

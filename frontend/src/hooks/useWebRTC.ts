@@ -314,12 +314,12 @@ export function useWebRTC(_roomId: string) {
     const handleIceEvent = ({ candidate, sender_sid }: any) => {
       handleIceCandidate(candidate, sender_sid);
     };
-    const handlePeerTalkTarget = ({ sid, campus, target }: any) => {
+        const handlePeerTalkTarget = ({ sid, campus, target }: any) => {
       console.log(`[WebRTC] peer_talk_target: ${campus} (${sid}) -> ${target}`);
       const pc = peersRef.current.get(sid);
       if (pc) {
         const myCampus = useSessionStore.getState().roomUsers.find(u => u.sid === s?.id)?.campus;
-        const shouldUnmute = target !== null && (target === 'both' || target === myCampus);
+        const shouldUnmute = target === 'both' || (target != null && target === myCampus);
         console.log(`[WebRTC] Incoming audio from ${campus}: myCampus=${myCampus}, target=${target}, shouldUnmute=${shouldUnmute}`);
         pc.getReceivers().forEach((receiver) => {
           if (receiver.track?.kind === 'audio') {
@@ -396,8 +396,10 @@ export function useWebRTC(_roomId: string) {
       let combined: string | null = null;
       if (currentTalkTarget && currentLocalMic) combined = 'both';
       else if (currentTalkTarget) combined = currentTalkTarget;
-      else if (currentLocalMic) combined = 'local';
+      else if (currentLocalMic) combined = 'both';
       emit('talk_to', { target: combined });
+    } else {
+      emit('talk_to', { target: null });
     }
 
     const currentVideoOff = usePeerStore.getState().isVideoOff;
@@ -415,10 +417,13 @@ export function useWebRTC(_roomId: string) {
     let combined: string | null = null;
     if (talkTarget && localMicActive) combined = 'both';
     else if (talkTarget) combined = talkTarget;
-    else if (localMicActive) combined = 'local';
+    else if (localMicActive) combined = 'both';
 
     console.log(`[WebRTC] talk_to changed: talkTarget=${talkTarget}, localMicActive=${localMicActive}, combined=${combined}`);
     emit('talk_to', { target: combined });
+
+    const { isAudioMuted } = usePeerStore.getState();
+    emit('mute_audio', { muted: isAudioMuted });
   }, [talkTarget, localMicActive, emit]);
 
   useEffect(() => {

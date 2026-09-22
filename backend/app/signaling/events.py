@@ -712,7 +712,7 @@ async def talk_to(sid, data):
         return
 
     if target == "local":
-        target = campus
+        target = "both"
 
     print(f"[Backend] talk_to: {session.get('full_name')} ({campus}) -> {target}")
     await sio.emit("peer_talk_target", {

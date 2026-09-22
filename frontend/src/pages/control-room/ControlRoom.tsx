@@ -33,7 +33,7 @@ export function ControlRoom() {
   const { startLocalStream, toggleVideo, shareScreen } = useWebRTC(roomId);
   const { emit } = useSocket();
   useSettingsSync();
-  const { localStream, isVideoOff, isScreenSharing, localMicActive } = usePeerStore();
+  const { localStream, isVideoOff, isScreenSharing, localMicActive, isAudioMuted } = usePeerStore();
   const { roomUsers, isEmergency, emergencyTriggeredBy, remotePortalModes, remoteMeetingModes, remoteVideoOff, remoteAudioMuted, screenSharerSid, portalMode, unreadAllCount, unreadCampusCount, clearUnreadChat } = useSessionStore();
   const { user } = useAuthStore();
   const { isRecording, elapsedTime, uploading: recordingUploading, uploadError, startRecording, stopRecording, formatTime: formatRecordingTime } = useRecording(roomId);
@@ -57,8 +57,13 @@ export function ControlRoom() {
   useEffect(() => {
     if (talkResponseStatus === 'accepted' && activeTalkTarget && !useSessionStore.getState().portalMode) {
       setTalkTarget(activeTalkTarget);
+      setLocalMicActive(true);
     }
-  }, [talkResponseStatus, activeTalkTarget, setTalkTarget]);
+    if (talkResponseStatus === 'rejected') {
+      setActiveTalkTarget(null);
+      useSessionStore.getState().clearTalkRequest();
+    }
+  }, [talkResponseStatus, activeTalkTarget, setTalkTarget, setLocalMicActive]);
 
   useEffect(() => {
     const pending = localStorage.getItem('pending_live_demo');
@@ -198,7 +203,7 @@ export function ControlRoom() {
             name={u.user}
             campus={u.campus}
             isLocal={true}
-            isMuted={!localMicActive}
+            isMuted={isAudioMuted}
             isVideoOff={isVideoOff}
             peerSid={mySid}
           />
@@ -400,7 +405,7 @@ export function ControlRoom() {
                             campus={u.campus}
                             isLocal={true}
                             isSmall={true}
-                            isMuted={!localMicActive}
+                            isMuted={isAudioMuted}
                             isVideoOff={isVideoOff}
                             peerSid={mySid}
                           />
@@ -492,10 +497,13 @@ export function ControlRoom() {
             <div className="flex items-center gap-1 sm:gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-end">
               <div data-demo="portal-toggle"><PortalToggle compact /></div>
               <VideoControls
-                isAudioMuted={!localMicActive}
+                isAudioMuted={isAudioMuted}
                 isVideoOff={isVideoOff}
                 isScreenSharing={isScreenSharing}
-                onToggleAudio={() => !portalMode && setLocalMicActive(!localMicActive)}
+                onToggleAudio={() => {
+                  if (portalMode) return;
+                  setLocalMicActive(!localMicActive);
+                }}
                 onToggleVideo={toggleVideo}
                 onToggleScreenShare={() => !portalMode && shareScreen().catch(() => {})}
                 isHandRaised={isHandRaised}

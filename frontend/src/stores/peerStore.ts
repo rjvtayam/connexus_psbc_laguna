@@ -115,7 +115,7 @@ export const usePeerStore = create<PeerState>((set, get) => ({
     const { talkTarget, localMicActive } = get();
     if (talkTarget && localMicActive) return 'both';
     if (talkTarget) return talkTarget;
-    if (localMicActive) return 'local';
+    if (localMicActive) return 'both';
     return null;
   },
 
