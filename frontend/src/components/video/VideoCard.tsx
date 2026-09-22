@@ -46,8 +46,14 @@ export function VideoCard({
   const myReactions = allFloatingReactions.filter((r) => r.sid === peerSid && !claimedIds.current.has(r.id));
 
   useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
+    const video = videoRef.current;
+    if (video && stream) {
+      if (video.srcObject !== stream) {
+        video.srcObject = stream;
+      }
+      if (!isVideoOff) {
+        video.play().catch(() => {});
+      }
     }
   }, [stream, isVideoOff]);
 

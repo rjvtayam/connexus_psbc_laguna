@@ -249,7 +249,7 @@ export function useWebRTC(_roomId: string) {
     const newVideoOff = !peerState.isVideoOff;
     if (peerState.localStream) {
       peerState.localStream.getVideoTracks().forEach((track) => {
-        track.enabled = newVideoOff;
+        track.enabled = !newVideoOff;
       });
     }
     usePeerStore.setState({ isVideoOff: newVideoOff });

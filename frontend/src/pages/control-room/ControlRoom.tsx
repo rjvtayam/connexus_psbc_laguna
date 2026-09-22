@@ -116,8 +116,9 @@ export function ControlRoom() {
       setTalkTarget(null);
       setLocalMicActive(false);
       localStream.getVideoTracks().forEach((track) => { track.enabled = true; });
+      const wasOff = usePeerStore.getState().isVideoOff;
       usePeerStore.setState({ isVideoOff: false });
-      emit('mute_video', { video_off: false });
+      if (wasOff) emit('mute_video', { video_off: false });
       emit('mute_audio', { muted: true });
       emit('talk_to', { target: null });
     }
