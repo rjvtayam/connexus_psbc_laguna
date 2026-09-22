@@ -4,7 +4,7 @@ import { formatDate, formatTime } from '../../lib/utils';
 import {
   ClipboardList, Search, RefreshCw, Filter, ChevronDown, ChevronLeft,
   ChevronRight, LogIn, LogOut, Play, Square, AlertTriangle, UserPlus,
-  Trash2, Shield, Activity, X, Inbox, Clock, Loader2, Database
+  Trash2, Shield, Activity, X, Inbox, Clock, Loader2, Database, ShieldAlert, UserX
 } from 'lucide-react';
 
 interface AuditLog {
@@ -32,6 +32,9 @@ const ACTION_META: Record<string, ActionMeta> = {
   user_delete: { label: 'User Deactivated', icon: <Trash2 size={12} />, chip: 'bg-amber-500/10 text-amber-400 border-amber-500/25' },
   user_update: { label: 'User Updated', icon: <Shield size={12} />, chip: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/25' },
   cache_clear: { label: 'Cache Cleared', icon: <Database size={12} />, chip: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/25' },
+  login_failed: { label: 'Failed Login', icon: <ShieldAlert size={12} />, chip: 'bg-rose-500/10 text-rose-400 border-rose-500/25' },
+  account_deactivated: { label: 'Account Deactivated', icon: <UserX size={12} />, chip: 'bg-amber-500/10 text-amber-400 border-amber-500/25' },
+  account_deleted: { label: 'Account Deleted', icon: <Trash2 size={12} />, chip: 'bg-red-500/10 text-red-400 border-red-500/25' },
 };
 
 const PAGE_SIZE = 12;
@@ -176,6 +179,18 @@ export function AuditLogs() {
 
         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
           <Filter size={11} className="text-gray-600" />
+          <button
+            onClick={() => { setActionFilter(actionFilter === 'login_failed' ? 'all' : 'login_failed'); setCurrentPage(1); }}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium border transition-all ${
+              actionFilter === 'login_failed'
+                ? 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+                : 'bg-rose-500/5 border-rose-500/25 text-rose-400/90 hover:text-rose-300 hover:border-rose-500/40'
+            }`}
+          >
+            <ShieldAlert size={10} />
+            Failed Attempts
+            <span className="ml-0.5 opacity-70 font-mono">{actionCounts['login_failed'] || 0}</span>
+          </button>
           {filterChips.slice(0, 8).map((chip) => (
             <button
               key={chip.value}

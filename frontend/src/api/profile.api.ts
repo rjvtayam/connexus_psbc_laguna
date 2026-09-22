@@ -59,4 +59,19 @@ export const profileApi = {
     const response = await api.get('/profile/activity', { params: { limit } });
     return response.data;
   },
+
+  deactivateAccount: async (password: string): Promise<{ message: string }> => {
+    const response = await api.post('/profile/deactivate', {
+      current_password: password,
+      new_password: '',
+    });
+    return response.data;
+  },
+
+  deleteAccount: async (password: string): Promise<{ message: string }> => {
+    const response = await api.delete('/profile/me', {
+      data: { current_password: password, new_password: '' },
+    });
+    return response.data;
+  },
 };

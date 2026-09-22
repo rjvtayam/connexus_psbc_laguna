@@ -3,6 +3,7 @@ import base64
 import pyotp
 import qrcode
 import io
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request, status
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -120,6 +121,62 @@ def change_password(request: Request, data: PasswordChange, db: Session = Depend
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to change password")
 
     return {"message": "Password changed successfully"}
+
+
+@router.post("/deactivate")
+@limiter.limit("5/minute")
+def deactivate_account(request: Request, data: PasswordChange, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if not verify_password(data.current_password, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password is incorrect")
+
+    if not current_user.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Account is already deactivated")
+
+    try:
+        current_user.is_active = False
+        log = AuditLog(
+            user_id=current_user.id,
+            action="account_deactivated",
+            details={"email": current_user.email},
+            ip_address=request.client.host if request.client else None,
+        )
+        db.add(log)
+        db.commit()
+        invalidate(get_profile_cache(), "profile")
+        get_profile_cache().pop(f"user:{current_user.id}", None)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to deactivate account")
+
+    return {"message": "Account deactivated successfully"}
+
+
+@router.delete("/me")
+@limiter.limit("5/minute")
+def delete_account(request: Request, data: PasswordChange, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if not verify_password(data.current_password, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password is incorrect")
+
+    try:
+        current_user.is_active = False
+        current_user.deleted_at = datetime.utcnow()
+        current_user.two_factor_enabled = False
+        current_user.two_factor_secret = None
+        log = AuditLog(
+            user_id=current_user.id,
+            action="account_deleted",
+            details={"email": current_user.email},
+            ip_address=request.client.host if request.client else None,
+        )
+        db.add(log)
+        db.commit()
+        invalidate(get_profile_cache(), "profile")
+        get_profile_cache().pop(f"user:{current_user.id}", None)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete account")
+
+    return {"message": "Account deleted successfully"}
 
 
 @router.post("/avatar")

@@ -1,17 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { useAuthStore } from '../../stores/authStore';
 import { useSettingsStore, type SettingsState } from '../../stores/settingsStore';
+import { useAuth } from '../../hooks/useAuth';
 import { profileApi } from '../../api/profile.api';
 import { User as UserType, ActivityLog } from '../../types/user';
 import { Save, Shield, Bell, User, Building2, Monitor, AudioLines,
   Wifi, Globe, Volume2, VolumeX, RefreshCw, Camera, CameraOff, Aperture,
   Clock, Mic, MicOff, Speaker, Phone, Mail, Lock, History, CheckCircle2,
-  AlertCircle, LogIn, Key, Edit3, Eye, EyeOff, X
+  AlertCircle, LogIn, Key, Edit3, Eye, EyeOff, X, Trash2, UserX, PauseCircle,
+  AlertTriangle, ShieldCheck, Info
 } from 'lucide-react';
-import { pushSettingsToast, SettingsToast } from '../../components/ui/SettingsToast';
+import { pushSettingsToast, pushAccountToast, SettingsToast } from '../../components/ui/SettingsToast';
 
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void }) {
   return (
@@ -44,7 +48,7 @@ function SettingRow({ icon, iconBg, label, description, children }: {
 }
 
 type Tab = 'profile' | 'video' | 'audio' | 'connection' | 'notifications';
-type ProfileSubTab = 'personal' | 'security' | 'activity';
+type ProfileSubTab = 'personal' | 'security' | 'activity' | 'account';
 
 const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
   { key: 'profile', label: 'Profile', icon: <User size={11} /> },
@@ -58,6 +62,7 @@ const PROFILE_SUB_TABS: { key: ProfileSubTab; label: string; icon: React.ReactNo
   { key: 'personal', label: 'Personal Info', icon: <User size={10} /> },
   { key: 'security', label: 'Security', icon: <Lock size={10} /> },
   { key: 'activity', label: 'Activity Log', icon: <History size={10} /> },
+  { key: 'account', label: 'Account', icon: <UserX size={10} /> },
 ];
 
 export function SettingsPage() {
@@ -273,6 +278,7 @@ function ProfileSection({ user, updateUser, activeSubTab, onSubTabChange }: {
       {activeSubTab === 'personal' && <PersonalInfoTab user={user} updateUser={updateUser} />}
       {activeSubTab === 'security' && <SecurityTab user={user} updateUser={updateUser} />}
       {activeSubTab === 'activity' && <ActivityTab />}
+      {activeSubTab === 'account' && <AccountTab user={user} />}
     </div>
   );
 }
@@ -780,6 +786,8 @@ function ActivityTab() {
       case 'profile_updated': return <Edit3 size={12} className="text-blue-400" />;
       case 'password_changed': return <Key size={12} className="text-amber-400" />;
       case 'login': return <LogIn size={12} className="text-green-400" />;
+      case 'account_deactivated': return <UserX size={12} className="text-amber-400" />;
+      case 'account_deleted': return <Trash2 size={12} className="text-red-400" />;
       default: return <Clock size={12} className="text-gray-400" />;
     }
   };
@@ -789,6 +797,8 @@ function ActivityTab() {
       case 'profile_updated': return 'Profile Updated';
       case 'password_changed': return 'Password Changed';
       case 'login': return 'Logged In';
+      case 'account_deactivated': return 'Account Deactivated';
+      case 'account_deleted': return 'Account Deleted';
       default: return action.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
     }
   };
@@ -841,6 +851,224 @@ function ActivityTab() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── ACCOUNT TAB ─── */
+function AccountTab({ user }: { user: UserType | null }) {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [deactivatePassword, setDeactivatePassword] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [busy, setBusy] = useState<'deactivate' | 'delete' | null>(null);
+  const [showDeactivatePw, setShowDeactivatePw] = useState(false);
+  const [showDeletePw, setShowDeletePw] = useState(false);
+
+  const signOut = async () => {
+    try { await logout(); } catch { /* ignore */ }
+    navigate('/login', { replace: true });
+  };
+
+  const handleDeactivate = async () => {
+    if (!deactivatePassword) {
+      pushAccountToast('Enter your password to continue', 'error');
+      return;
+    }
+    setBusy('deactivate');
+    try {
+      await profileApi.deactivateAccount(deactivatePassword);
+      pushAccountToast('Account deactivated — signing you out…', 'success');
+      setShowDeactivateConfirm(false);
+      setDeactivatePassword('');
+      setTimeout(signOut, 2200);
+    } catch (err: any) {
+      pushAccountToast(err.response?.data?.detail || 'Failed to deactivate account', 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletePassword) {
+      pushAccountToast('Enter your password to continue', 'error');
+      return;
+    }
+    setBusy('delete');
+    try {
+      await profileApi.deleteAccount(deletePassword);
+      pushAccountToast('Account deleted — signing you out…', 'success');
+      setShowDeleteConfirm(false);
+      setDeletePassword('');
+      setTimeout(signOut, 2200);
+    } catch (err: any) {
+      pushAccountToast(err.response?.data?.detail || 'Failed to delete account', 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4 animate-fade-in-up">
+      {/* Account overview */}
+      <div className="relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-600/40 to-transparent" />
+        <div className="p-3.5 flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary-500/15 border border-primary-500/25 flex items-center justify-center shrink-0">
+            <ShieldCheck size={15} className="text-primary-400" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-white text-[12px] font-semibold">Account Status</h3>
+            <p className="text-gray-500 text-[10px] mt-0.5 leading-relaxed">
+              Manage the lifecycle of <span className="text-gray-300 font-medium">{user?.email}</span>.
+              Deactivation temporarily locks sign-in; deletion permanently retires this account.
+            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className={`flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                user?.is_active ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/25' : 'text-amber-400 bg-amber-500/10 border border-amber-500/25'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${user?.is_active ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                {user?.is_active ? 'Active' : 'Deactivated'}
+              </span>
+              <span className="text-[9px] text-gray-600">Role: {user?.role?.toUpperCase()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Deactivate */}
+      <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-amber-500/15 overflow-hidden">
+        <div className="p-3 border-b border-amber-500/10 flex items-center gap-1.5">
+          <PauseCircle size={12} className="text-amber-400" />
+          <span className="text-[11px] font-semibold text-amber-400/90 uppercase tracking-widest">Deactivate Account</span>
+          <span className="ml-auto text-[9px] text-amber-500/70 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">REVERSIBLE</span>
+        </div>
+        <div className="p-4 space-y-3">
+          <ul className="space-y-1.5">
+            {['Sign-in is blocked immediately on all devices', 'Your profile and data are preserved', 'An administrator can restore access later'].map((item) => (
+              <li key={item} className="flex items-start gap-2 text-[11px] text-gray-400">
+                <Info size={11} className="text-amber-400/70 shrink-0 mt-0.5" />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <div>
+            <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">Confirm with password</label>
+            <div className="relative">
+              <Key size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+              <input
+                type={showDeactivatePw ? 'text' : 'password'}
+                value={deactivatePassword}
+                onChange={(e) => setDeactivatePassword(e.target.value)}
+                placeholder="Your current password"
+                className="w-full bg-gray-900/60 border border-gray-800 rounded-lg pl-8 pr-9 py-2 text-white text-[11px] placeholder-gray-600 focus:ring-1 focus:ring-amber-500/40 focus:border-amber-500/40 focus:outline-none transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowDeactivatePw(!showDeactivatePw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300"
+              >
+                {showDeactivatePw ? <EyeOff size={13} /> : <Eye size={13} />}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-end pt-1">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!deactivatePassword || busy !== null}
+              onClick={() => setShowDeactivateConfirm(true)}
+              className="inline-flex items-center whitespace-nowrap bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30"
+            >
+              {busy === 'deactivate' ? <RefreshCw size={11} className="mr-1.5 animate-spin" /> : <PauseCircle size={11} className="mr-1.5" />}
+              {busy === 'deactivate' ? 'Deactivating…' : 'Deactivate Account'}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete */}
+      <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-red-500/20 overflow-hidden">
+        <div className="p-3 border-b border-red-500/10 flex items-center gap-1.5">
+          <Trash2 size={12} className="text-red-400" />
+          <span className="text-[11px] font-semibold text-red-400/90 uppercase tracking-widest">Delete Account</span>
+          <span className="ml-auto text-[9px] text-red-400 bg-red-500/10 border border-red-500/25 px-1.5 py-0.5 rounded">PERMANENT</span>
+        </div>
+        <div className="p-4 space-y-3">
+          <div className="flex items-start gap-2 p-2.5 bg-red-500/5 border border-red-500/15 rounded-lg">
+            <AlertTriangle size={12} className="text-red-400 shrink-0 mt-0.5" />
+            <p className="text-[11px] text-red-300/90 leading-relaxed">
+              This cannot be undone. Your account will be retired, sessions revoked, and you will be signed out everywhere.
+            </p>
+          </div>
+          <ul className="space-y-1.5">
+            {['All active sessions and tokens are revoked', 'Two-factor authentication is removed', 'Audit history is retained for security'].map((item) => (
+              <li key={item} className="flex items-start gap-2 text-[11px] text-gray-400">
+                <span className="w-1 h-1 rounded-full bg-red-400/70 shrink-0 mt-1.5" />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <div>
+            <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-1.5">Confirm with password</label>
+            <div className="relative">
+              <Key size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
+              <input
+                type={showDeletePw ? 'text' : 'password'}
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Your current password"
+                className="w-full bg-gray-900/60 border border-red-500/20 rounded-lg pl-8 pr-9 py-2 text-white text-[11px] placeholder-gray-600 focus:ring-1 focus:ring-red-500/40 focus:border-red-500/40 focus:outline-none transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowDeletePw(!showDeletePw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300"
+              >
+                {showDeletePw ? <EyeOff size={13} /> : <Eye size={13} />}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-end pt-1">
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={!deletePassword || busy !== null}
+              onClick={() => setShowDeleteConfirm(true)}
+              className="inline-flex items-center whitespace-nowrap"
+            >
+              {busy === 'delete' ? <RefreshCw size={11} className="mr-1.5 animate-spin" /> : <Trash2 size={11} className="mr-1.5" />}
+              {busy === 'delete' ? 'Deleting…' : 'Delete Account'}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <ConfirmModal
+        isOpen={showDeactivateConfirm}
+        title="Deactivate Account?"
+        message="You will be signed out immediately and unable to sign in until an administrator reactivates your account. Your data will be kept."
+        confirmLabel="Deactivate"
+        cancelLabel="Cancel"
+        variant="warning"
+        icon="warning"
+        onConfirm={handleDeactivate}
+        onCancel={() => setShowDeactivateConfirm(false)}
+      />
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Delete Account Permanently?"
+        message={`This permanently retires ${user?.email || 'your account'}. This action cannot be undone. Type-free confirmation requires your password (already entered).`}
+        confirmLabel="Delete Forever"
+        cancelLabel="Cancel"
+        variant="danger"
+        icon="trash"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }
