@@ -12,6 +12,7 @@ import { RecordsPage } from './pages/control-room/RecordsPage';
 import { UserManagement } from './pages/admin/UserManagement';
 import { SessionHistory } from './pages/admin/SessionHistory';
 import { AuditLogs } from './pages/admin/AuditLogs';
+import { SystemMonitoring } from './pages/admin/SystemMonitoring';
 import { queryClient } from './lib/queryClient';
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
@@ -98,6 +99,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['principal', 'admin']}>
                 <SessionHistory />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/system"
+            element={
+              <ProtectedRoute allowedRoles={['principal', 'admin']}>
+                <SystemMonitoring />
               </ProtectedRoute>
             }
           />

@@ -7,7 +7,7 @@ from app.config import settings
 from app.api.v1.router import api_router
 from app.middleware.cors import setup_cors
 from app.middleware.rate_limit import limiter
-from app.signaling.events import sio
+from app.signaling.events import sio, start_system_monitoring
 from app.database import engine, warmup_db
 import json
 
@@ -82,8 +82,9 @@ def create_app() -> FastAPI:
         return {"status": "healthy" if db_status == "connected" else "degraded", "database": db_status, "service": "here-to-there"}
 
     @app.on_event("startup")
-    def startup():
+    async def startup():
         warmup_db()
+        await start_system_monitoring()
 
     @app.on_event("shutdown")
     def shutdown():

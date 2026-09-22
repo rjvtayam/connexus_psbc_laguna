@@ -14,6 +14,19 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 database_url = os.environ.get("DATABASE_URL")
+if not database_url:
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
+        database_url = os.environ.get("DATABASE_URL")
+    except Exception:
+        pass
+if not database_url:
+    try:
+        from app.config import settings
+        database_url = settings.DATABASE_URL
+    except Exception:
+        pass
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url)
 

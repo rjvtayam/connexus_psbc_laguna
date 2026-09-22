@@ -3,9 +3,16 @@ from datetime import datetime, timedelta
 from app.services.broadcast_service import BroadcastService
 from app.database import SessionLocal
 from app.services.notification_service import NotificationService
+from app.services.cache import get_all_caches, invalidate_all_caches
 from app.models.chat_message import ChatMessage as ChatMessageModel
+from app.models.user import User
+from app.models.session import VideoSession
+from sqlalchemy import func
 
 from app.config import settings
+import asyncio
+import psutil
+import os
 
 MAX_CHAT_MESSAGE_LENGTH = settings.MAX_CHAT_MESSAGE_LENGTH
 ALLOWED_ROLES = {"principal", "admin", "teacher", "staff"}
@@ -22,6 +29,7 @@ sio = socketio.AsyncServer(
 broadcast_service = BroadcastService()
 
 room_members: dict[str, set[str]] = {}
+system_metrics_subscribers: set[str] = set()
 
 chat_history: dict[str, list[dict]] = {}
 CHAT_HISTORY_LIMIT = 200
@@ -58,6 +66,7 @@ async def disconnect(sid, reason=""):
 
     user_id = session.get("user_id")
     room_id = session.get("current_room")
+    system_metrics_subscribers.discard(sid)
     if room_id:
         if room_id in room_members and sid in room_members[room_id]:
             room_members[room_id].discard(sid)
@@ -838,3 +847,171 @@ async def send_reaction(sid, data):
         "emoji": emoji,
     }, room=room_id, skip_sid=sid)
     print(f"[Backend] reaction: {session.get('full_name')} -> {emoji} in {room_id}")
+
+
+# ─── System Monitoring (Admin Only) ───
+system_metrics_history: list[dict] = []
+MAX_HISTORY_POINTS = 120  # 2 hours at 1-minute intervals
+
+
+async def collect_system_metrics() -> dict:
+    """Collect current system metrics."""
+    process = psutil.Process(os.getpid())
+    
+    # Get cache stats
+    cache_stats = {}
+    try:
+        caches = get_all_caches()
+        total_entries = sum(len(cache) for cache in caches.values())
+        cache_stats = {
+            "total_entries": total_entries,
+            "caches": {name: len(cache) for name, cache in caches.items()},
+        }
+    except Exception:
+        cache_stats = {"total_entries": 0, "caches": {}}
+
+    # Get active sessions and users
+    active_sessions = 0
+    total_users = 0
+    online_users = len(room_members.get(MAIN_ROOM, set()))
+    recent_activity = 0
+    db = SessionLocal()
+    try:
+        active_sessions = db.query(VideoSession).filter(VideoSession.status == "active").count()
+        total_users = db.query(User).filter(User.is_active == True).count()
+
+        # Get recent activity count
+        from app.models.audit_log import AuditLog
+        recent_activity = db.query(AuditLog).filter(
+            AuditLog.timestamp >= datetime.utcnow() - timedelta(minutes=5)
+        ).count()
+    except Exception as e:
+        print(f"[System Metrics] DB query error: {e}")
+    finally:
+        db.close()
+
+    # System resources
+    try:
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage(os.getcwd())
+        system_stats = {
+            "cpu_percent": cpu_percent,
+            "memory_percent": memory.percent,
+            "memory_used_mb": memory.used / (1024 * 1024),
+            "memory_total_mb": memory.total / (1024 * 1024),
+            "disk_percent": disk.percent,
+            "disk_used_gb": disk.used / (1024 * 1024 * 1024),
+            "disk_total_gb": disk.total / (1024 * 1024 * 1024),
+        }
+        process_stats = {
+            "process_memory_mb": process.memory_info().rss / (1024 * 1024),
+            "process_cpu_percent": process.cpu_percent(),
+        }
+    except Exception as e:
+        print(f"[System Metrics] psutil error: {e}")
+        system_stats = {
+            "cpu_percent": 0.0,
+            "memory_percent": 0.0,
+            "memory_used_mb": 0.0,
+            "memory_total_mb": 0.0,
+            "disk_percent": 0.0,
+            "disk_used_gb": 0.0,
+            "disk_total_gb": 0.0,
+        }
+        process_stats = {"process_memory_mb": 0.0, "process_cpu_percent": 0.0}
+
+    return {
+        "timestamp": datetime.utcnow().isoformat(),
+        "system": system_stats,
+        "application": {
+            "active_sessions": active_sessions,
+            "total_users": total_users,
+            "online_users": online_users,
+            "recent_activity_5m": recent_activity,
+            **process_stats,
+        },
+        "cache": cache_stats,
+        "control_room": {
+            "active": online_users > 0,
+            "connected_participants": online_users,
+        },
+    }
+
+
+async def broadcast_system_metrics():
+    """Broadcast system metrics to admin users."""
+    metrics = await collect_system_metrics()
+    
+    # Add to history
+    system_metrics_history.append(metrics)
+    if len(system_metrics_history) > MAX_HISTORY_POINTS:
+        system_metrics_history.pop(0)
+    
+    # Broadcast to subscribed admin users
+    for member_sid in list(system_metrics_subscribers):
+        try:
+            member_session = await sio.get_session(member_sid)
+            if member_session and member_session.get("role") in ["admin", "principal"]:
+                await sio.emit("system_metrics", metrics, room=member_sid)
+            else:
+                system_metrics_subscribers.discard(member_sid)
+        except (KeyError, Exception):
+            system_metrics_subscribers.discard(member_sid)
+
+
+async def system_metrics_loop():
+    """Background task to periodically collect and broadcast system metrics."""
+    while True:
+        try:
+            await broadcast_system_metrics()
+        except Exception as e:
+            print(f"[System Metrics] Error: {e}")
+        await asyncio.sleep(30)  # Every 30 seconds
+
+
+@sio.event
+async def request_system_metrics(sid, data):
+    """Admin requests current system metrics."""
+    try:
+        session = await sio.get_session(sid)
+    except (KeyError, Exception):
+        return
+    
+    if session.get("role") not in ["admin", "principal"]:
+        return
+    
+    system_metrics_subscribers.add(sid)
+    metrics = await collect_system_metrics()
+    metrics["history"] = system_metrics_history[-60:]  # Last 60 points
+    await sio.emit("system_metrics_response", metrics, room=sid)
+
+
+@sio.event
+async def clear_cache(sid, data):
+    """Admin clears all caches."""
+    try:
+        session = await sio.get_session(sid)
+    except (KeyError, Exception):
+        return
+    
+    if session.get("role") != "admin":
+        await sio.emit("error", {"message": "Admin access required"}, room=sid)
+        return
+    
+    try:
+        invalidate_all_caches()
+        await sio.emit("cache_cleared", {
+            "cleared_by": session.get("full_name"),
+            "timestamp": datetime.utcnow().isoformat(),
+        }, room=sid)
+        print(f"[Backend] Cache cleared by {session.get('full_name')}")
+    except Exception as e:
+        await sio.emit("error", {"message": f"Failed to clear cache: {e}"}, room=sid)
+        print(f"[Backend] Cache clear error: {e}")
+
+
+# Start background metrics collection
+# This will be called on startup
+async def start_system_monitoring():
+    asyncio.create_task(system_metrics_loop())

@@ -72,12 +72,32 @@ def invalidate(cache: TTLCache, prefix: Optional[str] = None):
         cache.clear()
 
 
-def invalidate_all():
+def get_all_caches():
+    """Get all cache instances for monitoring."""
+    return {
+        "user_list": _user_list_cache,
+        "session": _session_cache,
+        "bulletin": _bulletin_cache,
+        "announcement": _announcement_cache,
+        "room_users": _room_users_cache,
+        "settings": _settings_cache,
+        "audit_log": _audit_log_cache,
+        "profile": _profile_cache,
+        "computation": _computation_cache,
+    }
+
+
+def invalidate_all_caches():
     """Clear all caches."""
     for c in [_user_list_cache, _session_cache, _bulletin_cache,
               _announcement_cache, _room_users_cache, _settings_cache,
               _audit_log_cache, _profile_cache, _computation_cache]:
         c.clear()
+
+
+def invalidate_all():
+    """Alias for invalidate_all_caches."""
+    invalidate_all_caches()
 
 
 # ─── Convenience accessors ───

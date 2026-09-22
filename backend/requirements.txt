@@ -18,3 +18,4 @@ Pillow==12.3.0
 slowapi==0.1.9
 cryptography==44.0.0
 cachetools==7.1.8
+psutil==6.0.0

@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useUIStore } from '../../stores/uiStore';
-import { Home, Settings, Users, LogOut, ChevronsLeft, ChevronsRight, X, Film, ClipboardList, History } from 'lucide-react';
+import { Home, Settings, Users, LogOut, ChevronsLeft, ChevronsRight, X, Film, ClipboardList, History, Activity } from 'lucide-react';
 
 interface SidebarProps {
   isMobile?: boolean;
@@ -59,6 +59,9 @@ export function Sidebar({ isMobile = false }: SidebarProps) {
             )}
             {showUsers && (
               <SidebarLink to="/admin/audit-logs" icon={<ClipboardList size={18} />} label="Audit Logs" isOpen={true} onClick={toggleSidebar} />
+            )}
+            {showUsers && (
+              <SidebarLink to="/admin/system" icon={<Activity size={18} />} label="System Monitor" isOpen={true} onClick={toggleSidebar} />
             )}
             {(user?.role === 'admin' || user?.role === 'teacher' || user?.role === 'staff' || user?.role === 'principal') && (
               <SidebarLink to="/control-room/settings" icon={<Settings size={18} />} label="Settings" isOpen={true} onClick={toggleSidebar} />
@@ -123,10 +126,13 @@ export function Sidebar({ isMobile = false }: SidebarProps) {
         {showUsers && (
           <SidebarLink to="/admin/session-history" icon={<History size={18} />} label="Session History" isOpen={isSidebarOpen} />
         )}
-        {showUsers && (
-          <SidebarLink to="/admin/audit-logs" icon={<ClipboardList size={18} />} label="Audit Logs" isOpen={isSidebarOpen} />
-        )}
-        {(user?.role === 'admin' || user?.role === 'teacher' || user?.role === 'staff' || user?.role === 'principal') && (
+{showUsers && (
+              <SidebarLink to="/admin/audit-logs" icon={<ClipboardList size={18} />} label="Audit Logs" isOpen={isSidebarOpen} />
+            )}
+            {showUsers && (
+              <SidebarLink to="/admin/system" icon={<Activity size={18} />} label="System Monitor" isOpen={isSidebarOpen} />
+            )}
+            {(user?.role === 'admin' || user?.role === 'teacher' || user?.role === 'staff' || user?.role === 'principal') && (
           <SidebarLink to="/control-room/settings" icon={<Settings size={18} />} label="Settings" isOpen={isSidebarOpen} />
         )}
       </nav>
