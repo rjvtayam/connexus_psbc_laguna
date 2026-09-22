@@ -41,10 +41,7 @@ export function Login() {
         return;
       }
 
-      const demoKey = `demo_completed_${user?.id}`;
-      if (!localStorage.getItem(demoKey)) {
-        localStorage.setItem('pending_live_demo', JSON.stringify({ userId: user?.id, name: user?.full_name, campus: user?.campus, role: user?.role }));
-      }
+      localStorage.setItem('pending_live_demo', JSON.stringify({ userId: user?.id, name: user?.full_name, campus: user?.campus, role: user?.role }));
 
       if (user?.role === 'principal' || user?.role === 'admin') {
         navigate('/control-room');
@@ -75,10 +72,7 @@ export function Login() {
         return;
       }
 
-      const demoKey = `demo_completed_${user.id}`;
-      if (!localStorage.getItem(demoKey)) {
-        localStorage.setItem('pending_live_demo', JSON.stringify({ userId: user.id, name: user.full_name, campus: user.campus, role: user.role }));
-      }
+      localStorage.setItem('pending_live_demo', JSON.stringify({ userId: user.id, name: user.full_name, campus: user.campus, role: user.role }));
 
       if (user.role === 'principal' || user.role === 'admin') {
         navigate('/control-room');

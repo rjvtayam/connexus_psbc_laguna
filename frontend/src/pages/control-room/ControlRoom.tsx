@@ -18,7 +18,7 @@ import { useSessionStore } from '../../stores/sessionStore';
 import { useAuthStore } from '../../stores/authStore';
 import { ROOMS } from '../../lib/constants';
 import { RoomUser } from '../../types/session';
-import { buildSelfUser, cardKey, partitionCampusColumns, SELF_CARD_KEY } from '../../lib/campusLayout';
+import { buildSelfUser, cardKey, partitionCampusColumns, sortUsersForDisplay, SELF_CARD_KEY } from '../../lib/campusLayout';
 import { Users, Wifi, MessageSquare, MonitorUp, AlertTriangle, X } from 'lucide-react';
 import { PortalToggle } from '../../components/controls/PortalToggle';
 import { PortalStatusIndicator } from '../../components/indicators/PortalStatusIndicator';
@@ -192,16 +192,17 @@ export function ControlRoom() {
   const renderParticipantCard = (u: RoomUser) => {
     if (u === selfUser) {
       return (
-        <VideoCard
-          key={cardKey(u, true)}
-          stream={localStream}
-          name={u.user}
-          campus={u.campus}
-          isLocal={true}
-          isMuted={!localMicActive}
-          isVideoOff={isVideoOff}
-          peerSid={mySid}
-        />
+        <div key={cardKey(u, true)} data-demo="local-video" className="h-full min-h-0">
+          <VideoCard
+            stream={localStream}
+            name={u.user}
+            campus={u.campus}
+            isLocal={true}
+            isMuted={!localMicActive}
+            isVideoOff={isVideoOff}
+            peerSid={mySid}
+          />
+        </div>
       );
     }
 
@@ -290,7 +291,7 @@ export function ControlRoom() {
                     </div>
                   )}
                   <div className="max-h-64 overflow-y-auto">
-                    {roomUsers.map((u) => {
+                    {sortUsersForDisplay(roomUsers).map((u) => {
                       const isMe = u.sid === mySid;
                       return (
                         <div
@@ -545,7 +546,12 @@ export function ControlRoom() {
           role={demoData.role}
           onComplete={() => {
             setShowWelcome(false);
-            setShowLiveDemo(true);
+            const demoKey = `demo_completed_${demoData.userId}`;
+            if (localStorage.getItem(demoKey)) {
+              localStorage.removeItem('pending_live_demo');
+            } else {
+              setShowLiveDemo(true);
+            }
           }}
         />
       )}

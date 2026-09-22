@@ -93,3 +93,8 @@ export function buildSelfUser(params: {
 export function cardKey(u: RoomUser, isSelf: boolean): string {
   return isSelf ? SELF_CARD_KEY : u.sid;
 }
+
+/** Flatten campus columns for lists (Online panel) — Paete → Control → Pagsanjan, role then name. */
+export function sortUsersForDisplay(users: RoomUser[]): RoomUser[] {
+  return partitionCampusColumns(users).flatMap((c) => c.users);
+}
