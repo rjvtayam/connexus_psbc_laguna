@@ -115,15 +115,15 @@ export function SessionHistory() {
         {stats.map((stat, i) => (
           <div
             key={stat.label}
-            className="group relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 p-3 transition-all duration-300 hover:border-cyan-500/30 hover:shadow-[0_0_18px_rgba(34,211,238,0.06)]"
+            className="group relative bg-gray-950/70 backdrop-blur-xl rounded-xl border border-gray-800/80 p-2.5 transition-all duration-300 hover:border-cyan-500/30 hover:shadow-[0_0_18px_rgba(34,211,238,0.06)]"
             style={{ animationDelay: `${i * 80}ms` }}
           >
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-600/40 to-transparent" />
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-6 h-6 rounded-md border flex items-center justify-center ${stat.iconCls}`}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className={`w-6 h-6 shrink-0 rounded-md border flex items-center justify-center ${stat.iconCls}`}>
                 <stat.icon size={12} />
               </div>
-              <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest font-medium">{stat.label}</span>
+              <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest font-medium truncate">{stat.label}</span>
             </div>
             <p className={`text-base sm:text-lg font-bold font-mono leading-none ${stat.valCls}`}>{stat.value}</p>
           </div>
@@ -177,12 +177,12 @@ export function SessionHistory() {
           <p className="text-[11px]">Loading sessions…</p>
         </div>
       ) : pageSessions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-          <div className="w-12 h-12 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center mb-3">
-            <Inbox size={20} className="text-gray-600" />
+        <div className="flex flex-col items-center justify-center py-10 text-gray-500">
+          <div className="w-11 h-11 rounded-xl bg-gray-950 border border-gray-800 flex items-center justify-center mb-2.5">
+            <Inbox size={18} className="text-gray-600" />
           </div>
           <p className="text-white text-[12px] font-medium mb-1">No sessions found</p>
-          <p className="text-[11px]">{searchQuery || statusFilter !== 'all' ? 'Try adjusting your search or filters.' : 'Sessions will appear here once video sessions begin.'}</p>
+          <p className="text-[11px] text-center px-4">{searchQuery || statusFilter !== 'all' ? 'Try adjusting your search or filters.' : 'Sessions will appear here once video sessions begin.'}</p>
         </div>
       ) : (
         <div className="space-y-2">
