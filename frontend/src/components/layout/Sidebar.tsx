@@ -32,7 +32,7 @@ export function Sidebar({ isMobile = false }: SidebarProps) {
                   <circle cx="12" cy="12" r="1.5" />
                 </svg>
               </div>
-              <span className="text-sm font-bold text-white truncate">Here to There</span>
+              <span className="text-sm font-bold text-white truncate">CONNEXUS</span>
             </div>
             <button onClick={toggleSidebar} className="p-1 rounded hover:bg-gray-800 text-gray-400">
               <X size={18} />
@@ -96,7 +96,7 @@ export function Sidebar({ isMobile = false }: SidebarProps) {
                 <circle cx="12" cy="12" r="1.5" />
               </svg>
             </div>
-            <span className="text-sm font-bold text-white truncate">Here to There</span>
+            <span className="text-sm font-bold text-white truncate">CONNEXUS</span>
           </div>
         ) : (
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary-500 to-cyan-500 flex items-center justify-center">

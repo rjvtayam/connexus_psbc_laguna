@@ -55,7 +55,7 @@ function Navbar({ onLogin }: { onLogin: () => void }) {
               <circle cx="12" cy="12" r="1.5" />
             </svg>
           </div>
-          <span className="text-lg font-bold">Here to There</span>
+          <span className="text-lg font-bold">CONNEXUS</span>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={onLogin} className="text-sm font-medium bg-gradient-to-r from-primary-600 to-cyan-600 hover:from-primary-500 hover:to-cyan-500 px-5 py-2 rounded-lg transition-all duration-300 shadow-lg shadow-primary-500/20">
@@ -124,7 +124,7 @@ function HeroSection({ onGetStarted, onWatchDemo }: { onGetStarted: () => void; 
 
         <div className="max-w-2xl mx-auto mb-10 space-y-1">
           <p className="typing-line text-sm sm:text-base md:text-lg text-gray-300 leading-relaxed" style={{ animationDelay: '1s' }}>
-            <span className="text-cyan-400">Here to There</span> enables seamless live video communication
+            <span className="text-cyan-400">CONNEXUS</span> enables seamless live video communication
           </p>
           <p className="typing-line text-sm sm:text-base md:text-lg text-gray-300 leading-relaxed" style={{ animationDelay: '2.2s' }}>
             between PSBC Paete and PSBC Pagsanjan.
@@ -769,7 +769,7 @@ function BrowserCompatSection() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Browser</span>
             </h2>
             <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-              No downloads. No plugins. Just open your browser and connect. Here to There runs entirely in the web.
+              No downloads. No plugins. Just open your browser and connect. CONNEXUS runs entirely in the web.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {browsers.map((b, i) => (
@@ -844,7 +844,7 @@ function BrowserCompatSection() {
 /* ─── TESTIMONIALS ─── */
 function TestimonialsSection() {
   const row1 = [
-    { quote: "Here to There has transformed how our campuses communicate. What used to require physical travel now happens instantly.", name: 'Campus Admin', role: 'PSBC Paete', neon: '#06b6d4' },
+    { quote: "CONNEXUS has transformed how our campuses communicate. What used to require physical travel now happens instantly.", name: 'Campus Admin', role: 'PSBC Paete', neon: '#06b6d4' },
     { quote: "The emergency broadcast feature gives us peace of mind. We can reach both campuses in seconds.", name: 'School Principal', role: 'PSBC Pagsanjan', neon: '#a855f7' },
     { quote: "Teachers love the simplicity. No downloads — just open the browser and start communicating.", name: 'IT Coordinator', role: 'PSBC Laguna', neon: '#22c55e' },
     { quote: "Screen sharing during meetings is seamless. Presentations look crystal clear on both ends.", name: 'Faculty Head', role: 'PSBC Paete', neon: '#f59e0b' },
@@ -867,7 +867,7 @@ function TestimonialsSection() {
     { quote: "Cross-campus meetings used to take an hour of travel. Now they take zero.", name: 'Campus Director', role: 'PSBC Paete', neon: '#f59e0b' },
     { quote: "The notification system ensures no important bulletin goes unread across campuses.", name: 'Admin Asst.', role: 'PSBC Pagsanjan', neon: '#6366f1' },
     { quote: "Even on slower connections, the video adapts and stays usable. Very reliable.", name: 'Student Rep', role: 'PSBC Laguna', neon: '#f43f5e' },
-    { quote: "We've reduced travel costs significantly since adopting Here to There.", name: 'Finance Head', role: 'PSBC Paete', neon: '#14b8a6' },
+    { quote: "We've reduced travel costs significantly since adopting CONNEXUS.", name: 'Finance Head', role: 'PSBC Paete', neon: '#14b8a6' },
     { quote: "The welcome demo tour helped new users get comfortable with the system right away.", name: 'Training Lead', role: 'PSBC Pagsanjan', neon: '#3b82f6' },
     { quote: "Volume controls per user let me adjust audio without affecting others on the call.", name: 'AV Technician', role: 'PSBC Paete', neon: '#8b5cf6' },
     { quote: "This platform is exactly what intercampus education needed. Simple yet powerful.", name: 'Project Lead', role: 'PSBC Laguna', neon: '#ec4899' },
@@ -919,7 +919,7 @@ function TestimonialsSection() {
             Trusted by{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">Educators</span>
           </h2>
-          <p className="text-gray-400 max-w-lg mx-auto text-sm">What our campus community says about Here to There.</p>
+          <p className="text-gray-400 max-w-lg mx-auto text-sm">What our campus community says about CONNEXUS.</p>
         </div>
       </div>
 
@@ -970,7 +970,7 @@ function ContactSection() {
               <Mail size={20} className="text-primary-400" />
             </div>
             <h3 className="text-sm font-bold text-white mb-1">Email Us</h3>
-            <p className="text-[11px] text-gray-500">support@heretothere.edu.ph</p>
+            <p className="text-[11px] text-gray-500">support@connexus.edu.ph</p>
           </div>
 
           <div className="bg-gray-900/60 rounded-2xl border border-gray-800/50 p-6 text-center group hover:border-cyan-500/30 transition-all duration-300">
@@ -1000,8 +1000,8 @@ function FAQSection() {
 
   const faqs = [
     {
-      q: 'What is Here to There?',
-      a: 'Here to There is a dedicated live video portal designed specifically for PSBC Paete and PSBC Pagsanjan to enable real-time intercampus communication without the need for physical travel.',
+      q: 'What is CONNEXUS?',
+      a: 'CONNEXUS is a dedicated live video portal designed specifically for PSBC Paete and PSBC Pagsanjan to enable real-time intercampus communication without the need for physical travel.',
     },
     {
       q: 'How does the video connection work?',
@@ -1029,7 +1029,7 @@ function FAQSection() {
     },
     {
       q: 'Can I use it on a tablet or phone?',
-      a: 'Here to There is designed for desktop/laptop browsers with webcam support. While the interface is responsive, we recommend using a computer with a webcam for the best video conferencing experience.',
+      a: 'CONNEXUS is designed for desktop/laptop browsers with webcam support. While the interface is responsive, we recommend using a computer with a webcam for the best video conferencing experience.',
     },
     {
       q: 'Is there text chat during video calls?',
@@ -1051,7 +1051,7 @@ function FAQSection() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-cyan-400">Questions</span>
           </h2>
           <p className="text-gray-400 max-w-lg mx-auto">
-            Everything you need to know about the Here to There Live Video Portal.
+            Everything you need to know about the CONNEXUS Live Video Portal.
           </p>
         </div>
 
@@ -1526,13 +1526,13 @@ function Footer() {
   ];
 
   const termsSections = [
-    { icon: <CheckCircle2 size={15} />, title: 'Acceptance of Terms', text: 'By accessing and using Here to There, you agree to be bound by these Terms of Service. This platform is designed for authorized personnel of PSBC Paete and PSBC Pagsanjan.' },
+    { icon: <CheckCircle2 size={15} />, title: 'Acceptance of Terms', text: 'By accessing and using CONNEXUS, you agree to be bound by these Terms of Service. This platform is designed for authorized personnel of PSBC Paete and PSBC Pagsanjan.' },
     { icon: <KeyRound size={15} />, title: 'Authorized Use', text: 'This system is intended for legitimate educational and administrative purposes only. Users must have valid credentials provided by their campus administrator.' },
     { icon: <Users size={15} />, title: 'User Responsibilities', text: 'Users are responsible for maintaining the confidentiality of their credentials, using the system appropriately, respecting other users during live sessions.' },
     { icon: <Zap size={15} />, title: 'Emergency Features', text: 'The emergency broadcast system is reserved for genuine emergencies only. Misuse of emergency alerts may result in account suspension.' },
     { icon: <Globe size={15} />, title: 'System Availability', text: 'We strive to maintain high availability but do not guarantee uninterrupted service. Scheduled maintenance and updates may temporarily affect availability.' },
     { icon: <Eye size={15} />, title: 'Account Termination', text: 'Accounts may be deactivated by administrators for policy violations. Users may also request deactivation.' },
-    { icon: <Shield size={15} />, title: 'Limitation of Liability', text: 'Here to There is provided "as is" for educational purposes. The developers and PSBC are not liable for any damages arising from the use of this platform.' },
+    { icon: <Shield size={15} />, title: 'Limitation of Liability', text: 'CONNEXUS is provided "as is" for educational purposes. The developers and PSBC are not liable for any damages arising from the use of this platform.' },
   ];
 
   const renderModal = (
@@ -1616,14 +1616,14 @@ function Footer() {
               </div>
               <p className="text-[10.5px] text-gray-400 mb-2.5">For any questions or concerns about this policy, reach out to us.</p>
               <a
-                href="mailto:support@heretothere.edu.ph"
+                href="mailto:support@connexus.edu.ph"
                 className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 hover:border-cyan-500/40 transition-all group"
               >
                 <Mail size={12} className="text-cyan-400 group-hover:text-cyan-300 transition-colors" />
-                <span className="text-[11px] text-cyan-400 group-hover:text-cyan-300 font-medium">support@heretothere.edu.ph</span>
+                <span className="text-[11px] text-cyan-400 group-hover:text-cyan-300 font-medium">support@connexus.edu.ph</span>
               </a>
               <div className="mt-3 pt-2.5 border-t border-gray-800/40 flex items-center justify-between">
-                <p className="text-[9px] text-gray-600 uppercase tracking-wider">Here to There</p>
+                <p className="text-[9px] text-gray-600 uppercase tracking-wider">CONNEXUS</p>
                 <div className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                   <span className="text-[9px] text-green-400/60">Active</span>
@@ -1649,13 +1649,13 @@ function Footer() {
                   <circle cx="12" cy="12" r="1.5" />
                 </svg>
               </div>
-              <span className="text-sm font-bold">Here to There</span>
+              <span className="text-sm font-bold">CONNEXUS</span>
             </div>
             <p className="text-xs text-gray-500">
               Capstone Project &copy; 2026 &mdash; PSBC Paete &amp; PSBC Pagsanjan
             </p>
             <div className="flex gap-4">
-              <a href="mailto:support@heretothere.edu.ph" className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Support</a>
+              <a href="mailto:support@connexus.edu.ph" className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Support</a>
               <button onClick={() => setActiveModal('privacy')} className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Privacy</button>
               <button onClick={() => setActiveModal('terms')} className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Terms</button>
             </div>

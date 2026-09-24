@@ -1,10 +1,10 @@
-# Deployment Guide — Here to There (PSBC)
+# Deployment Guide — CONNEXUS (PSBC)
 
 ## Step 1: Neon (PostgreSQL Database)
 
 1. Go to https://neon.tech → Sign in with GitHub
 2. Click **Create Project**
-   - Project name: `here-to-there`
+   - Project name: `connexus`
    - Region: **AWS Asia Pacific (Mumbai)** or nearest to Philippines
    - PostgreSQL version: **17**
 3. After creation, **copy the connection string**:
@@ -17,9 +17,9 @@
 
 1. Go to https://dashboard.render.com → Sign in with GitHub
 2. Click **New** → **Web Service**
-3. Connect your GitHub repo: `rjvtayam/here_to_there_psbc_laguna`
+3. Connect your GitHub repo: `rjvtayam/connexus_psbc_laguna`
 4. Configure:
-   - **Name**: `here-to-there-api`
+   - **Name**: `connexus-api`
    - **Region**: US Oregon or Singapore
    - **Runtime**: Python 3
    - **Build Command**: `cd backend && pip install -r requirements.txt`
@@ -29,13 +29,13 @@
    - `JWT_SECRET_KEY` = (click Generate)
    - `ALLOWED_ORIGINS` = `https://your-app.vercel.app,http://localhost:5173`
 6. Click **Create Web Service**
-7. Wait for deployment → Copy the URL (e.g., `https://here-to-there-api.onrender.com`)
+7. Wait for deployment → Copy the URL (e.g., `https://connexus-api.onrender.com`)
 
 ## Step 3: Vercel (Frontend)
 
 1. Go to https://vercel.com → Sign in with GitHub
 2. Click **Add New** → **Project**
-3. Import: `rjvtayam/here_to_there_psbc_laguna`
+3. Import: `rjvtayam/connexus_psbc_laguna`
 4. Configure:
    - **Framework Preset**: Vite
    - **Root Directory**: `frontend`
@@ -44,7 +44,7 @@
 5. Add Environment Variables:
    - `VITE_SOCKET_URL` = Your Render backend URL (from Step 2)
 6. Click **Deploy**
-7. Wait for deployment → Copy the URL (e.g., `https://here-to-there.vercel.app`)
+7. Wait for deployment → Copy the URL (e.g., `https://connexus.vercel.app`)
 
 ## Step 4: Post-Deploy — Run Migrations
 
@@ -62,7 +62,7 @@
 
 ## Step 5: Update CORS
 
-1. Go to Render Dashboard → here-to-there-api → Environment
+1. Go to Render Dashboard → connexus-api → Environment
 2. Update `ALLOWED_ORIGINS` to include your Vercel URL:
    ```
    https://your-app.vercel.app

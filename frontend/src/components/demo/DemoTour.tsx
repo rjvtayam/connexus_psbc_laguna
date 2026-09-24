@@ -27,7 +27,7 @@ interface TourStep {
 const tourSteps: Omit<TourStep, 'mockup'>[] = [
   {
     id: 1,
-    title: 'Welcome to Here to There',
+    title: 'Welcome to CONNEXUS',
     subtitle: 'Your Intercampus Live Video Portal',
     description: 'A dedicated platform connecting PSBC Paete and PSBC Pagsanjan in real-time. Let us show you how it works.',
     icon: <Sparkles size={28} />,
@@ -475,7 +475,7 @@ function WelcomeMockup() {
           <circle cx="12" cy="12" r="1.5" />
         </svg>
       </div>
-      <h3 className="font-orbitron text-lg font-bold text-white mb-2">Here to There</h3>
+      <h3 className="font-orbitron text-lg font-bold text-white mb-2">CONNEXUS</h3>
       <p className="text-sm text-gray-500 mb-6">PSBC Intercampus Video Portal</p>
       <div className="flex items-center justify-center gap-3">
         <div className="w-3 h-3 rounded-full bg-cyan-500 animate-pulse" />
@@ -500,7 +500,7 @@ function LoginMockup({ labels }: { labels: TourStep['labels'] }) {
               <circle cx="12" cy="12" r="1.5" />
             </svg>
           </div>
-          <span className="font-orbitron text-sm font-bold text-white">Here to There</span>
+          <span className="font-orbitron text-sm font-bold text-white">CONNEXUS</span>
         </div>
         <div className="flex items-center justify-center gap-2">
           <span className="text-[8px] text-green-400 bg-green-500/10 border border-green-500/20 px-1.5 py-0.5 rounded-full flex items-center gap-1">
@@ -516,7 +516,7 @@ function LoginMockup({ labels }: { labels: TourStep['labels'] }) {
       </div>
 
       <div className="relative">
-        <MockupFrame title="Login — Here to There">
+        <MockupFrame title="Login — CONNEXUS">
           <div className="p-5 space-y-3">
             {/* Sign In header */}
             <div className="flex items-center gap-2 mb-3">

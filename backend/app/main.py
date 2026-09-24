@@ -44,7 +44,7 @@ def _add_cors_headers(request: Request, response: JSONResponse) -> JSONResponse:
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="Here to There API",
+        title="CONNEXUS API",
         description="Live Video Portal for Intercampus Communication",
         version="1.0.0",
         docs_url="/api/docs",
@@ -79,7 +79,7 @@ def create_app() -> FastAPI:
             db_status = "connected"
         except Exception:
             db_status = "disconnected"
-        return {"status": "healthy" if db_status == "connected" else "degraded", "database": db_status, "service": "here-to-there"}
+        return {"status": "healthy" if db_status == "connected" else "degraded", "database": db_status, "service": "connexus"}
 
     @app.on_event("startup")
     async def startup():

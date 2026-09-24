@@ -125,7 +125,7 @@ export function Login() {
               </svg>
             </div>
             <h1 className="font-orbitron text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Here to <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-cyan-400">There</span>
+              CONN<span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-cyan-400">EXUS</span>
             </h1>
           </div>
           <p className="text-gray-400 text-sm tracking-wide">Live Video Portal for Intercampus Communication</p>

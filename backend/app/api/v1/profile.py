@@ -290,7 +290,7 @@ def setup_2fa(current_user: User = Depends(get_current_user), db: Session = Depe
         totp = pyotp.TOTP(secret)
         provisioning_uri = totp.provisioning_uri(
             name=current_user.email,
-            issuer_name="Here to There"
+            issuer_name="CONNEXUS"
         )
 
         qr = qrcode.make(provisioning_uri)

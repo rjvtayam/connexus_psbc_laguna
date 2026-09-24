@@ -1,6 +1,6 @@
 <div align="center">
 
-# Here to There
+# CONNEXUS
 
 ### Live Video Portal for Intercampus Communication
 
@@ -44,7 +44,7 @@
 
 ## About the Project
 
-**Here to There** is a capstone project built for PSBC (Polytechnic State College of the Philippines) connecting the Paete and Pagsanjan campuses through a live video portal. The platform enables:
+**CONNEXUS** is a capstone project built for PSBC (Polytechnic State College of the Philippines) connecting the Paete and Pagsanjan campuses through a live video portal. The platform enables:
 
 - Real-time video communication between campuses via WebRTC
 - Independent audio channels: cross-campus talk buttons and same-campus microphone
@@ -279,8 +279,8 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/rjvtayam/here_to_there_psbc_laguna.git
-   cd here_to_there_psbc_laguna
+   git clone https://github.com/rjvtayam/connexus_psbc_laguna.git
+   cd connexus_psbc_laguna
    ```
 
 2. **Backend Setup**
@@ -345,7 +345,7 @@ RATE_LIMIT_API=60/minute
 Frontend environment variable (optional, for production):
 
 ```env
-VITE_SOCKET_URL=https://here-to-there-api.onrender.com
+VITE_SOCKET_URL=https://connexus-api.onrender.com
 ```
 
 ### Running the App
@@ -380,7 +380,7 @@ The application is deployed using a cloud-native stack:
 | Component | Service | URL |
 |-----------|---------|-----|
 | Frontend | Vercel | [frontend-seven-kappa-41.vercel.app](https://frontend-seven-kappa-41.vercel.app) |
-| Backend | Render | [here-to-there-api.onrender.com](https://here-to-there-api.onrender.com) |
+| Backend | Render | [connexus-api.onrender.com](https://connexus-api.onrender.com) |
 | Database | Neon | Serverless PostgreSQL |
 
 ### Backend (Render)
@@ -414,7 +414,7 @@ For detailed deployment instructions, see [DEPLOY.md](DEPLOY.md).
 ## Project Structure
 
 ```
-here_to_there_psbc_laguna/
+connexus_psbc_laguna/
 ├── backend/
 │   ├── app/
 │   │   ├── api/v1/           # API route handlers
