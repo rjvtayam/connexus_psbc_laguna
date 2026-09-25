@@ -118,19 +118,51 @@ export function ControlRoom() {
     };
   }, []);
 
+  const prevPortalRef = useRef(portalMode);
+  const handledStreamRef = useRef<MediaStream | null>(null);
+  const isRecordingRef = useRef(isRecording);
+  isRecordingRef.current = isRecording;
+  const stopRecordingRef = useRef(stopRecording);
+  stopRecordingRef.current = stopRecording;
+
   useEffect(() => {
     if (!localStream) return;
+    const portalChanged = prevPortalRef.current !== portalMode;
+    const newStream = handledStreamRef.current !== localStream;
+    if (!portalChanged && !newStream) return;
+    const wasPortal = prevPortalRef.current;
+    prevPortalRef.current = portalMode;
+    handledStreamRef.current = localStream;
+
     if (portalMode) {
       setTalkTarget(null);
       setLocalMicActive(false);
-      localStream.getVideoTracks().forEach((track) => { track.enabled = true; });
-      const wasOff = usePeerStore.getState().isVideoOff;
-      usePeerStore.setState({ isVideoOff: false });
-      if (wasOff) emit('mute_video', { video_off: false });
       emit('mute_audio', { muted: true });
       emit('talk_to', { target: null });
+      if (isAdmin) {
+        localStream.getVideoTracks().forEach((track) => { track.enabled = false; });
+        const wasOff = usePeerStore.getState().isVideoOff;
+        usePeerStore.setState({ isVideoOff: true });
+        if (!wasOff) emit('mute_video', { video_off: true });
+        stopScreenShare();
+        if (isRecordingRef.current) {
+          try { stopRecordingRef.current?.(); } catch {}
+        }
+      } else {
+        localStream.getVideoTracks().forEach((track) => { track.enabled = true; });
+        const wasOff = usePeerStore.getState().isVideoOff;
+        usePeerStore.setState({ isVideoOff: false });
+        if (wasOff) emit('mute_video', { video_off: false });
+      }
+    } else if (wasPortal) {
+      localStream.getVideoTracks().forEach((track) => { track.enabled = true; });
+      const wasOff = usePeerStore.getState().isVideoOff;
+      if (wasOff) {
+        usePeerStore.setState({ isVideoOff: false });
+        emit('mute_video', { video_off: false });
+      }
     }
-  }, [portalMode, localStream, emit, setTalkTarget, setLocalMicActive]);
+  }, [portalMode, localStream, isAdmin, emit, setTalkTarget, setLocalMicActive, stopScreenShare]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -144,8 +176,16 @@ export function ControlRoom() {
 
   const remoteUsers = roomUsers.filter((u) => {
     if (u.sid === mySid) return false;
+    if (u.role === 'admin' && (remotePortalModes[u.sid] ?? false)) return false;
     return true;
   });
+
+  const isHiddenPeer = (sid: string | null | undefined) => {
+    if (!sid || sid === mySid) return false;
+    const u = roomUsers.find((x) => x.sid === sid);
+    return u?.role === 'admin' && (remotePortalModes[sid] ?? false);
+  };
+  const effectiveSharerSid = screenSharerSid && !isHiddenPeer(screenSharerSid) ? screenSharerSid : null;
 
   const selfUser = buildSelfUser({
     sid: mySid,
@@ -353,13 +393,13 @@ export function ControlRoom() {
 
         {/* Video Grid — GMeet-style campus columns (realtime) */}
         <div className="flex-1 mb-1.5 sm:mb-3 md:mb-4 min-h-0 animate-fade-in-up" data-demo="remote-area">
-          {screenSharerSid ? (
+          {effectiveSharerSid ? (
             <div className="h-full flex flex-col gap-1.5 sm:gap-3">
               {(() => {
-                const isLocalSharer = screenSharerSid === mySid;
+                const isLocalSharer = effectiveSharerSid === mySid;
                 const sharer = isLocalSharer
                   ? { sid: mySid, user: user?.full_name || 'You', campus: myCampus || 'control_room', stream: localStream }
-                  : remoteUsers.find((u) => u.sid === screenSharerSid);
+                  : remoteUsers.find((u) => u.sid === effectiveSharerSid);
                 if (sharer) {
                   return (
                     <div className="flex-1 relative min-h-0">
@@ -386,14 +426,14 @@ export function ControlRoom() {
                 return null;
               })()}
               {displayUsers.filter((u) => {
-                if (screenSharerSid && u.sid === screenSharerSid) return false;
-                if (screenSharerSid === mySid && u === selfUser) return false;
+                if (effectiveSharerSid && u.sid === effectiveSharerSid) return false;
+                if (effectiveSharerSid === mySid && u === selfUser) return false;
                 return true;
               }).length > 0 && (
                 <div className="flex gap-1.5 sm:gap-2 h-16 sm:h-24 md:h-28 flex-shrink-0 overflow-x-auto">
                   {displayUsers.filter((u) => {
-                    if (screenSharerSid && u.sid === screenSharerSid) return false;
-                    if (screenSharerSid === mySid && u === selfUser) return false;
+                    if (effectiveSharerSid && u.sid === effectiveSharerSid) return false;
+                    if (effectiveSharerSid === mySid && u === selfUser) return false;
                     return true;
                   }).map((u) => {
                     const isSelf = u === selfUser;
@@ -512,7 +552,7 @@ export function ControlRoom() {
                 onToggleHand={handleToggleHand}
                 onReact={handleReact}
                 audioDisabled={portalMode}
-                videoDisabled={false}
+                videoDisabled={isAdmin && portalMode}
                 screenShareDisabled={portalMode}
                 handDisabled={portalMode}
                 reactionDisabled={portalMode}

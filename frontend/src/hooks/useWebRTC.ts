@@ -3,6 +3,7 @@ import { useSocket, getSocket } from './useSocket';
 import { usePeerStore } from '../stores/peerStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useAuthStore } from '../stores/authStore';
 import { buildRTCConfig } from '../types/webrtc';
 
 function computeShouldUnmute(target: string | null | undefined, myCampus: string | undefined, myScope: string | null): boolean {
@@ -39,9 +40,15 @@ export function useWebRTC(_roomId: string) {
       localStreamRef.current = stream;
       setLocalStream(stream);
       const portalOn = useSessionStore.getState().portalMode;
+      const isAdmin = useAuthStore.getState().user?.role === 'admin';
       if (portalOn) {
         stream.getAudioTracks().forEach((track) => { track.enabled = false; });
-        usePeerStore.setState({ localMicActive: false, isAudioMuted: true, isVideoOff: false });
+        if (isAdmin) {
+          stream.getVideoTracks().forEach((track) => { track.enabled = false; });
+          usePeerStore.setState({ localMicActive: false, isAudioMuted: true, isVideoOff: true });
+        } else {
+          usePeerStore.setState({ localMicActive: false, isAudioMuted: true, isVideoOff: false });
+        }
       } else {
         usePeerStore.setState({ localMicActive: true, isAudioMuted: false });
       }

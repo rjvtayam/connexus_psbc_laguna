@@ -142,8 +142,16 @@ export function CampusView() {
 
   const visibleUsers = roomUsers.filter((u) => {
     if (u.sid === mySid) return false;
+    if (u.role === 'admin' && (remotePortalModes[u.sid] ?? false)) return false;
     return true;
   });
+
+  const isHiddenPeer = (sid: string | null | undefined) => {
+    if (!sid || sid === mySid) return false;
+    const u = roomUsers.find((x) => x.sid === sid);
+    return u?.role === 'admin' && (remotePortalModes[sid] ?? false);
+  };
+  const effectiveSharerSid = screenSharerSid && !isHiddenPeer(screenSharerSid) ? screenSharerSid : null;
 
   const selfUser = buildSelfUser({
     sid: mySid,
@@ -321,13 +329,13 @@ export function CampusView() {
         )}
 
         <div className="flex-1 mb-1.5 sm:mb-3 md:mb-4 min-h-0" data-demo="remote-area">
-          {screenSharerSid ? (
+          {effectiveSharerSid ? (
             <div className="h-full flex flex-col gap-1.5 sm:gap-3">
               {(() => {
-                const isLocalSharer = screenSharerSid === mySid;
+                const isLocalSharer = effectiveSharerSid === mySid;
                 const sharer = isLocalSharer
                   ? { sid: mySid, user: user?.full_name || 'You', campus: campusName || 'paete', stream: localStream }
-                  : visibleUsers.find((u) => u.sid === screenSharerSid);
+                  : visibleUsers.find((u) => u.sid === effectiveSharerSid);
                 if (sharer) {
                   return (
                     <div className="flex-1 relative min-h-0">
@@ -353,14 +361,14 @@ export function CampusView() {
                 return null;
               })()}
               {displayUsers.filter((u) => {
-                if (screenSharerSid && u.sid === screenSharerSid) return false;
-                if (screenSharerSid === mySid && u === selfUser) return false;
+                if (effectiveSharerSid && u.sid === effectiveSharerSid) return false;
+                if (effectiveSharerSid === mySid && u === selfUser) return false;
                 return true;
               }).length > 0 && (
                 <div className="flex gap-1.5 sm:gap-2 h-16 sm:h-24 md:h-28 flex-shrink-0 overflow-x-auto">
                   {displayUsers.filter((u) => {
-                    if (screenSharerSid && u.sid === screenSharerSid) return false;
-                    if (screenSharerSid === mySid && u === selfUser) return false;
+                    if (effectiveSharerSid && u.sid === effectiveSharerSid) return false;
+                    if (effectiveSharerSid === mySid && u === selfUser) return false;
                     return true;
                   }).map((u) => {
                     const isSelf = u === selfUser;
