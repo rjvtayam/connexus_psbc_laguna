@@ -3,6 +3,7 @@ import { AlertTriangle, X } from 'lucide-react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useAuthStore } from '../../stores/authStore';
 import { useSocket } from '../../hooks/useSocket';
+import { startEmergencySiren, startEmergencyVibration } from '../../lib/emergencySound';
 
 interface EmergencyButtonProps {
   onClick: () => void;
@@ -52,6 +53,15 @@ export function EmergencyAlert() {
   const mySid = useSocket().socket?.id;
   const isAdmin = user?.role === 'admin';
   const isTriggerer = mySid === emergencyTriggeredBySid || isAdmin;
+
+  useEffect(() => {
+    const stopSiren = startEmergencySiren();
+    const stopVibration = startEmergencyVibration();
+    return () => {
+      stopSiren();
+      stopVibration();
+    };
+  }, []);
 
   useEffect(() => {
     console.log('%c[EmergencyAlert] ✅ MOUNTED — Banner is now visible!', 'color: red; font-weight: bold; font-size: 14px;', {

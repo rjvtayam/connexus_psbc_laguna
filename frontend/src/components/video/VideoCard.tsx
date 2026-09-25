@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Mic, MicOff, MonitorUp, Radio, VideoOff, User, Lock, Camera, Hand } from 'lucide-react';
+import { Mic, MicOff, MonitorUp, Radio, VideoOff, User, Lock, Camera, Hand, AlertTriangle } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useSessionStore } from '../../stores/sessionStore';
 
@@ -41,7 +41,15 @@ export function VideoCard({
   const isHandRaised = useSessionStore((s) => s.raisedHands[peerSid || ''] ?? false);
   const allFloatingReactions = useSessionStore((s) => s.floatingReactions);
   const removeFloatingReaction = useSessionStore((s) => s.removeFloatingReaction);
+  const isEmergencyActive = useSessionStore((s) => s.isEmergency);
+  const emergencyTriggeredBySid = useSessionStore((s) => s.emergencyTriggeredBySid);
+  const emergencyCampus = useSessionStore((s) => s.emergencyCampus);
+  const emergencyCampusOnly = useSessionStore((s) => s.emergencyCampusOnly);
   const claimedIds = useRef(new Set<number>());
+
+  const isEmergencyTriggerer = isEmergencyActive && !!peerSid && peerSid === emergencyTriggeredBySid;
+  const emergencyCampusSlug = (emergencyCampus || '').toLowerCase().replace(/\s+/g, '_');
+  const showEmergency = isEmergencyActive && (isEmergencyTriggerer || !emergencyCampusOnly || !emergencyCampus || emergencyCampusSlug === campus);
 
   const myReactions = allFloatingReactions.filter((r) => r.sid === peerSid && !claimedIds.current.has(r.id));
 
@@ -83,7 +91,7 @@ export function VideoCard({
     : '';
 
   return (
-    <div className={`relative rounded-xl overflow-hidden bg-gray-900 border border-gray-800/60 group transition-all duration-300 ${highlightClasses} ${isSmall ? 'h-20 sm:h-24 md:h-32' : isScreenShare ? 'h-full' : 'h-full max-h-[500px]'}`}>
+    <div className={`relative rounded-xl overflow-hidden bg-gray-900 border ${showEmergency ? 'border-red-500/70 animate-emergency-glow' : 'border-gray-800/60'} group transition-all duration-300 ${highlightClasses} ${isSmall ? 'h-20 sm:h-24 md:h-32' : isScreenShare ? 'h-full' : 'h-full max-h-[500px]'}`}>
       {stream && !isVideoOff ? (
         <video
           ref={videoRef}
@@ -133,6 +141,20 @@ export function VideoCard({
         </div>
       )}
 
+      {/* Emergency - animated indicator on the triggerer's card */}
+      {isEmergencyTriggerer && (
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 animate-bounce">
+          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-red-600/90 border-2 border-red-300/60 shadow-lg shadow-red-600/50">
+            <AlertTriangle size={28} className="text-white" />
+          </div>
+          <div className="mt-1.5 flex items-center justify-center">
+            <span className="text-[10px] font-bold text-white bg-red-600/90 border border-red-400/50 px-2 py-0.5 rounded-full tracking-wider">
+              EMERGENCY
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Top header */}
       <div className="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/60 to-transparent">
         <div className="flex items-center justify-between">
@@ -148,6 +170,11 @@ export function VideoCard({
             )}
           </div>
           <div className="flex items-center gap-1.5">
+            {showEmergency && (
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-red-400 bg-red-500/15 border border-red-500/40 px-1.5 py-0.5 rounded animate-pulse">
+                <AlertTriangle size={10} /> {isSmall ? null : 'EMERGENCY'}
+              </span>
+            )}
             {isScreenSharing && (
               <span className="flex items-center gap-1 text-[10px] text-green-400 bg-green-500/10 border border-green-500/20 px-1.5 py-0.5 rounded">
                 <MonitorUp size={10} /> SCREEN

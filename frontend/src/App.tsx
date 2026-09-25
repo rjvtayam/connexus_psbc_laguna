@@ -12,6 +12,7 @@ import { ControlRoom } from './pages/control-room/ControlRoom';
 import { SettingsPage } from './pages/control-room/SettingsPage';
 import { AdminPage } from './pages/admin/AdminPage';
 import { queryClient } from './lib/queryClient';
+import { unlockEmergencyAudio } from './lib/emergencySound';
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, token } = useAuthStore();
@@ -41,6 +42,20 @@ export default function App() {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [token]);
+
+  useEffect(() => {
+    if (!token) useSessionStore.getState().setEmergency(false);
+  }, [token]);
+
+  useEffect(() => {
+    const unlock = () => unlockEmergencyAudio();
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
