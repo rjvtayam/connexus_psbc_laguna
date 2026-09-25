@@ -434,10 +434,22 @@ export function CampusView() {
           )}
         </div>
 
-        {/* Controls — self card lives in the campus grid above */}
+        {/* Controls + Local Feed — self card also lives in the campus grid above */}
         <div className="animate-fade-in-up">
-          <div className="bg-gray-900/80 backdrop-blur-xl rounded-xl border border-gray-800/60 p-1.5 sm:p-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1.5 sm:gap-2">
-            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+          <div className="bg-gray-900/80 backdrop-blur-xl rounded-xl border border-gray-800/60 p-1.5 sm:p-3 flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 md:gap-4">
+            <div className="w-full sm:w-20 md:w-36 lg:w-48 flex-shrink-0" data-demo="local-video">
+              <VideoCard
+                isLocal
+                isSmall
+                stream={localStream}
+                name={user?.full_name || 'You'}
+                campus={campusName || user?.campus || 'paete'}
+                isMuted={isAudioMuted}
+                isVideoOff={isVideoOff}
+                peerSid={mySid}
+              />
+            </div>
+            <div className="flex sm:flex-1 items-center gap-1 sm:gap-1.5 flex-wrap">
               <span className={`text-[9px] sm:text-[10px] md:text-xs px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg border ${campusName === 'paete' ? 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30' : 'text-purple-300 bg-purple-500/10 border-purple-500/30'}`} data-demo="campus-badge">
                 <span className="opacity-60 hidden sm:inline">Campus :</span> <span className="font-bold">{campusLabel}</span>
               </span>
