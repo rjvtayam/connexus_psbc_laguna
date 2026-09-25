@@ -16,6 +16,8 @@ import os
 
 MAX_CHAT_MESSAGE_LENGTH = settings.MAX_CHAT_MESSAGE_LENGTH
 ALLOWED_ROLES = {"principal", "admin", "teacher", "staff"}
+MEETING_ROLES = {"principal", "teacher", "staff"}
+MEETING_CAMPUSES = {"paete", "pagsanjan"}
 MAIN_ROOM = "main-session"
 
 sio = socketio.AsyncServer(
@@ -146,6 +148,9 @@ async def join_room(sid, data):
     session["current_room"] = room_id
     session["portal_active"] = True
     session["portal_meeting"] = False
+    session["meeting_active"] = False
+    session["meeting_scope"] = None
+    session["screen_sharing"] = False
     await sio.save_session(sid, session)
 
     await sio.emit("peer_joined", {
@@ -235,8 +240,25 @@ async def leave_room(sid, data):
     await sio.leave_room(sid, room_id)
     session.pop("current_room", None)
 
+    had_meeting = session.get("meeting_active", False)
+    session["meeting_active"] = False
+    session["meeting_scope"] = None
+    session["screen_sharing"] = False
+    try:
+        await sio.save_session(sid, session)
+    except (KeyError, Exception):
+        pass
+
     if room_id in room_members:
         room_members[room_id].discard(sid)
+
+    if had_meeting:
+        await sio.emit("peer_meeting_changed", {
+            "sid": sid,
+            "user": session.get("full_name"),
+            "active": False,
+            "campus": None,
+        }, room=room_id)
 
     await _broadcast_room_users(room_id)
 
@@ -256,6 +278,8 @@ async def _build_room_users_payload(room_id: str) -> dict:
                     "role": member_session.get("role"),
                     "muted": member_session.get("audio_muted", False),
                     "video_off": member_session.get("video_off", False),
+                    "meeting": member_session.get("meeting_active", False),
+                    "meeting_campus": member_session.get("meeting_scope"),
                 })
                 portal_states[member_sid] = {
                     "active": member_session.get("portal_active", True),
@@ -371,6 +395,27 @@ async def mute_video(sid, data):
         }, room=room_id, skip_sid=sid)
 
 
+async def _emit_screen_share_started(room_id: str, sid: str, session: dict, audience_campus=None):
+    payload = {"sid": sid, "user": session.get("full_name")}
+    if audience_campus is None:
+        await sio.emit("screen_share_started", payload, room=room_id, skip_sid=sid)
+        return
+    payload["audience"] = [audience_campus]
+    for member_sid in list(room_members.get(room_id, set())):
+        if member_sid == sid:
+            continue
+        try:
+            member_session = await sio.get_session(member_sid)
+        except (KeyError, Exception):
+            continue
+        if not member_session:
+            continue
+        if member_session.get("campus") == audience_campus:
+            await sio.emit("screen_share_started", payload, room=member_sid)
+        else:
+            await sio.emit("screen_share_stopped", {"sid": sid, "user": session.get("full_name")}, room=member_sid)
+
+
 @sio.event
 async def screen_share_start(sid, data):
     try:
@@ -379,10 +424,13 @@ async def screen_share_start(sid, data):
         return
     room_id = session.get("current_room")
     if room_id:
-        await sio.emit("screen_share_started", {
-            "sid": sid,
-            "user": session.get("full_name"),
-        }, room=room_id, skip_sid=sid)
+        session["screen_sharing"] = True
+        try:
+            await sio.save_session(sid, session)
+        except (KeyError, Exception):
+            pass
+        audience = session.get("meeting_scope") if session.get("meeting_active", False) else None
+        await _emit_screen_share_started(room_id, sid, session, audience)
 
 
 @sio.event
@@ -393,6 +441,11 @@ async def screen_share_stop(sid, data):
         return
     room_id = session.get("current_room")
     if room_id:
+        session["screen_sharing"] = False
+        try:
+            await sio.save_session(sid, session)
+        except (KeyError, Exception):
+            pass
         await sio.emit("screen_share_stopped", {
             "sid": sid,
             "user": session.get("full_name"),
@@ -646,6 +699,11 @@ async def chat_message(sid, data):
     target = data.get("target", "all")
     sender_campus = session.get("campus")
     scope = data.get("campus_scope", sender_campus) if target == "campus" else None
+
+    if session.get("meeting_active", False):
+        target = "campus"
+        scope = session.get("meeting_scope") or sender_campus
+
     timestamp = datetime.utcnow().isoformat()
 
     reply_to_id = data.get("reply_to_id")
@@ -721,6 +779,9 @@ async def talk_to(sid, data):
 
     if target == "local":
         target = "both"
+
+    if session.get("meeting_active", False):
+        target = session.get("meeting_scope") or target
 
     print(f"[Backend] talk_to: {session.get('full_name')} ({campus}) -> {target}")
     await sio.emit("peer_talk_target", {
@@ -828,11 +889,89 @@ async def portal_mode_changed(sid, data):
     print(f"[Backend] portal_mode_changed: {session.get('full_name')} ({session.get('campus')}) -> active={active}, meeting={meeting}")
     session["portal_active"] = active
     session["portal_meeting"] = meeting
+
+    if active and session.get("meeting_active", False):
+        session["meeting_active"] = False
+        session["meeting_scope"] = None
+        await sio.emit("peer_meeting_changed", {
+            "sid": sid,
+            "user": session.get("full_name"),
+            "active": False,
+            "campus": None,
+        }, room=room_id)
+
+    await sio.save_session(sid, session)
     await sio.emit("peer_portal_mode", {
         "sid": sid,
         "active": active,
         "meeting": meeting,
     }, room=room_id, skip_sid=sid)
+
+
+@sio.event
+async def meeting_changed(sid, data):
+    try:
+        session = await sio.get_session(sid)
+    except (KeyError, Exception):
+        return
+
+    room_id = session.get("current_room")
+    if not room_id:
+        return
+
+    role = session.get("role")
+    campus = session.get("campus")
+    active = bool(data.get("active", False))
+    scope = data.get("campus")
+
+    async def _echo_state():
+        await sio.emit("peer_meeting_changed", {
+            "sid": sid,
+            "user": session.get("full_name"),
+            "active": bool(session.get("meeting_active", False)),
+            "campus": session.get("meeting_scope"),
+        }, room=room_id)
+
+    if role not in MEETING_ROLES or campus not in MEETING_CAMPUSES:
+        await _echo_state()
+        return
+
+    if active and session.get("portal_active", False):
+        await _echo_state()
+        return
+
+    if active:
+        if scope not in MEETING_CAMPUSES:
+            scope = None
+        if scope is None:
+            await _echo_state()
+            return
+        previous_scope = session.get("meeting_scope")
+        session["meeting_active"] = True
+        session["meeting_scope"] = scope
+    else:
+        previous_scope = session.get("meeting_scope")
+        session["meeting_active"] = False
+        session["meeting_scope"] = None
+
+    await sio.save_session(sid, session)
+
+    if session.get("screen_sharing", False):
+        new_scope = session.get("meeting_scope")
+        if previous_scope != new_scope:
+            await sio.emit("screen_share_stopped", {
+                "sid": sid,
+                "user": session.get("full_name"),
+            }, room=room_id, skip_sid=sid)
+            await _emit_screen_share_started(room_id, sid, session, new_scope)
+
+    print(f"[Backend] meeting_changed: {session.get('full_name')} ({campus}) -> active={session.get('meeting_active')}, scope={session.get('meeting_scope')}")
+    await sio.emit("peer_meeting_changed", {
+        "sid": sid,
+        "user": session.get("full_name"),
+        "active": bool(session.get("meeting_active", False)),
+        "campus": session.get("meeting_scope"),
+    }, room=room_id)
 
 
 @sio.event

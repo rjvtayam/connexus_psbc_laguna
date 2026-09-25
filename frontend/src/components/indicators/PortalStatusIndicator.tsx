@@ -1,8 +1,18 @@
-import { Radio, Wifi } from 'lucide-react';
+import { Lock, Radio, Wifi } from 'lucide-react';
 import { useSessionStore } from '../../stores/sessionStore';
 
 export function PortalStatusIndicator() {
-  const { portalMode } = useSessionStore();
+  const { portalMode, meetingScope } = useSessionStore();
+
+  if (meetingScope) {
+    return (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/15 border border-amber-500/40 text-amber-400 shadow-lg shadow-amber-500/10 transition-all duration-300">
+        <Lock size={12} />
+        <span>MEETING · {meetingScope === 'paete' ? 'PAE' : 'PAG'}</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+      </div>
+    );
+  }
 
   if (!portalMode) {
     return (

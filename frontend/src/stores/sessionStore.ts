@@ -28,8 +28,10 @@ interface SessionState {
   emergencyCampusOnly: boolean;
   portalMode: boolean;
   meetingMode: boolean;
+  meetingScope: string | null;
   remotePortalModes: Record<string, boolean>;
   remoteMeetingModes: Record<string, boolean>;
+  remoteMeetingScopes: Record<string, string>;
   remoteVideoOff: Record<string, boolean>;
   remoteAudioMuted: Record<string, boolean>;
   raisedHands: Record<string, boolean>;
@@ -52,8 +54,11 @@ interface SessionState {
   togglePortalMode: () => void;
   setPortalMode: (active: boolean) => void;
   setMeetingMode: (active: boolean) => void;
+  setMeetingScope: (campus: string | null) => void;
   setRemotePortalMode: (sid: string, active: boolean) => void;
   setRemoteMeetingMode: (sid: string, active: boolean) => void;
+  setRemoteMeetingCampus: (sid: string, campus: string | null) => void;
+  setRemoteMeetingScopes: (scopes: Record<string, string>) => void;
   setRemoteVideoOff: (sid: string, videoOff: boolean) => void;
   setRemoteAudioMuted: (sid: string, muted: boolean) => void;
   setRaisedHand: (sid: string, raised: boolean) => void;
@@ -88,8 +93,10 @@ export const useSessionStore = create<SessionState>((set) => ({
   emergencyCampusOnly: false,
   portalMode: true,
   meetingMode: false,
+  meetingScope: null,
   remotePortalModes: {},
   remoteMeetingModes: {},
+  remoteMeetingScopes: {},
   remoteVideoOff: {},
   remoteAudioMuted: {},
   raisedHands: {},
@@ -135,6 +142,8 @@ export const useSessionStore = create<SessionState>((set) => ({
 
   setMeetingMode: (active) => set({ meetingMode: active }),
 
+  setMeetingScope: (campus) => set({ meetingScope: campus, meetingMode: !!campus }),
+
   setRemotePortalMode: (sid, active) =>
     set((state) => ({
       remotePortalModes: { ...state.remotePortalModes, [sid]: active },
@@ -144,6 +153,19 @@ export const useSessionStore = create<SessionState>((set) => ({
     set((state) => ({
       remoteMeetingModes: { ...state.remoteMeetingModes, [sid]: active },
     })),
+
+  setRemoteMeetingCampus: (sid, campus) =>
+    set((state) => {
+      const next = { ...state.remoteMeetingScopes };
+      if (campus) {
+        next[sid] = campus;
+      } else {
+        delete next[sid];
+      }
+      return { remoteMeetingScopes: next };
+    }),
+
+  setRemoteMeetingScopes: (scopes) => set({ remoteMeetingScopes: scopes }),
 
   setRemoteVideoOff: (sid, videoOff) =>
     set((state) => ({

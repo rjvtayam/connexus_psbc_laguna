@@ -21,6 +21,7 @@ import { RoomUser } from '../../types/session';
 import { buildSelfUser, cardKey, partitionCampusColumns, sortUsersForDisplay, SELF_CARD_KEY } from '../../lib/campusLayout';
 import { Users, Wifi, MessageSquare, MonitorUp, AlertTriangle, X } from 'lucide-react';
 import { PortalToggle } from '../../components/controls/PortalToggle';
+import { MeetingToggle } from '../../components/controls/MeetingToggle';
 import { PortalStatusIndicator } from '../../components/indicators/PortalStatusIndicator';
 import { MicTalkingIndicator } from '../../components/indicators/MicTalkingIndicator';
 import { WelcomeToast } from '../../components/demo/WelcomeToast';
@@ -30,11 +31,11 @@ import { TalkRequestModal } from '../../components/ui/TalkRequestModal';
 
 export function ControlRoom() {
   const roomId = ROOMS.MAIN;
-  const { startLocalStream, toggleVideo, shareScreen } = useWebRTC(roomId);
+  const { startLocalStream, toggleVideo, shareScreen, stopScreenShare } = useWebRTC(roomId);
   const { emit } = useSocket();
   useSettingsSync();
   const { localStream, isVideoOff, isScreenSharing, localMicActive, isAudioMuted } = usePeerStore();
-  const { roomUsers, isEmergency, emergencyTriggeredBy, remotePortalModes, remoteMeetingModes, remoteVideoOff, remoteAudioMuted, screenSharerSid, portalMode, unreadAllCount, unreadCampusCount, clearUnreadChat } = useSessionStore();
+  const { roomUsers, isEmergency, emergencyTriggeredBy, remotePortalModes, remoteMeetingScopes, remoteVideoOff, remoteAudioMuted, screenSharerSid, portalMode, meetingScope, unreadAllCount, unreadCampusCount, clearUnreadChat } = useSessionStore();
   const { user } = useAuthStore();
   const { isRecording, elapsedTime, uploading: recordingUploading, uploadError, startRecording, stopRecording, formatTime: formatRecordingTime } = useRecording(roomId);
   const [activeTalkTarget, setActiveTalkTarget] = useState<'paete' | 'pagsanjan' | 'both' | null>(null);
@@ -221,7 +222,7 @@ export function ControlRoom() {
         isMuted={remoteAudioMuted[u.sid] || false}
         isVideoOff={remoteVideoOff[u.sid] || false}
         isPortalLive={remotePortalModes[u.sid] ?? false}
-        portalStatus={remoteMeetingModes[u.sid] ? 'meeting' : (remotePortalModes[u.sid] ? 'portal' : 'live')}
+        portalStatus={remoteMeetingScopes[u.sid] ? 'meeting' : (remotePortalModes[u.sid] ? 'portal' : 'live')}
         peerSid={u.sid}
       />
     );
@@ -371,7 +372,7 @@ export function ControlRoom() {
                         isMuted={!isLocalSharer && (remoteAudioMuted[sharer.sid] || false)}
                         isVideoOff={!isLocalSharer && (remoteVideoOff[sharer.sid] || false)}
                         isPortalLive={!isLocalSharer && (remotePortalModes[sharer.sid] ?? false)}
-                        portalStatus={!isLocalSharer ? (remoteMeetingModes[sharer.sid] ? 'meeting' : (remotePortalModes[sharer.sid] ? 'portal' : 'live')) : null}
+                        portalStatus={!isLocalSharer ? (remoteMeetingScopes[sharer.sid] ? 'meeting' : (remotePortalModes[sharer.sid] ? 'portal' : 'live')) : null}
                         isScreenShare={true}
                         peerSid={isLocalSharer ? undefined : sharer.sid}
                       />
@@ -422,7 +423,7 @@ export function ControlRoom() {
                           isMuted={remoteAudioMuted[u.sid] || false}
                           isVideoOff={remoteVideoOff[u.sid] || false}
                           isPortalLive={remotePortalModes[u.sid] ?? false}
-                          portalStatus={remoteMeetingModes[u.sid] ? 'meeting' : (remotePortalModes[u.sid] ? 'portal' : 'live')}
+                          portalStatus={remoteMeetingScopes[u.sid] ? 'meeting' : (remotePortalModes[u.sid] ? 'portal' : 'live')}
                           peerSid={u.sid}
                         />
                       </div>
@@ -472,7 +473,7 @@ export function ControlRoom() {
                     target={myCampus === 'paete' ? 'pagsanjan' : 'paete'}
                     isActive={activeTalkTarget !== null}
                     onClick={() => handleTalkTo(myCampus === 'paete' ? 'pagsanjan' : 'paete')}
-                    disabled={portalMode}
+                    disabled={portalMode || !!meetingScope}
                     compact
                   />
                 </>
@@ -480,21 +481,22 @@ export function ControlRoom() {
               {!myCampus || myCampus === 'control_room' ? (
                 <>
                   <div className="flex flex-col items-center gap-0.5">
-                    <TalkButton target="paete" isActive={activeTalkTarget === 'paete'} onClick={() => handleTalkTo('paete')} disabled={portalMode} compact />
+                    <TalkButton target="paete" isActive={activeTalkTarget === 'paete'} onClick={() => handleTalkTo('paete')} disabled={portalMode || !!meetingScope} compact />
                     <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">PAE</span>
                   </div>
                   <div className="flex flex-col items-center gap-0.5">
-                    <TalkButton target="pagsanjan" isActive={activeTalkTarget === 'pagsanjan'} onClick={() => handleTalkTo('pagsanjan')} disabled={portalMode} compact />
+                    <TalkButton target="pagsanjan" isActive={activeTalkTarget === 'pagsanjan'} onClick={() => handleTalkTo('pagsanjan')} disabled={portalMode || !!meetingScope} compact />
                     <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">PAG</span>
                   </div>
                   <div className="flex flex-col items-center gap-0.5">
-                    <TalkButton target="both" isActive={activeTalkTarget === 'both'} onClick={() => handleTalkTo('both')} disabled={portalMode} compact />
+                    <TalkButton target="both" isActive={activeTalkTarget === 'both'} onClick={() => handleTalkTo('both')} disabled={portalMode || !!meetingScope} compact />
                     <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">BTH</span>
                   </div>
                 </>
               ) : null}
             </div>
             <div className="flex items-center gap-1 sm:gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-end">
+              <MeetingToggle compact />
               <div data-demo="portal-toggle"><PortalToggle compact /></div>
               <VideoControls
                 isAudioMuted={isAudioMuted}
@@ -505,7 +507,7 @@ export function ControlRoom() {
                   setLocalMicActive(!localMicActive);
                 }}
                 onToggleVideo={toggleVideo}
-                onToggleScreenShare={() => !portalMode && shareScreen().catch(() => {})}
+                onToggleScreenShare={() => { if (portalMode) return; if (isScreenSharing) stopScreenShare(); else shareScreen().catch(() => {}); }}
                 isHandRaised={isHandRaised}
                 onToggleHand={handleToggleHand}
                 onReact={handleReact}

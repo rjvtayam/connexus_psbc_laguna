@@ -41,6 +41,17 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
     if (roomId) {
       console.log('[Socket] (Re)joining room:', roomId);
       socket?.emit('join_room', { room_id: roomId });
+      const sessionState = useSessionStore.getState();
+      socket?.emit('portal_mode_changed', {
+        active: sessionState.portalMode,
+        meeting: false,
+      });
+      if (sessionState.meetingScope) {
+        socket?.emit('meeting_changed', {
+          active: true,
+          campus: sessionState.meetingScope,
+        });
+      }
     } else if (autoReconnect) {
       console.log('[Socket] Auto-reconnect on, but no room id stored');
     }
@@ -73,6 +84,23 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
       }
     }
 
+    {
+      const state = useSessionStore.getState();
+      const mySid = socket?.id;
+      const nextScopes: Record<string, string> = {};
+      for (const u of users) {
+        if (u.meeting && u.meeting_campus && u.sid !== mySid) {
+          nextScopes[u.sid] = u.meeting_campus;
+        }
+      }
+      state.setRemoteMeetingScopes(nextScopes);
+
+      const me = users.find((u: any) => u.sid === mySid);
+      if (me && me.meeting && me.meeting_campus && state.meetingScope !== me.meeting_campus) {
+        state.setMeetingScope(me.meeting_campus);
+      }
+    }
+
     const currentSharer = useSessionStore.getState().screenSharerSid;
     if (currentSharer && !users.find((u: any) => u.sid === currentSharer)) {
       useSessionStore.getState().setScreenSharer(null);
@@ -94,6 +122,7 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
     if (state.screenSharerSid === sid) {
       state.setScreenSharer(null);
     }
+    state.setRemoteMeetingCampus(sid, null);
     window.dispatchEvent(new CustomEvent('participant_left', {
       detail: {
         user: user || leavingUser?.user || 'Unknown',
@@ -121,7 +150,29 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
     useSessionStore.getState().setRemoteMeetingMode(sid, meeting ?? false);
   });
 
-  socket.on('screen_share_started', ({ sid, user }: { sid: string; user: string }) => {
+  socket.on('peer_meeting_changed', ({ sid, active, campus }: { sid: string; active: boolean; campus?: string | null }) => {
+    console.log(`[Socket] peer_meeting_changed: ${sid} -> active=${active}, campus=${campus}`);
+    const state = useSessionStore.getState();
+    const mySid = socket?.id;
+    if (sid === mySid) {
+      state.setMeetingScope(active && campus ? campus : null);
+      return;
+    }
+    state.setRemoteMeetingCampus(sid, active && campus ? campus : null);
+    if ((!active || !campus) && state.screenSharerSid === sid) {
+      state.setScreenSharer(null);
+    }
+  });
+
+  socket.on('screen_share_started', (payload: { sid: string; user: string; audience?: string[] }) => {
+    const { sid, user } = payload;
+    if (Array.isArray(payload.audience)) {
+      const myCampus = useSessionStore.getState().roomUsers.find((u) => u.sid === socket?.id)?.campus;
+      if (myCampus && !payload.audience.includes(myCampus)) {
+        console.log(`[Socket] screen_share_started ignored (audience=${payload.audience}, myCampus=${myCampus})`);
+        return;
+      }
+    }
     console.log(`[Socket] screen_share_started: ${user} (${sid})`);
     useSessionStore.getState().setScreenSharer(sid);
   });

@@ -5,8 +5,15 @@ import { useSessionStore } from '../stores/sessionStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { buildRTCConfig } from '../types/webrtc';
 
+function computeShouldUnmute(target: string | null | undefined, myCampus: string | undefined, myScope: string | null): boolean {
+  if (target == null) return false;
+  return target === 'both' || (myCampus != null && target === myCampus) || (myScope != null && target === myScope);
+}
+
 export function useWebRTC(_roomId: string) {
   const localStreamRef = useRef<MediaStream | null>(null);
+  const screenTrackRef = useRef<MediaStreamTrack | null>(null);
+  const lastTalkTargetsRef = useRef<Map<string, string | null>>(new Map());
   const peersRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const connectedSidsRef = useRef<Set<string>>(new Set());
   const connectTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -18,6 +25,7 @@ export function useWebRTC(_roomId: string) {
   const { updateUserStream, roomUsers } = useSessionStore();
   const talkTarget = usePeerStore((s) => s.talkTarget);
   const localMicActive = usePeerStore((s) => s.localMicActive);
+  const meetingScope = useSessionStore((s) => s.meetingScope);
 
   const startLocalStream = useCallback(async () => {
     try {
@@ -60,6 +68,16 @@ export function useWebRTC(_roomId: string) {
         localStreamRef.current.getTracks().forEach((track) => {
           pc.addTrack(track, localStreamRef.current!);
         });
+      }
+
+      if (screenTrackRef.current) {
+        const scope = useSessionStore.getState().meetingScope;
+        const peerCampus = useSessionStore.getState().roomUsers.find((u) => u.sid === targetSid)?.campus;
+        const inScope = !scope || (peerCampus != null && peerCampus === scope);
+        if (inScope) {
+          const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+          sender?.replaceTrack(screenTrackRef.current).catch(() => {});
+        }
       }
 
       pc.ontrack = (event) => {
@@ -256,30 +274,56 @@ export function useWebRTC(_roomId: string) {
     emit('mute_video', { video_off: newVideoOff });
   }, [emit]);
 
+  const applyShareTracks = useCallback(() => {
+    const screenTrack = screenTrackRef.current;
+    const cameraTrack = localStreamRef.current?.getVideoTracks()[0];
+    const scope = useSessionStore.getState().meetingScope;
+    const users = useSessionStore.getState().roomUsers;
+    peersRef.current.forEach((pc, peerSid) => {
+      const peerCampus = users.find((u) => u.sid === peerSid)?.campus;
+      const inScope = !scope || (peerCampus != null && peerCampus === scope);
+      const desired = screenTrack && inScope ? screenTrack : cameraTrack;
+      const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+      if (sender && desired && sender.track !== desired) {
+        sender.replaceTrack(desired).catch((err) => {
+          console.error(`[WebRTC] replaceTrack failed for ${peerSid}:`, err);
+        });
+      }
+    });
+  }, []);
+
+  const stopScreenShare = useCallback(() => {
+    if (!screenTrackRef.current) return;
+    const screenTrack = screenTrackRef.current;
+    screenTrackRef.current = null;
+    screenTrack.onended = null;
+    try { screenTrack.stop(); } catch {}
+    emit('screen_share_stop', {});
+    useSessionStore.getState().setScreenSharer(null);
+    usePeerStore.setState({ isScreenSharing: false });
+    applyShareTracks();
+  }, [emit, applyShareTracks]);
+
   const shareScreen = useCallback(async () => {
     try {
       const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
       const screenTrack = screen.getVideoTracks()[0];
       const mySid = getSocket()?.id;
 
+      if (screenTrackRef.current && screenTrackRef.current !== screenTrack) {
+        screenTrackRef.current.onended = null;
+        try { screenTrackRef.current.stop(); } catch {}
+      }
+      screenTrackRef.current = screenTrack;
+
       emit('screen_share_start', {});
       useSessionStore.getState().setScreenSharer(mySid || null);
+      usePeerStore.setState({ isScreenSharing: true });
 
-      peersRef.current.forEach((pc) => {
-        const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
-        sender?.replaceTrack(screenTrack);
-      });
+      applyShareTracks();
 
       screenTrack.onended = () => {
-        emit('screen_share_stop', {});
-        useSessionStore.getState().setScreenSharer(null);
-        const cameraTrack = localStreamRef.current?.getVideoTracks()[0];
-        if (cameraTrack) {
-          peersRef.current.forEach((pc) => {
-            const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
-            sender?.replaceTrack(cameraTrack);
-          });
-        }
+        stopScreenShare();
       };
 
       return screen;
@@ -287,9 +331,10 @@ export function useWebRTC(_roomId: string) {
       console.error('Failed to share screen:', error);
       throw error;
     }
-  }, [emit]);
+  }, [emit, applyShareTracks, stopScreenShare]);
 
   const cleanup = useCallback(() => {
+    stopScreenShare();
     peersRef.current.forEach((pc) => pc.close());
     peersRef.current.clear();
     connectedSidsRef.current.clear();
@@ -297,7 +342,13 @@ export function useWebRTC(_roomId: string) {
     connectTimersRef.current.clear();
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     localStreamRef.current = null;
-  }, []);
+  }, [stopScreenShare]);
+
+  useEffect(() => {
+    if (!screenTrackRef.current) return;
+    applyShareTracks();
+    emit('screen_share_start', {});
+  }, [meetingScope, applyShareTracks, emit]);
 
   useEffect(() => {
     const s = getSocket();
@@ -316,11 +367,14 @@ export function useWebRTC(_roomId: string) {
     };
         const handlePeerTalkTarget = ({ sid, campus, target }: any) => {
       console.log(`[WebRTC] peer_talk_target: ${campus} (${sid}) -> ${target}`);
+      lastTalkTargetsRef.current.set(sid, target ?? null);
       const pc = peersRef.current.get(sid);
       if (pc) {
-        const myCampus = useSessionStore.getState().roomUsers.find(u => u.sid === s?.id)?.campus;
-        const shouldUnmute = target === 'both' || (target != null && target === myCampus);
-        console.log(`[WebRTC] Incoming audio from ${campus}: myCampus=${myCampus}, target=${target}, shouldUnmute=${shouldUnmute}`);
+        const state = useSessionStore.getState();
+        const myCampus = state.roomUsers.find(u => u.sid === s?.id)?.campus;
+        const myScope = state.meetingScope;
+        const shouldUnmute = computeShouldUnmute(target, myCampus, myScope);
+        console.log(`[WebRTC] Incoming audio from ${campus}: myCampus=${myCampus}, myScope=${myScope}, target=${target}, shouldUnmute=${shouldUnmute}`);
         pc.getReceivers().forEach((receiver) => {
           if (receiver.track?.kind === 'audio') {
             receiver.track.enabled = shouldUnmute;
@@ -392,15 +446,14 @@ export function useWebRTC(_roomId: string) {
 
     const currentTalkTarget = usePeerStore.getState().talkTarget;
     const currentLocalMic = usePeerStore.getState().localMicActive;
-    if (currentTalkTarget || currentLocalMic) {
-      let combined: string | null = null;
-      if (currentTalkTarget && currentLocalMic) combined = 'both';
-      else if (currentTalkTarget) combined = currentTalkTarget;
-      else if (currentLocalMic) combined = 'both';
-      emit('talk_to', { target: combined });
-    } else {
-      emit('talk_to', { target: null });
-    }
+    const currentMeetingScope = useSessionStore.getState().meetingScope;
+    let combinedOnJoin: string | null = null;
+    if (currentMeetingScope) {
+      combinedOnJoin = currentLocalMic ? currentMeetingScope : null;
+    } else if (currentTalkTarget && currentLocalMic) combinedOnJoin = 'both';
+    else if (currentTalkTarget) combinedOnJoin = currentTalkTarget;
+    else if (currentLocalMic) combinedOnJoin = 'both';
+    emit('talk_to', { target: combinedOnJoin });
 
     const currentVideoOff = usePeerStore.getState().isVideoOff;
     emit('mute_video', { video_off: currentVideoOff });
@@ -415,16 +468,35 @@ export function useWebRTC(_roomId: string) {
     if (!s?.connected) return;
 
     let combined: string | null = null;
-    if (talkTarget && localMicActive) combined = 'both';
+    if (meetingScope) {
+      combined = localMicActive ? meetingScope : null;
+    } else if (talkTarget && localMicActive) combined = 'both';
     else if (talkTarget) combined = talkTarget;
     else if (localMicActive) combined = 'both';
 
-    console.log(`[WebRTC] talk_to changed: talkTarget=${talkTarget}, localMicActive=${localMicActive}, combined=${combined}`);
+    console.log(`[WebRTC] talk_to changed: talkTarget=${talkTarget}, localMicActive=${localMicActive}, meetingScope=${meetingScope}, combined=${combined}`);
     emit('talk_to', { target: combined });
 
     const { isAudioMuted } = usePeerStore.getState();
     emit('mute_audio', { muted: isAudioMuted });
-  }, [talkTarget, localMicActive, emit]);
+  }, [talkTarget, localMicActive, meetingScope, emit]);
+
+  useEffect(() => {
+    const s = getSocket();
+    if (!s?.connected || lastTalkTargetsRef.current.size === 0) return;
+    const state = useSessionStore.getState();
+    const myCampus = state.roomUsers.find((u) => u.sid === s.id)?.campus;
+    lastTalkTargetsRef.current.forEach((target, sid) => {
+      const pc = peersRef.current.get(sid);
+      if (!pc) return;
+      const shouldUnmute = computeShouldUnmute(target, myCampus, meetingScope);
+      pc.getReceivers().forEach((receiver) => {
+        if (receiver.track?.kind === 'audio') {
+          receiver.track.enabled = shouldUnmute;
+        }
+      });
+    });
+  }, [meetingScope]);
 
   useEffect(() => {
     const currentSids = new Set(roomUsers.map((u) => u.sid));
@@ -449,6 +521,7 @@ export function useWebRTC(_roomId: string) {
     toggleAudio,
     toggleVideo,
     shareScreen,
+    stopScreenShare,
     cleanup,
     localStream: localStreamRef,
   };

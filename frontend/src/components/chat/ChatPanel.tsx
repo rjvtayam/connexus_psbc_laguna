@@ -69,7 +69,12 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
   const isAdmin = user?.role === 'admin';
   const myCampus = user?.campus;
   const isControlRoom = myCampus === 'control_room';
-  const effectiveCampus = isControlRoom ? campusTarget : (myCampus as 'paete' | 'pagsanjan');
+  const meetingScope = useSessionStore((s) => s.meetingScope);
+  const effectiveCampus = (meetingScope ?? (isControlRoom ? campusTarget : myCampus)) as 'paete' | 'pagsanjan';
+
+  useEffect(() => {
+    if (meetingScope && activeTab !== 'campus') setActiveTab('campus');
+  }, [meetingScope, activeTab]);
 
   const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant' });
@@ -357,7 +362,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
 
         {/* Tabs */}
         <div className="flex border-b border-gray-700/60 bg-gray-900/50 flex-shrink-0">
-          <button onClick={() => setActiveTab('all')} className={`relative flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${activeTab === 'all' ? 'text-white border-b-2 border-primary-500 bg-gray-800/40' : 'text-gray-500 hover:text-gray-300'}`}>
+          <button onClick={() => !meetingScope && setActiveTab('all')} disabled={!!meetingScope} className={`relative flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${meetingScope ? 'text-gray-600 cursor-not-allowed' : activeTab === 'all' ? 'text-white border-b-2 border-primary-500 bg-gray-800/40' : 'text-gray-500 hover:text-gray-300'}`} title={meetingScope ? 'Unavailable during a meeting' : undefined}>
             <Users size={13} />All
             {activeTab !== 'all' && unreadAll > 0 && (
               <span className="absolute top-1.5 right-4 min-w-[14px] h-3.5 bg-blue-500 rounded-full text-[9px] font-bold flex items-center justify-center px-1 animate-badge-pulse">{unreadAll > 9 ? '9+' : unreadAll}</span>
@@ -459,7 +464,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
           )}
           <div className="flex items-center gap-2 mb-2">
             <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${activeTab === 'campus' ? 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400' : 'bg-gray-700/60 border border-gray-600/40 text-gray-400'}`}>
-              {activeTab === 'campus' ? `To ${effectiveCampus === 'paete' ? 'Paete' : 'Pagsanjan'}` : 'To Everyone'}
+              {activeTab === 'campus' ? `To ${meetingScope ? effectiveCampus.toUpperCase() + ' · Meeting' : effectiveCampus === 'paete' ? 'Paete' : 'Pagsanjan'}` : 'To Everyone'}
             </span>
           </div>
           <div className="flex items-center gap-2">
