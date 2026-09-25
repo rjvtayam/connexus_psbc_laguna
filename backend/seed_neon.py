@@ -14,7 +14,7 @@ USERS = [
     {"email": "teacher1@paete.edu.ph",    "password": "teacher123",  "full_name": "REEMA SHANE P. AFABLE",  "role": "teacher",    "campus": "paete"},
     {"email": "teacher1@pagsanjan.edu.ph","password": "teacher123",  "full_name": "MART JACOB C. CABRIGA",  "role": "teacher",    "campus": "pagsanjan"},
     {"email": "staff1@paete.edu.ph",      "password": "teststaff123",  "full_name": "RIMER JAMES G. TUMBAGA", "role": "staff",      "campus": "paete"},
-    {"email": "staff2@paete.edu.ph",      "password": "teststaff123",  "full_name": "ANGELYN GIL BACSAFRA",   "role": "staff",      "campus": "paete"},
+    {"email": "staff2@pagsanjan.edu.ph", "password": "teststaff123",  "full_name": "ANGELYN GIL BACSAFRA",   "role": "staff",      "campus": "pagsanjan"},
     {"email": "staff1@pagsanjan.edu.ph",  "password": "teststaff123",  "full_name": "JUANA FRANCEZKA V. HERRADURA", "role": "staff", "campus": "pagsanjan"},
 ]
 

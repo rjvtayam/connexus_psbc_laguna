@@ -51,11 +51,11 @@ USERS = [
         "campus": "paete",
     },
     {
-        "email": "staff2_paete@psbc.edu.ph",
+        "email": "staff2_pagsanjan@psbc.edu.ph",
         "password": "teststaff123",
         "full_name": "ANGELYN GIL BACSAFRA",
         "role": "staff",
-        "campus": "paete",
+        "campus": "pagsanjan",
     },
     {
         "email": "staff_pagsanjan@psbc.edu.ph",
@@ -94,7 +94,7 @@ def seed():
         print("  Paete Teacher:         paete@psbc.edu.ph / teacher123")
         print("  Pagsanjan Teacher:     pagsanjan@psbc.edu.ph / teacher123")
         print("  Paete Staff:           staff_paete@psbc.edu.ph / teststaff123")
-        print("  Paete Staff 2:         staff2_paete@psbc.edu.ph / teststaff123")
+        print("  Pagsanjan Staff 2:     staff2_pagsanjan@psbc.edu.ph / teststaff123")
         print("  Pagsanjan Staff:       staff_pagsanjan@psbc.edu.ph / teststaff123")
     finally:
         db.close()
