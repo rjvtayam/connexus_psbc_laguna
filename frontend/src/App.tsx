@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './stores/authStore';
+import { authApi } from './api/auth.api';
 import { EmergencyAlert } from './components/controls/EmergencyButton';
 import { useSessionStore } from './stores/sessionStore';
 import { LandingPage } from './pages/LandingPage';
@@ -27,6 +29,18 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 
 export default function App() {
   const isEmergency = useSessionStore((s) => s.isEmergency);
+  const token = useAuthStore((s) => s.token);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    authApi.getMe()
+      .then((u) => {
+        if (!cancelled && u) useAuthStore.getState().updateUser(u);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [token]);
 
   return (
     <QueryClientProvider client={queryClient}>

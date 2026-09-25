@@ -11,36 +11,57 @@ USERS = [
     {
         "email": "principal_paete@psbc.edu.ph",
         "password": "admin123",
-        "full_name": "Paete Campus Principal",
+        "full_name": "ARIANNE LOULLE L. GATBONTON",
         "role": "principal",
         "campus": "paete",
     },
     {
         "email": "principal_pagsanjan@psbc.edu.ph",
         "password": "admin123",
-        "full_name": "Pagsanjan Campus Principal",
+        "full_name": "MARIA JENILAH C. OSERO",
         "role": "principal",
         "campus": "pagsanjan",
     },
     {
         "email": "admin@psbc.edu.ph",
         "password": "admin123",
-        "full_name": "System Admin",
+        "full_name": "JUSTIN RAIN M. SANTOS",
         "role": "admin",
         "campus": "control_room",
     },
     {
         "email": "paete@psbc.edu.ph",
         "password": "teacher123",
-        "full_name": "Paete Campus Teacher",
+        "full_name": "REEMA SHANE P. AFABLE",
         "role": "teacher",
         "campus": "paete",
     },
     {
         "email": "pagsanjan@psbc.edu.ph",
         "password": "teacher123",
-        "full_name": "Pagsanjan Campus Teacher",
+        "full_name": "MART JACOB C. CABRIGA",
         "role": "teacher",
+        "campus": "pagsanjan",
+    },
+    {
+        "email": "staff_paete@psbc.edu.ph",
+        "password": "admin123",
+        "full_name": "RIMER JAMES G. TUMBAGA",
+        "role": "staff",
+        "campus": "paete",
+    },
+    {
+        "email": "staff2_paete@psbc.edu.ph",
+        "password": "admin123",
+        "full_name": "ANGELYN GIL BACSAFRA",
+        "role": "staff",
+        "campus": "paete",
+    },
+    {
+        "email": "staff_pagsanjan@psbc.edu.ph",
+        "password": "admin123",
+        "full_name": "JUANA FRANCEZKA V. HERRADURA",
+        "role": "staff",
         "campus": "pagsanjan",
     },
 ]
@@ -72,6 +93,9 @@ def seed():
         print("  Admin:                 admin@psbc.edu.ph / admin123")
         print("  Paete Teacher:         paete@psbc.edu.ph / teacher123")
         print("  Pagsanjan Teacher:     pagsanjan@psbc.edu.ph / teacher123")
+        print("  Paete Staff:           staff_paete@psbc.edu.ph / admin123")
+        print("  Paete Staff 2:         staff2_paete@psbc.edu.ph / admin123")
+        print("  Pagsanjan Staff:       staff_pagsanjan@psbc.edu.ph / admin123")
     finally:
         db.close()
 

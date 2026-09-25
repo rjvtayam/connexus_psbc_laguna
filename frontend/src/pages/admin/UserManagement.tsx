@@ -265,7 +265,7 @@ export function UserManagement() {
                     <input
                       value={newUser.full_name}
                       onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
-                      placeholder="Juan Dela Cruz"
+                      placeholder="Full Name (Last, First, M.I.)"
                       required
                       className="w-full bg-gray-800/60 border border-gray-700/50 rounded-lg pl-9 pr-4 py-2 text-white text-[11px] placeholder-gray-600 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/40 focus:outline-none transition-all"
                     />
