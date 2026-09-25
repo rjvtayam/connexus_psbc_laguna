@@ -10,14 +10,14 @@ from app.utils.security import hash_password
 USERS = [
     {
         "email": "principal_paete@psbc.edu.ph",
-        "password": "admin123",
+        "password": "testprincipal123",
         "full_name": "ARIANNE LOULLE L. GATBONTON",
         "role": "principal",
         "campus": "paete",
     },
     {
         "email": "principal_pagsanjan@psbc.edu.ph",
-        "password": "admin123",
+        "password": "testprincipal123",
         "full_name": "MARIA JENILAH C. OSERO",
         "role": "principal",
         "campus": "pagsanjan",
@@ -45,21 +45,21 @@ USERS = [
     },
     {
         "email": "staff_paete@psbc.edu.ph",
-        "password": "admin123",
+        "password": "teststaff123",
         "full_name": "RIMER JAMES G. TUMBAGA",
         "role": "staff",
         "campus": "paete",
     },
     {
         "email": "staff2_paete@psbc.edu.ph",
-        "password": "admin123",
+        "password": "teststaff123",
         "full_name": "ANGELYN GIL BACSAFRA",
         "role": "staff",
         "campus": "paete",
     },
     {
         "email": "staff_pagsanjan@psbc.edu.ph",
-        "password": "admin123",
+        "password": "teststaff123",
         "full_name": "JUANA FRANCEZKA V. HERRADURA",
         "role": "staff",
         "campus": "pagsanjan",
@@ -88,14 +88,14 @@ def seed():
         db.commit()
         print("\nSeed completed!")
         print("\nTest Accounts:")
-        print("  Principal (Paete):     principal_paete@psbc.edu.ph / admin123")
-        print("  Principal (Pagsanjan): principal_pagsanjan@psbc.edu.ph / admin123")
+        print("  Principal (Paete):     principal_paete@psbc.edu.ph / testprincipal123")
+        print("  Principal (Pagsanjan): principal_pagsanjan@psbc.edu.ph / testprincipal123")
         print("  Admin:                 admin@psbc.edu.ph / admin123")
         print("  Paete Teacher:         paete@psbc.edu.ph / teacher123")
         print("  Pagsanjan Teacher:     pagsanjan@psbc.edu.ph / teacher123")
-        print("  Paete Staff:           staff_paete@psbc.edu.ph / admin123")
-        print("  Paete Staff 2:         staff2_paete@psbc.edu.ph / admin123")
-        print("  Pagsanjan Staff:       staff_pagsanjan@psbc.edu.ph / admin123")
+        print("  Paete Staff:           staff_paete@psbc.edu.ph / teststaff123")
+        print("  Paete Staff 2:         staff2_paete@psbc.edu.ph / teststaff123")
+        print("  Pagsanjan Staff:       staff_pagsanjan@psbc.edu.ph / teststaff123")
     finally:
         db.close()
 
