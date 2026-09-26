@@ -4,7 +4,7 @@ from app.models.user import User
 from app.models.audit_log import AuditLog
 from app.schemas.user import UserCreate, UserLogin, Token, UserResponse, ProfileUpdate, PasswordChange
 from app.utils.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token, create_temp_token
-from app.services.cache import get_profile_cache, invalidate
+from app.services.cache import get_user_list_cache, invalidate
 
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_DURATION_MINUTES = 30
@@ -29,6 +29,7 @@ class AuthService:
         self.db.add(user)
         self.db.commit()
         self.db.refresh(user)
+        invalidate(get_user_list_cache())
         return user
 
     def _log_failed_login(self, user: User, email: str, ip_address: str = None):
@@ -89,7 +90,6 @@ class AuthService:
 
         user.last_login_at = datetime.utcnow()
         self.db.commit()
-        get_profile_cache().pop(f"user:{user.id}", None)
 
         if user.two_factor_enabled:
             temp_token = create_temp_token(data={"sub": str(user.id), "type": "2fa_pending"})
@@ -130,17 +130,9 @@ class AuthService:
         )
 
     def get_current_user(self, user_id: str) -> User:
-        cache = get_profile_cache()
-        cache_key = f"user:{user_id}"
-        cached = cache.get(cache_key)
-        if cached is not None:
-            return cached
-
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
             raise ValueError("User not found")
-
-        cache[cache_key] = user
         return user
 
     def update_profile(self, user: User, data: ProfileUpdate, ip_address: str = None) -> User:
@@ -164,9 +156,6 @@ class AuthService:
         self.db.add(log)
         self.db.commit()
         self.db.refresh(user)
-
-        cache = get_profile_cache()
-        cache.pop(f"user:{user.id}", None)
         return user
 
     def change_password(self, user: User, data: PasswordChange, ip_address: str = None) -> None:
@@ -182,7 +171,6 @@ class AuthService:
         )
         self.db.add(log)
         self.db.commit()
-        get_profile_cache().pop(f"user:{user.id}", None)
 
     def get_activity_log(self, user_id: str, limit: int = 20) -> list:
         logs = (

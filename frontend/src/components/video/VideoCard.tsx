@@ -143,15 +143,13 @@ export function VideoCard({
 
       {/* Emergency - animated indicator on the triggerer's card */}
       {isEmergencyTriggerer && (
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 animate-bounce">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 animate-bounce flex flex-col items-center">
           <div className="flex items-center justify-center w-14 h-14 rounded-full bg-red-600/90 border-2 border-red-300/60 shadow-lg shadow-red-600/50">
             <AlertTriangle size={28} className="text-white" />
           </div>
-          <div className="mt-1.5 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-white bg-red-600/90 border border-red-400/50 px-2 py-0.5 rounded-full tracking-wider">
-              EMERGENCY
-            </span>
-          </div>
+          <span className="mt-1.5 text-[10px] font-bold text-white bg-red-600/90 border border-red-400/50 px-2 py-0.5 rounded-full tracking-wider">
+            EMERGENCY
+          </span>
         </div>
       )}
 

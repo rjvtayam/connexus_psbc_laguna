@@ -24,23 +24,10 @@ class SessionService:
         return session
 
     def get_active_session(self) -> Optional[VideoSession]:
-        cache = get_session_cache()
-        key = "session:active"
-        if key in cache:
-            return cache[key]
-        result = self.db.query(VideoSession).filter(VideoSession.status == "active").first()
-        cache[key] = result
-        return result
+        return self.db.query(VideoSession).filter(VideoSession.status == "active").first()
 
     def get_session_by_id(self, session_id: UUID) -> Optional[VideoSession]:
-        cache = get_session_cache()
-        key = f"session:{session_id}"
-        if key in cache:
-            return cache[key]
-        result = self.db.query(VideoSession).filter(VideoSession.id == session_id).first()
-        if result:
-            cache[key] = result
-        return result
+        return self.db.query(VideoSession).filter(VideoSession.id == session_id).first()
 
     def get_all_sessions(self, limit: int = 50) -> List[VideoSession]:
         cache = get_session_cache()

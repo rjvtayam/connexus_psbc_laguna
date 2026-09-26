@@ -6,15 +6,17 @@ import json
 
 
 # ─── Cache policies per endpoint prefix ───
+# Authenticated API responses are `no-cache`: the browser must revalidate on
+# every use so it can never serve a stale body after a mutation. Server-side
+# TTL caches (services/cache.py) absorb the DB load.
 CACHE_POLICIES = {
-    "/api/v1/auth":       "no-store",
-    "/api/v1/users":      "private, max-age=30, stale-while-revalidate=10",
-    "/api/v1/sessions":   "private, max-age=15, stale-while-revalidate=5",
-    "/api/v1/announcements": "private, max-age=60, stale-while-revalidate=15",
-    "/api/v1/notifications": "private, max-age=15, stale-while-revalidate=5",
-    "/api/v1/dashboard":  "private, max-age=30, stale-while-revalidate=10",
-    "/api/v1/profile":    "private, max-age=60, stale-while-revalidate=15",
-    "/images":            "public, max-age=86400, immutable",
+    "/api/v1/auth":          "no-store",
+    "/api/v1/users":         "private, no-cache",
+    "/api/v1/sessions":      "private, no-cache",
+    "/api/v1/announcements": "private, no-cache",
+    "/api/v1/notifications": "private, no-cache",
+    "/api/v1/dashboard":     "private, no-cache",
+    "/api/v1/profile":       "private, no-cache",
 }
 
 
@@ -45,10 +47,19 @@ class SecurityHeadersMiddleware:
 
                 method = scope.get("method", "GET")
                 path = scope.get("path", "")
-                if method == "GET":
+                status = message.get("status", 500)
+
+                # Only successful GET responses may be cacheable; errors and
+                # every non-GET response are always no-store.
+                if method == "GET" and 200 <= status < 300:
                     headers["Cache-Control"] = _get_cache_policy(path)
                 else:
-                    headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+                    headers["Cache-Control"] = "no-store"
+
+                # Key authenticated responses on the credential so one user's
+                # cached body can never be served to another in the same browser.
+                if path.startswith("/api/"):
+                    headers.append("Vary", "Authorization")
 
             await send(message)
 

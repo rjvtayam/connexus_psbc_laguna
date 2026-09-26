@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 import { API_BASE_URL } from '../lib/constants';
+import { queryClient } from '../lib/queryClient';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -45,6 +46,7 @@ api.interceptors.response.use(
         }
       } catch {
         useAuthStore.getState().logout();
+        queryClient.clear();
         api.post('/auth/logout').catch(() => {});
       }
     }

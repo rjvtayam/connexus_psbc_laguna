@@ -5,7 +5,7 @@ from app.models.user import User
 from app.models.audit_log import AuditLog
 from app.schemas.user import UserCreate, UserResponse
 from app.utils.security import hash_password
-from app.services.cache import get_user_list_cache, get_profile_cache, invalidate
+from app.services.cache import get_user_list_cache, invalidate
 from datetime import datetime
 
 ALLOWED_UPDATE_FIELDS = {"full_name", "email", "phone", "campus", "role", "is_active"}
@@ -25,14 +25,7 @@ class UserService:
         return result
 
     def get_user_by_id(self, user_id: UUID) -> Optional[User]:
-        cache = get_profile_cache()
-        key = f"user:{user_id}"
-        if key in cache:
-            return cache[key]
-        result = self.db.query(User).filter(User.id == user_id).first()
-        if result:
-            cache[key] = result
-        return result
+        return self.db.query(User).filter(User.id == user_id).first()
 
     def get_users_by_campus(self, campus: str) -> List[User]:
         cache = get_user_list_cache()
@@ -60,7 +53,6 @@ class UserService:
         self.db.commit()
         self.db.refresh(user)
         invalidate(get_user_list_cache())
-        get_profile_cache().pop(f"user:{user_id}", None)
         return user
 
     def deactivate_user(self, user_id: UUID, actor_id: UUID = None) -> bool:
@@ -72,7 +64,6 @@ class UserService:
         user.deleted_at = datetime.utcnow()
         self.db.commit()
         invalidate(get_user_list_cache())
-        get_profile_cache().pop(f"user:{user_id}", None)
 
         if actor_id:
             self._log_audit(actor_id, "user_deactivate", {"user_id": str(user_id), "email": user.email})
@@ -88,7 +79,6 @@ class UserService:
         user.deleted_at = datetime.utcnow()
         self.db.commit()
         invalidate(get_user_list_cache())
-        get_profile_cache().pop(f"user:{user_id}", None)
 
         if actor_id:
             self._log_audit(actor_id, "user_soft_delete", {"user_id": str(user_id), "email": user.email})
@@ -104,7 +94,6 @@ class UserService:
         user.deleted_at = None
         self.db.commit()
         invalidate(get_user_list_cache())
-        get_profile_cache().pop(f"user:{user_id}", None)
 
         if actor_id:
             self._log_audit(actor_id, "user_restore", {"user_id": str(user_id), "email": user.email})

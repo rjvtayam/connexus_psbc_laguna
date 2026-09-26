@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { authApi } from '../api/auth.api';
 import { api } from '../api/axios';
+import { queryClient } from '../lib/queryClient';
 
 export function useAuth() {
   const { user, token, setAuth, logout: storeLogout } = useAuthStore();
@@ -44,6 +45,7 @@ export function useAuth() {
       // Ignore errors on logout
     }
     storeLogout();
+    queryClient.clear();
   }, [storeLogout]);
 
   return {

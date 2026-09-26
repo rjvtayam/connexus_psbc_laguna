@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.schemas.user import UserResponse
 from app.services.user_service import UserService
-from app.services.cache import invalidate, get_user_list_cache, get_profile_cache
+from app.services.cache import invalidate, get_user_list_cache
 from app.api.deps import get_current_user, require_admin, require_principal
 
 router = APIRouter()
@@ -52,7 +52,6 @@ def update_user(user_id: UUID, updates: UserUpdate, db: Session = Depends(get_db
     try:
         result = service.update_user(user_id, updates.model_dump(exclude_none=True))
         invalidate(get_user_list_cache(), "users")
-        invalidate(get_profile_cache(), "profile")
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -66,7 +65,6 @@ def deactivate_user(user_id: UUID, db: Session = Depends(get_db), current_user=D
     try:
         service.deactivate_user(user_id, current_user.id)
         invalidate(get_user_list_cache(), "users")
-        invalidate(get_profile_cache(), "profile")
         return {"message": "User deactivated"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -80,7 +78,6 @@ def permanent_delete_user(user_id: UUID, db: Session = Depends(get_db), current_
     try:
         service.soft_delete_user(user_id, current_user.id)
         invalidate(get_user_list_cache(), "users")
-        invalidate(get_profile_cache(), "profile")
         return {"message": "User permanently deleted (soft delete)"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -94,7 +91,6 @@ def restore_user(user_id: UUID, db: Session = Depends(get_db), current_user=Depe
     try:
         service.restore_user(user_id, current_user.id)
         invalidate(get_user_list_cache(), "users")
-        invalidate(get_profile_cache(), "profile")
         return {"message": "User restored"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

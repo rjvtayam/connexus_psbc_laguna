@@ -18,7 +18,6 @@ _announcement_cache = TTLCache(maxsize=64, ttl=60)       # 60s
 _room_users_cache = TTLCache(maxsize=128, ttl=5)         # 5s — very volatile
 _settings_cache = TTLCache(maxsize=32, ttl=300)          # 5min — rarely changes
 _audit_log_cache = TTLCache(maxsize=64, ttl=30)          # 30s
-_profile_cache = TTLCache(maxsize=128, ttl=60)           # 60s
 
 # LRU cache for expensive computations (no TTL, just size limit)
 _computation_cache = LRUCache(maxsize=256)
@@ -82,7 +81,6 @@ def get_all_caches():
         "room_users": _room_users_cache,
         "settings": _settings_cache,
         "audit_log": _audit_log_cache,
-        "profile": _profile_cache,
         "computation": _computation_cache,
     }
 
@@ -91,7 +89,7 @@ def invalidate_all_caches():
     """Clear all caches."""
     for c in [_user_list_cache, _session_cache, _bulletin_cache,
               _announcement_cache, _room_users_cache, _settings_cache,
-              _audit_log_cache, _profile_cache, _computation_cache]:
+              _audit_log_cache, _computation_cache]:
         c.clear()
 
 
@@ -121,9 +119,6 @@ def get_settings_cache():
 
 def get_audit_log_cache():
     return _audit_log_cache
-
-def get_profile_cache():
-    return _profile_cache
 
 def get_computation_cache():
     return _computation_cache
