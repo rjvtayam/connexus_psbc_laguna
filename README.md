@@ -29,6 +29,7 @@
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
+- [Conceptual Framework](#conceptual-framework)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -262,6 +263,222 @@
 |                  +---------------------------+                        |
 +-----------------------------------------------------------------------+
 ```
+
+---
+
+## Conceptual Framework
+
+The conceptual framework of **CONNEXUS** is grounded on the **Input–Process–Output (IPO) model**, the standard paradigm for describing information systems. It illustrates how people, hardware, software, data, and network resources flow through the system's core processes to produce measurable intercampus communication outcomes. The framework is supported by a system context diagram (Level-0 Data Flow Diagram), actor-based use cases, the development methodology, and the theoretical foundation of the platform.
+
+### Input–Process–Output (IPO) Model
+
+```mermaid
+flowchart LR
+  subgraph inputs["INPUTS"]
+    direction TB
+    I1["I1 Human Resources<br/>Administrator, Principal, Teacher, Staff"]
+    I2["I2 Hardware Endpoints<br/>Campus TV, Webcam, Speakers<br/>Control Room PC, Camera, Microphone"]
+    I3["I3 Software Technologies<br/>React, TypeScript, FastAPI<br/>Socket.IO, WebRTC, Tailwind CSS"]
+    I4["I4 Data and Records<br/>Accounts, Bulletins, Chat Logs<br/>Recordings, Notifications, Audit Logs"]
+    I5["I5 Network and Connectivity<br/>Internet, STUN and TURN Servers"]
+    I6["I6 Cloud Services<br/>Vercel, Render, Neon PostgreSQL"]
+  end
+
+  subgraph processes["PROCESSING"]
+    direction TB
+    P1["P1 Authentication and Access Control<br/>JWT, Two-Factor Authentication, Role-Based Access"]
+    P2["P2 Video Session and WebRTC Management<br/>Peer Mesh, Portal Modes, Screen Share, Talk Routing"]
+    P3["P3 Collaboration and Communication<br/>Chat, Reactions, Bulletins, Notifications"]
+    P4["P4 Emergency Broadcasting<br/>Role-Verified Trigger, Siren, Fullscreen Alert, Dismiss"]
+    P5["P5 Content and Recording Management<br/>Record, Upload, Playback, Soft Delete"]
+    P6["P6 Administration and Monitoring<br/>User CRUD, Dashboard, Session History, Audit Logs"]
+  end
+
+  subgraph outputs["OUTPUTS"]
+    direction TB
+    O1["O1 Secured Role-Scoped Access Session"]
+    O2["O2 Live Intercampus Video Portal with Controlled Audio"]
+    O3["O3 Real-Time Messaging and Announcement Dissemination"]
+    O4["O4 Campus-Wide Emergency Alerts with Audit Trail"]
+    O5["O5 Recorded Session Media Library"]
+    O6["O6 Management Reports and System Audit Logs"]
+  end
+
+  inputs --> processes --> outputs
+```
+
+#### Inputs
+
+| Ref | Category | Components |
+|-----|----------|------------|
+| **I1** | Human Resources | Four system roles — Administrator, Principal, Teacher, and Staff — serving PSBC Paete and PSBC Pagsanjan |
+| **I2** | Hardware Endpoints | Campus endpoints (TV display, webcam, speakers) and the Control Room workstation (PC, camera, microphone, speakers) |
+| **I3** | Software Technologies | React 18, TypeScript, Vite, Tailwind CSS, and Zustand on the client; FastAPI, SQLAlchemy, and python-socketio on the server; WebRTC and Socket.IO for real-time media |
+| **I4** | Data and Records | User accounts, bulletin announcements, chat messages, session recordings, notifications, and audit logs |
+| **I5** | Network and Connectivity | Internet connectivity, Google STUN servers, and optional TURN relay for NAT traversal |
+| **I6** | Cloud Services | Vercel (frontend hosting), Render (API hosting), and Neon (serverless PostgreSQL) |
+
+#### Processes
+
+| Ref | Process | Key Activities |
+|-----|---------|----------------|
+| **P1** | Authentication and Access Control | Credential validation, JWT issuance with refresh rotation, TOTP two-factor authentication, role-based route guarding, and account lockout after failed attempts |
+| **P2** | Video Session and WebRTC Management | Room join and leave, three-peer WebRTC mesh negotiation (offer, answer, and ICE exchanged via Socket.IO), Portal / In Meeting / Live states, screen presentation with Google Meet-style layout, and selective cross-campus talk routing |
+| **P3** | Collaboration and Communication | Real-time chat with reply threading and emoji reactions, raise hand, floating reactions, bulletin board with comments, and push notifications |
+| **P4** | Emergency Broadcasting | Server-side role verification, campus-scoped or broadcast delivery, synchronized siren and fullscreen alert overlay, dismissal, and database audit logging |
+| **P5** | Content and Recording Management | Client-side session recording via MediaRecorder, validated server upload, playback, and soft delete with restore |
+| **P6** | Administration and Monitoring | User CRUD with soft delete, session history, audit trail with IP tracking, dashboard statistics, and live system metrics |
+
+#### Outputs
+
+| Ref | Output | Description |
+|-----|--------|-------------|
+| **O1** | Secured Access Session | An authenticated, role-scoped session that grants only the capabilities permitted to the user's role |
+| **O2** | Live Intercampus Video Portal | Real-time peer-to-peer audio and video among Paete, Pagsanjan, and the Control Room with selective talk routing and screen presentation |
+| **O3** | Real-Time Information Dissemination | Instant messages and bulletin announcements pushed to every connected endpoint within milliseconds |
+| **O4** | Emergency Alert and Audit Trail | Fullscreen alerts with audible siren — campus-scoped or campus-wide — each permanently recorded in the audit log |
+| **O5** | Session Media Library | Uploaded recordings available for authenticated playback, restoration, and management |
+| **O6** | Management Reports and Audit Logs | Dashboard statistics, session history, and an immutable audit trail for administrative review |
+
+### System Context (Level-0 Data Flow Diagram)
+
+The context diagram positions CONNEXUS between its four actor classes and the external services it depends on. Media flows **peer-to-peer** between endpoints; only signaling, chat, and persisted data pass through the server.
+
+```mermaid
+flowchart TD
+  subgraph actors["System Actors"]
+    A1["Administrator"]
+    A2["Principal"]
+    A3["Teacher"]
+    A4["Staff"]
+  end
+
+  SYS["CONNEXUS System<br/>FastAPI REST API and Socket.IO Signaling Server"]
+
+  subgraph services["External Services and Data Stores"]
+    DB[("PostgreSQL 17 on Neon<br/>Users, Sessions, Bulletins, Recordings, Audit Logs")]
+    NAT["Google STUN Server<br/>NAT Traversal Discovery"]
+    HOST["Cloud Hosting<br/>Vercel Frontend, Render Backend"]
+  end
+
+  A1 -->|"User management, dashboard, global emergency control"| SYS
+  A2 -->|"Control Room operation, campus emergency, bulletin posting"| SYS
+  A3 -->|"Campus video session, chat, bulletin engagement"| SYS
+  A4 -->|"Campus video session, chat, bulletin engagement"| SYS
+  SYS <-->|"REST API and data persistence"| DB
+  SYS <-->|"ICE and server reflexive address discovery"| NAT
+  SYS -->|"Continuous deployment from GitHub"| HOST
+
+  NOTE["Design Note: Audio and video travel peer-to-peer between endpoints over WebRTC. Only signaling, chat, and persisted data pass through the system."]
+  SYS -.-> NOTE
+```
+
+### Use Cases by Actor
+
+```mermaid
+flowchart LR
+  ADM(["Administrator"])
+  PRN(["Principal"])
+  TCH(["Teacher"])
+  STF(["Staff"])
+
+  subgraph boundary["CONNEXUS System Boundary"]
+    UC1(["UC1 Authenticate with Password and 2FA"])
+    UC2(["UC2 Join Campus Live Video Session"])
+    UC3(["UC3 Operate the Control Room"])
+    UC4(["UC4 Share Screen and Present"])
+    UC5(["UC5 Send Chat, Raise Hand, and React"])
+    UC6(["UC6 Post Bulletin Announcements"])
+    UC7(["UC7 React and Comment on Bulletins"])
+    UC8(["UC8 Trigger and Dismiss Emergency Alerts"])
+    UC9(["UC9 Manage Users and Roles"])
+    UC10(["UC10 Record and Manage Session Media"])
+    UC11(["UC11 View Dashboard, Session History, and Audit Logs"])
+    UC12(["UC12 Configure Camera, Audio, and Profile Settings"])
+  end
+
+  ADM --> UC1
+  ADM --> UC2
+  ADM --> UC3
+  ADM --> UC4
+  ADM --> UC5
+  ADM --> UC6
+  ADM --> UC7
+  ADM --> UC8
+  ADM --> UC9
+  ADM --> UC10
+  ADM --> UC11
+  ADM --> UC12
+
+  PRN --> UC1
+  PRN --> UC2
+  PRN --> UC3
+  PRN --> UC4
+  PRN --> UC5
+  PRN --> UC6
+  PRN --> UC7
+  PRN --> UC8
+  PRN --> UC9
+  PRN --> UC11
+  PRN --> UC12
+
+  TCH --> UC1
+  TCH --> UC2
+  TCH --> UC4
+  TCH --> UC5
+  TCH --> UC7
+  TCH --> UC12
+
+  STF --> UC1
+  STF --> UC2
+  STF --> UC4
+  STF --> UC5
+  STF --> UC7
+  STF --> UC12
+```
+
+| Actor | Access Scope | Use Cases |
+|-------|--------------|-----------|
+| **Administrator** | Full system control | UC1 – UC12 (all use cases), including global emergency dismissal and permanent media management |
+| **Principal** | Control Room and own-campus administration | UC1 – UC9, UC11, UC12 — Control Room operation, campus-scoped emergency, bulletin posting, and own-campus staff management |
+| **Teacher** | Campus participation | UC1, UC2, UC4, UC5, UC7, UC12 — video sessions, screen sharing, chat and reactions, bulletin engagement, and settings |
+| **Staff** | Campus participation | UC1, UC2, UC4, UC5, UC7, UC12 — identical participation scope to Teacher |
+
+> **Access enforcement is two-layered.** Route guards restrict pages in the client (`App.tsx` — Control Room and Dashboard require `principal` or `admin`), while the server independently verifies authority on sensitive events (for example, `emergency_trigger` accepts only `principal` or `admin` sessions, and bulletin creation is limited to `admin` and `principal`). Principals may view the recordings library; starting a recording and permanent deletion are administrator-only.
+
+### Development Methodology
+
+The system was built using the **Agile Iterative** software development life cycle, delivered in six two-week sprints with continuous client feedback between iterations.
+
+```mermaid
+flowchart LR
+  S1["1 Requirements<br/>Gathering and Analysis"] --> S2["2 System Design<br/>Architecture, Data Model, UI Wireframes"]
+  S2 --> S3["3 Implementation<br/>Six Agile Sprints"]
+  S3 --> S4["4 Testing and Quality Assurance<br/>Type Checks, Builds, End-to-End Suites"]
+  S4 --> S5["5 Deployment<br/>Continuous Delivery on Vercel and Render"]
+  S5 --> S6["6 Evaluation<br/>Client Acceptance and Feedback"]
+  S6 -->|"Iterate"| S2
+```
+
+| Phase | Activities | Project Evidence |
+|-------|------------|------------------|
+| **1. Requirements** | Stakeholder interviews and feature backlog definition | Intercampus portal, selective talk routing, emergency broadcast, and bulletin board requirements |
+| **2. System Design** | Three-tier architecture, entity-relationship design, UI/UX prototyping | Client–server architecture, twelve-entity data model, campus-branded interface (Paete = cyan, Pagsanjan = purple) |
+| **3. Implementation** | Incremental sprint delivery | Foundation → WebRTC core → multi-peer Control Room → advanced features → administration → polish |
+| **4. Testing** | Type checking, production builds, end-to-end API suites, role-based acceptance logins | Continuous `tsc` and `vite build` gates, 23-check end-to-end verification suite, all seeded accounts validated against production |
+| **5. Deployment** | Push-triggered CI/CD | GitHub → Vercel (frontend) and Render (backend) auto-deployment with Neon-managed database |
+| **6. Evaluation** | User-acceptance testing rounds and feedback incorporation | Iterative refinements — for example, emergency indicators, screen-share stage layout, and roster alignment |
+
+### Theoretical Foundation
+
+- **Peer-to-Peer Multimedia Communication (WebRTC)** — browser-native real-time audio and video between endpoints, encrypted end-to-end with DTLS-SRTP; media never transits the application server.
+- **NAT Traversal (STUN/TURN)** — STUN discovers each peer's public address for direct connection; TURN provides relaying when restrictive NATs block the direct path.
+- **WebSocket Full-Duplex Signaling (Socket.IO)** — a persistent low-latency channel for WebRTC signaling, presence, chat, notifications, and emergency events.
+- **Stateless Web Architecture (REST and JWT)** — short-lived access tokens with refresh rotation and HTTP-only cookies enable secure, horizontally scalable APIs.
+- **Password and Second-Factor Cryptography (BCrypt, TOTP RFC 6238)** — adaptive salted password hashing combined with time-based one-time passwords for two-factor authentication.
+- **Three-Tier Client–Server Architecture** — a clear separation of presentation (React), application (FastAPI and Socket.IO), and data (PostgreSQL) tiers.
+- **Relational Data Modeling (SQLAlchemy and Alembic)** — twelve persistent entities with referential integrity, versioned migrations, and role-scoped queries.
+- **Cloud-Native PaaS Deployment** — Vercel, Render, and Neon provide managed, auto-scaling infrastructure with push-based continuous delivery.
 
 ---
 
