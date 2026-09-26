@@ -530,13 +530,16 @@ export function ControlRoom() {
                   <span className={`text-[9px] sm:text-[10px] md:text-xs px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg border ${myCampus === 'paete' ? 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30' : 'text-purple-300 bg-purple-500/10 border-purple-500/30'}`} data-demo="campus-badge">
                     <span className="opacity-60 hidden sm:inline">Campus :</span> <span className="font-bold">{myCampus.toUpperCase()}</span>
                   </span>
-                  <TalkButton
-                    target={myCampus === 'paete' ? 'pagsanjan' : 'paete'}
-                    isActive={activeTalkTarget !== null}
-                    onClick={() => handleTalkTo(myCampus === 'paete' ? 'pagsanjan' : 'paete')}
-                    disabled={portalMode || !!meetingScope}
-                    compact
-                  />
+                  <div className="flex flex-col items-center gap-0.5">
+                    <TalkButton
+                      target={myCampus === 'paete' ? 'pagsanjan' : 'paete'}
+                      isActive={activeTalkTarget !== null}
+                      onClick={() => handleTalkTo(myCampus === 'paete' ? 'pagsanjan' : 'paete')}
+                      disabled={portalMode || !!meetingScope}
+                      compact
+                    />
+                    <span className="text-[8px] sm:text-[9px] text-gray-500 font-medium">{myCampus === 'paete' ? 'PAG' : 'PAE'}</span>
+                  </div>
                 </>
               )}
               {!myCampus || myCampus === 'control_room' ? (
