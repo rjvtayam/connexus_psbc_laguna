@@ -17,6 +17,8 @@ CACHE_POLICIES = {
     "/api/v1/notifications": "private, no-cache",
     "/api/v1/dashboard":     "private, no-cache",
     "/api/v1/profile":       "private, no-cache",
+    # Public, auth-free roster — safe for any client to cache briefly.
+    "/api/v1/team":          "public, max-age=300",
 }
 
 

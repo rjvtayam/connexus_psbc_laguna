@@ -146,12 +146,9 @@ export function CampusView() {
     return true;
   });
 
-  const isHiddenPeer = (sid: string | null | undefined) => {
-    if (!sid || sid === mySid) return false;
-    const u = roomUsers.find((x) => x.sid === sid);
-    return u?.role === 'admin' && (remotePortalModes[sid] ?? false);
-  };
-  const effectiveSharerSid = screenSharerSid && !isHiddenPeer(screenSharerSid) ? screenSharerSid : null;
+  // Portal-hide hides the admin's *camera* card from the grid; their shared
+  // screen must still take over the stage (the whole point of presenting).
+  const effectiveSharerSid = screenSharerSid || null;
 
   const selfUser = buildSelfUser({
     sid: mySid,
@@ -335,7 +332,7 @@ export function CampusView() {
                 const isLocalSharer = effectiveSharerSid === mySid;
                 const sharer = isLocalSharer
                   ? { sid: mySid, user: user?.full_name || 'You', campus: campusName || 'paete', stream: localStream }
-                  : visibleUsers.find((u) => u.sid === effectiveSharerSid);
+                  : roomUsers.find((u) => u.sid === effectiveSharerSid);
                 if (sharer) {
                   return (
                     <div className="flex-1 relative min-h-0">
@@ -365,7 +362,7 @@ export function CampusView() {
                 if (effectiveSharerSid === mySid && u === selfUser) return false;
                 return true;
               }).length > 0 && (
-                <div className="flex gap-1.5 sm:gap-2 h-16 sm:h-24 md:h-28 flex-shrink-0 overflow-x-auto">
+                <div className="flex gap-1.5 sm:gap-2 h-20 sm:h-24 md:h-32 flex-shrink-0 overflow-x-auto">
                   {displayUsers.filter((u) => {
                     if (effectiveSharerSid && u.sid === effectiveSharerSid) return false;
                     if (effectiveSharerSid === mySid && u === selfUser) return false;

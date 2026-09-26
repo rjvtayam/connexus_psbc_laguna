@@ -48,6 +48,7 @@ export function ControlRoom() {
   const [demoData, setDemoData] = useState<{ userId: string; name: string; campus: string; role: string } | null>(null);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [expandedSid, setExpandedSid] = useState<string | null>(null);
 
   const myCampus = user?.campus;
   const mySid = useSocket().socket?.id;
@@ -174,18 +175,24 @@ export function ControlRoom() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!expandedSid) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setExpandedSid(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [expandedSid]);
+
   const remoteUsers = roomUsers.filter((u) => {
     if (u.sid === mySid) return false;
     if (u.role === 'admin' && (remotePortalModes[u.sid] ?? false)) return false;
     return true;
   });
 
-  const isHiddenPeer = (sid: string | null | undefined) => {
-    if (!sid || sid === mySid) return false;
-    const u = roomUsers.find((x) => x.sid === sid);
-    return u?.role === 'admin' && (remotePortalModes[sid] ?? false);
-  };
-  const effectiveSharerSid = screenSharerSid && !isHiddenPeer(screenSharerSid) ? screenSharerSid : null;
+  // Portal-hide hides the admin's *camera* card from the grid; their shared
+  // screen must still take over the stage (the whole point of presenting).
+  const effectiveSharerSid = screenSharerSid || null;
 
   const selfUser = buildSelfUser({
     sid: mySid,
@@ -247,6 +254,7 @@ export function ControlRoom() {
             isMuted={isAudioMuted}
             isVideoOff={isVideoOff}
             peerSid={mySid}
+            onExpand={() => setExpandedSid(mySid || SELF_CARD_KEY)}
           />
         </div>
       );
@@ -264,6 +272,7 @@ export function ControlRoom() {
         isPortalLive={remotePortalModes[u.sid] ?? false}
         portalStatus={remoteMeetingScopes[u.sid] ? 'meeting' : (remotePortalModes[u.sid] ? 'portal' : 'live')}
         peerSid={u.sid}
+        onExpand={() => setExpandedSid(u.sid)}
       />
     );
   };
@@ -399,7 +408,7 @@ export function ControlRoom() {
                 const isLocalSharer = effectiveSharerSid === mySid;
                 const sharer = isLocalSharer
                   ? { sid: mySid, user: user?.full_name || 'You', campus: myCampus || 'control_room', stream: localStream }
-                  : remoteUsers.find((u) => u.sid === effectiveSharerSid);
+                  : roomUsers.find((u) => u.sid === effectiveSharerSid);
                 if (sharer) {
                   return (
                     <div className="flex-1 relative min-h-0">
@@ -430,7 +439,7 @@ export function ControlRoom() {
                 if (effectiveSharerSid === mySid && u === selfUser) return false;
                 return true;
               }).length > 0 && (
-                <div className="flex gap-1.5 sm:gap-2 h-16 sm:h-24 md:h-28 flex-shrink-0 overflow-x-auto">
+                <div className="flex gap-1.5 sm:gap-2 h-20 sm:h-24 md:h-32 flex-shrink-0 overflow-x-auto">
                   {displayUsers.filter((u) => {
                     if (effectiveSharerSid && u.sid === effectiveSharerSid) return false;
                     if (effectiveSharerSid === mySid && u === selfUser) return false;
@@ -629,6 +638,63 @@ export function ControlRoom() {
           userRole={demoData.role}
         />
       )}
+
+      {/* Expanded card — one participant shown fullscreen */}
+      {expandedSid && (() => {
+        const isSelfExpanded = expandedSid === mySid || expandedSid === SELF_CARD_KEY;
+        const expandedUser = isSelfExpanded
+          ? selfUser
+          : displayUsers.find((u) => u.sid === expandedSid) || roomUsers.find((u) => u.sid === expandedSid);
+        if (!expandedUser) return null;
+        const badgeCls = expandedUser.campus === 'paete'
+          ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'
+          : expandedUser.campus === 'pagsanjan'
+            ? 'text-purple-400 bg-purple-500/10 border-purple-500/20'
+            : 'text-primary-400 bg-primary-500/10 border-primary-500/20';
+        return (
+          <div
+            className="fixed inset-0 z-[105] flex items-center justify-center p-2 sm:p-5"
+            onClick={() => setExpandedSid(null)}
+          >
+            <div className="absolute inset-0 bg-black/85 backdrop-blur-md" />
+            <div className="relative w-full h-full max-w-6xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${badgeCls}`}>
+                    {expandedUser.campus === 'control_room' ? 'CTRL' : expandedUser.campus.replace('_', ' ').toUpperCase().slice(0, 4)}
+                  </span>
+                  <span className="text-white text-xs sm:text-sm font-medium truncate">
+                    {isSelfExpanded ? 'You' : expandedUser.user}
+                  </span>
+                  <span className="hidden sm:inline text-[10px] text-gray-500">Press ESC to close</span>
+                </div>
+                <button
+                  onClick={() => setExpandedSid(null)}
+                  aria-label="Close fullscreen"
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all flex-shrink-0"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="flex-1 min-h-0">
+                <VideoCard
+                  stream={isSelfExpanded ? localStream : expandedUser.stream || null}
+                  name={expandedUser.user}
+                  campus={expandedUser.campus}
+                  isLocal={isSelfExpanded}
+                  isExpanded
+                  isMuted={isSelfExpanded ? isAudioMuted : remoteAudioMuted[expandedUser.sid] || false}
+                  isVideoOff={isSelfExpanded ? isVideoOff : remoteVideoOff[expandedUser.sid] || false}
+                  isPortalLive={!isSelfExpanded && (remotePortalModes[expandedUser.sid] ?? false)}
+                  portalStatus={!isSelfExpanded ? (remoteMeetingScopes[expandedUser.sid] ? 'meeting' : (remotePortalModes[expandedUser.sid] ? 'portal' : 'live')) : null}
+                  peerSid={isSelfExpanded ? mySid : expandedUser.sid}
+                  {...(!isSelfExpanded ? getHighlight(expandedUser.campus) : {})}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <ActivityToast />
       <NotificationToast />

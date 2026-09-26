@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Mic, MicOff, MonitorUp, Radio, VideoOff, User, Lock, Camera, Hand, AlertTriangle } from 'lucide-react';
+import { Mic, MicOff, MonitorUp, Radio, VideoOff, User, Lock, Camera, Hand, AlertTriangle, Maximize2 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useSessionStore } from '../../stores/sessionStore';
 
@@ -18,6 +18,8 @@ interface VideoCardProps {
   isScreenShare?: boolean;
   portalStatus?: 'portal' | 'meeting' | 'live' | null;
   peerSid?: string;
+  onExpand?: () => void;
+  isExpanded?: boolean;
 }
 
 export function VideoCard({
@@ -35,6 +37,8 @@ export function VideoCard({
   isScreenShare = false,
   portalStatus = null,
   peerSid,
+  onExpand,
+  isExpanded = false,
 }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const mirrorVideo = useSettingsStore((s) => s.mirrorVideo);
@@ -91,7 +95,7 @@ export function VideoCard({
     : '';
 
   return (
-    <div className={`relative rounded-xl overflow-hidden bg-gray-900 border ${showEmergency ? 'border-red-500/70 animate-emergency-glow' : 'border-gray-800/60'} group transition-all duration-300 ${highlightClasses} ${isSmall ? 'h-20 sm:h-24 md:h-32' : isScreenShare ? 'h-full' : 'h-full max-h-[500px]'}`}>
+    <div className={`relative rounded-xl overflow-hidden bg-gray-900 border ${showEmergency ? 'border-red-500/70 animate-emergency-glow' : 'border-gray-800/60'} group transition-all duration-300 ${highlightClasses} ${isSmall ? 'h-20 sm:h-24 md:h-32' : isScreenShare || isExpanded ? 'h-full' : 'h-full max-h-[500px]'}`}>
       {stream && !isVideoOff ? (
         <video
           ref={videoRef}
@@ -192,6 +196,20 @@ export function VideoCard({
               <span className="flex items-center gap-1 text-[10px] text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-1.5 py-0.5 rounded animate-pulse">
                 <Radio size={10} /> LIVE
               </span>
+            )}
+            {onExpand && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExpand();
+                }}
+                title="Expand"
+                aria-label="Expand to fullscreen"
+                className="p-1 rounded bg-black/40 border border-white/10 text-gray-300 hover:text-white hover:bg-black/70 hover:border-white/25 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
+              >
+                <Maximize2 size={11} />
+              </button>
             )}
           </div>
         </div>

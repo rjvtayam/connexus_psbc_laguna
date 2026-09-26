@@ -6,9 +6,10 @@ import {
   MessageSquare, CircleDot, Users, KeyRound, FileText, Settings,
   Headphones, CheckCircle2,
   Lock, Eye, Fingerprint, Mail, MapPin, Phone,
-  Smartphone, Tablet
+  Smartphone, Tablet, Code2, GraduationCap, Crown, BriefcaseBusiness, Loader2
 } from 'lucide-react';
 import { DemoTour } from '../components/demo/DemoTour';
+import { API_BASE_URL } from '../lib/constants';
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -1513,8 +1514,84 @@ function CTASection({ onGetStarted }: { onGetStarted: () => void }) {
 }
 
 /* ─── FOOTER ─── */
+type TeamMember = { full_name: string; role: string; campus: string };
+
+const TEAM_ROLE_RANK: Record<string, number> = { admin: 0, principal: 1, teacher: 2, staff: 3 };
+
+const FALLBACK_TEAM: TeamMember[] = [
+  { full_name: 'JUSTIN RAIN M. SANTOS', role: 'admin', campus: 'control_room' },
+  { full_name: 'ARIANNE LOULLE L. GATBONTON', role: 'principal', campus: 'paete' },
+  { full_name: 'MARIA JENILAH C. OSERO', role: 'principal', campus: 'pagsanjan' },
+  { full_name: 'MART JACOB C. CABRIGA', role: 'teacher', campus: 'pagsanjan' },
+  { full_name: 'REEMA SHANE P. AFABLE', role: 'teacher', campus: 'paete' },
+  { full_name: 'ANGELYN GIL BACSAFRA', role: 'staff', campus: 'pagsanjan' },
+  { full_name: 'JUANA FRANCEZKA V. HERRADURA', role: 'staff', campus: 'pagsanjan' },
+  { full_name: 'RIMER JAMES G. TUMBAGA', role: 'staff', campus: 'paete' },
+];
+
+const teamInitials = (name: string) =>
+  name.split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+
+const teamCampusLabel = (campus: string) =>
+  campus === 'control_room' ? 'Control Room' : campus.charAt(0).toUpperCase() + campus.slice(1);
+
+const teamRoleStyle: Record<string, { icon: React.ReactNode; cls: string }> = {
+  admin: { icon: <Shield size={9} />, cls: 'text-rose-300 bg-rose-500/10 border-rose-500/30' },
+  principal: { icon: <Crown size={9} />, cls: 'text-amber-300 bg-amber-500/10 border-amber-500/30' },
+  teacher: { icon: <GraduationCap size={9} />, cls: 'text-cyan-300 bg-cyan-500/10 border-cyan-500/30' },
+  staff: { icon: <BriefcaseBusiness size={9} />, cls: 'text-purple-300 bg-purple-500/10 border-purple-500/30' },
+};
+
+const teamAvatarCls: Record<string, string> = {
+  paete: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30',
+  pagsanjan: 'bg-purple-500/15 text-purple-300 border border-purple-500/30',
+  control_room: 'bg-primary-500/15 text-primary-300 border border-primary-500/30',
+};
+
 function Footer() {
-  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | null>(null);
+  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'team' | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[] | null>(null);
+  const [teamStatus, setTeamStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+
+  const teamFetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (activeModal !== 'team') {
+      teamFetchedRef.current = false;
+      setTeamStatus('idle');
+      return;
+    }
+    if (teamFetchedRef.current) return;
+    teamFetchedRef.current = true;
+    let cancelled = false;
+    setTeamStatus('loading');
+    fetch(`${API_BASE_URL}/team`, { headers: { Accept: 'application/json' } })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        if (Array.isArray(data)) {
+          setTeamMembers(data as TeamMember[]);
+          setTeamStatus('ready');
+        } else {
+          setTeamStatus('error');
+        }
+      })
+      .catch(() => { if (!cancelled) setTeamStatus('error'); });
+    return () => { cancelled = true; };
+  }, [activeModal]);
+
+  useEffect(() => {
+    if (!activeModal) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActiveModal(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [activeModal]);
+
 
   const privacySections = [
     { icon: <Users size={15} />, title: 'Information We Collect', text: 'We collect account information (name, email, role, campus), video/audio streams during live sessions, chat messages, and usage analytics. All data is stored securely in encrypted databases.' },
@@ -1656,6 +1733,7 @@ function Footer() {
             </p>
             <div className="flex gap-4">
               <a href="mailto:support@connexus.edu.ph" className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Support</a>
+              <button onClick={() => setActiveModal('team')} className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Teams</button>
               <button onClick={() => setActiveModal('privacy')} className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Privacy</button>
               <button onClick={() => setActiveModal('terms')} className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors">Terms</button>
             </div>
@@ -1680,6 +1758,129 @@ function Footer() {
         termsSections,
         '/images/terms-img.webp'
       )}
+
+      {activeModal === 'team' && (() => {
+        const displayMembers: TeamMember[] = teamStatus === 'error'
+          ? FALLBACK_TEAM
+          : [...(teamMembers || [])].sort((a, b) => {
+              const rank = (TEAM_ROLE_RANK[a.role] ?? 9) - (TEAM_ROLE_RANK[b.role] ?? 9);
+              return rank !== 0 ? rank : a.full_name.localeCompare(b.full_name);
+            });
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setActiveModal(null)}>
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            <div
+              className="relative w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-2xl border border-gray-700/40 bg-gray-900/95 backdrop-blur-xl shadow-[0_0_60px_-12px_rgba(0,0,0,0.5)] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Gradient header */}
+              <div className="relative px-6 py-4 bg-gradient-to-r from-slate-700/80 via-indigo-700/80 to-cyan-700/80 overflow-hidden">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djZoNnYtNmgtNnptMC0zMHY2aDZ2LTZoLTZ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-40" />
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center">
+                      <Users size={18} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-orbitron text-lg font-bold text-white tracking-wide">Our Team</h3>
+                      <p className="text-[10px] text-white/50 mt-0.5">The people behind CONNEXUS</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setActiveModal(null)}
+                    className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="overflow-y-auto p-5 sm:p-6 space-y-6">
+                {/* Special thanks — developer */}
+                <div className="relative rounded-xl border border-primary-500/30 bg-gradient-to-br from-primary-500/10 via-gray-900/60 to-cyan-500/10 p-4 sm:p-5 overflow-hidden animate-fade-in-up">
+                  <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-primary-500/10 blur-3xl" />
+                  <div className="relative flex flex-col sm:flex-row items-center gap-4">
+                    <div className="relative flex-shrink-0 w-16 h-16">
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary-500/50 to-cyan-400/50 blur-md animate-pulse-glow" />
+                      <div className="absolute inset-0 rounded-full border border-primary-400/30 animate-ping" style={{ animationDuration: '3s' }} />
+                      <div className="absolute inset-0 rounded-full border border-cyan-400/20 animate-ping" style={{ animationDuration: '4s', animationDelay: '1s' }} />
+                      <div className="relative inset-0 w-16 h-16 rounded-full bg-gray-950 border border-primary-400/40 flex items-center justify-center animate-float">
+                        <Code2 size={26} className="text-primary-300" />
+                      </div>
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                        <Sparkles size={10} /> Special Thanks
+                      </span>
+                      <h4 className="mt-2 text-lg font-bold text-white">R.J Verdan Tayam</h4>
+                      <p className="text-sm text-gray-300">A Software Engineer and Full-Stack Web Developer</p>
+                      <p className="mt-1.5 text-xs text-gray-500 leading-relaxed">
+                        Lead developer of CONNEXUS — architecting, building, and maintaining the platform end to end.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Members */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Members</span>
+                    <span className="flex-1 h-px bg-gradient-to-r from-gray-700 to-transparent" />
+                    <span className="text-[10px] text-gray-500">
+                      {teamStatus === 'loading' ? '…' : `${displayMembers.length} active`}
+                    </span>
+                  </div>
+
+                  {teamStatus === 'loading' && (
+                    <div className="flex items-center justify-center gap-2 py-10 text-gray-400 text-sm">
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Loading team…</span>
+                    </div>
+                  )}
+
+                  {teamStatus === 'error' && (
+                    <p className="text-[11px] text-amber-400/80 mb-3">
+                      Couldn&apos;t reach the server — showing saved team info.
+                    </p>
+                  )}
+
+                  {teamStatus !== 'loading' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {displayMembers.map((m, i) => {
+                        const role = teamRoleStyle[m.role] || { icon: <Users size={9} />, cls: 'text-gray-300 bg-gray-500/10 border-gray-500/30' };
+                        return (
+                          <div
+                            key={`${m.full_name}-${i}`}
+                            className="animate-bounce-in flex items-center gap-3 rounded-xl border border-gray-800/70 bg-gray-800/30 hover:border-gray-700/80 hover:bg-gray-800/50 p-3 transition-all"
+                            style={{ animationDelay: `${i * 70}ms` }}
+                          >
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold animate-float ${teamAvatarCls[m.campus] || 'bg-gray-700/40 text-gray-300 border border-gray-600/40'}`}
+                              style={{ animationDelay: `${(i % 5) * 400}ms` }}
+                            >
+                              {teamInitials(m.full_name)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-white truncate">{m.full_name}</p>
+                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                <span className={`inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border ${role.cls}`}>
+                                  {role.icon} {m.role}
+                                </span>
+                                <span className="text-[10px] text-gray-500">{teamCampusLabel(m.campus)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }
