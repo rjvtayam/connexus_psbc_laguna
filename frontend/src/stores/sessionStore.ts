@@ -19,6 +19,7 @@ export interface ChatMessage {
 interface SessionState {
   currentRoom: string | null;
   roomUsers: RoomUser[];
+  orphanStreams: Record<string, MediaStream>;
   isEmergency: boolean;
   emergencyMessage: string | null;
   emergencyTriggeredBy: string | null;
@@ -84,6 +85,7 @@ interface SessionState {
 export const useSessionStore = create<SessionState>((set) => ({
   currentRoom: null,
   roomUsers: [],
+  orphanStreams: {},
   isEmergency: false,
   emergencyMessage: null,
   emergencyTriggeredBy: null,
@@ -113,24 +115,53 @@ export const useSessionStore = create<SessionState>((set) => ({
 
   setCurrentRoom: (roomId) => set({ currentRoom: roomId }),
 
-  setRoomUsers: (users) => set({ roomUsers: users }),
+  setRoomUsers: (users) =>
+    set((state) => {
+      const orphans = state.orphanStreams;
+      if (Object.keys(orphans).length === 0) return { roomUsers: users };
+      let applied = false;
+      const merged = users.map((u) => {
+        if (!u.stream && orphans[u.sid]) {
+          applied = true;
+          return { ...u, stream: orphans[u.sid] };
+        }
+        return u;
+      });
+      return { roomUsers: applied ? merged : users };
+    }),
 
   addRoomUser: (user) =>
     set((state) => ({
-      roomUsers: [...state.roomUsers.filter((u) => u.sid !== user.sid), user],
+      roomUsers: [
+        ...state.roomUsers.filter((u) => u.sid !== user.sid),
+        user.stream ? user : { ...user, stream: state.orphanStreams[user.sid] },
+      ],
     })),
 
   removeRoomUser: (sid) =>
-    set((state) => ({
-      roomUsers: state.roomUsers.filter((u) => u.sid !== sid),
-    })),
+    set((state) => {
+      const nextOrphans = { ...state.orphanStreams };
+      delete nextOrphans[sid];
+      return {
+        roomUsers: state.roomUsers.filter((u) => u.sid !== sid),
+        orphanStreams: nextOrphans,
+      };
+    }),
 
   updateUserStream: (sid, stream) =>
-    set((state) => ({
-      roomUsers: state.roomUsers.map((u) =>
-        u.sid === sid ? { ...u, stream } : u
-      ),
-    })),
+    set((state) => {
+      const exists = state.roomUsers.some((u) => u.sid === sid);
+      if (exists) {
+        return {
+          roomUsers: state.roomUsers.map((u) =>
+            u.sid === sid ? { ...u, stream } : u
+          ),
+        };
+      }
+      // ontrack fired before room_users delivered this sid — buffer it so the
+      // stream is applied as soon as the user appears (was silently dropped)
+      return { orphanStreams: { ...state.orphanStreams, [sid]: stream } };
+    }),
 
   setEmergency: (active, message, triggeredBy, triggeredByRole, campus, campusOnly, triggeredBySid) =>
     set({ isEmergency: active, emergencyMessage: message || null, emergencyTriggeredBy: triggeredBy || null, emergencyTriggeredByRole: triggeredByRole || null, emergencyTriggeredBySid: triggeredBySid || null, emergencyCampus: campus || null, emergencyCampusOnly: campusOnly ?? false }),
