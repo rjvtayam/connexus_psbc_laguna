@@ -24,7 +24,7 @@ sio = socketio.AsyncServer(
     async_mode="asgi",
     cors_allowed_origins=settings.origins_list,
     logger=False,
-    ping_timeout=60,
+    ping_timeout=120,
     ping_interval=25,
 )
 
@@ -35,6 +35,9 @@ system_metrics_subscribers: set[str] = set()
 
 chat_history: dict[str, list[dict]] = {}
 CHAT_HISTORY_LIMIT = 200
+
+# Room-level meeting state: who initiated the active meeting in each room
+room_meetings: dict[str, dict] = {}
 
 
 @sio.event
@@ -95,7 +98,11 @@ async def disconnect(sid, reason=""):
             except Exception:
                 pass
 
-        await _broadcast_room_users(room_id)
+        meeting = room_meetings.get(room_id)
+        if meeting and session and meeting.get("initiator_user_id") == session.get("user_id"):
+            await _end_room_meeting(room_id)
+        else:
+            await _broadcast_room_users(room_id)
 
     if session and session.get("user_id"):
         try:
@@ -162,6 +169,20 @@ async def join_room(sid, data):
 
     await _broadcast_room_users(room_id)
     await sio.emit("room_users", await _build_room_users_payload(room_id), room=sid)
+
+    meeting = room_meetings.get(room_id)
+    if (
+        meeting
+        and meeting.get("initiator_user_id") != session.get("user_id")
+        and meeting.get("scope") == session.get("campus")
+        and session.get("role") in MEETING_ROLES
+    ):
+        await sio.emit("meeting_invite", {
+            "campus": meeting.get("scope"),
+            "from_sid": meeting.get("initiator_sid"),
+            "from_name": meeting.get("initiator_name"),
+            "late": True,
+        }, room=sid)
 
     for existing_sid in list(room_members[room_id]):
         if existing_sid == sid:
@@ -252,6 +273,12 @@ async def leave_room(sid, data):
     if room_id in room_members:
         room_members[room_id].discard(sid)
 
+    meeting = room_meetings.get(room_id)
+    if meeting and meeting.get("initiator_user_id") == session.get("user_id"):
+        # The initiator leaving ends the meeting for everyone in the room
+        await _end_room_meeting(room_id)
+        return
+
     if had_meeting:
         await sio.emit("peer_meeting_changed", {
             "sid": sid,
@@ -294,6 +321,57 @@ async def _broadcast_room_users(room_id: str):
     payload = await _build_room_users_payload(room_id)
     print(f"[Backend] Broadcasting room_users ({len(payload['users'])} users) to room={room_id}: {[u['user'] for u in payload['users']]}")
     await sio.emit("room_users", payload, room=room_id)
+
+
+async def _end_room_meeting(room_id: str):
+    meeting = room_meetings.pop(room_id, None)
+    if not meeting:
+        return
+    for member_sid in list(room_members.get(room_id, set())):
+        try:
+            member_session = await sio.get_session(member_sid)
+        except (KeyError, Exception):
+            continue
+        if not member_session or not member_session.get("meeting_active", False):
+            continue
+        member_session["meeting_active"] = False
+        member_session["meeting_scope"] = None
+        try:
+            await sio.save_session(member_sid, member_session)
+        except (KeyError, Exception):
+            continue
+        await sio.emit("peer_meeting_changed", {
+            "sid": member_sid,
+            "user": member_session.get("full_name"),
+            "active": False,
+            "campus": None,
+        }, room=room_id)
+    await sio.emit("meeting_ended", {"campus": meeting.get("scope")}, room=room_id)
+    print(f"[Backend] room meeting ended: room={room_id}, scope={meeting.get('scope')}")
+    await _broadcast_room_users(room_id)
+
+
+async def _send_meeting_invites(room_id: str, meeting: dict, exclude_sid=None):
+    scope = meeting.get("scope")
+    for member_sid in list(room_members.get(room_id, set())):
+        if member_sid == exclude_sid:
+            continue
+        try:
+            member_session = await sio.get_session(member_sid)
+        except (KeyError, Exception):
+            continue
+        if not member_session:
+            continue
+        if member_session.get("campus") != scope:
+            continue
+        if member_session.get("role") not in MEETING_ROLES:
+            continue
+        await sio.emit("meeting_invite", {
+            "campus": scope,
+            "from_sid": meeting.get("initiator_sid"),
+            "from_name": meeting.get("initiator_name"),
+            "late": False,
+        }, room=member_sid)
 
 
 @sio.event
@@ -891,14 +969,18 @@ async def portal_mode_changed(sid, data):
     session["portal_meeting"] = meeting
 
     if active and session.get("meeting_active", False):
+        meeting = room_meetings.get(room_id)
+        if meeting and meeting.get("initiator_user_id") == session.get("user_id"):
+            await _end_room_meeting(room_id)
+        else:
+            await sio.emit("peer_meeting_changed", {
+                "sid": sid,
+                "user": session.get("full_name"),
+                "active": False,
+                "campus": None,
+            }, room=room_id)
         session["meeting_active"] = False
         session["meeting_scope"] = None
-        await sio.emit("peer_meeting_changed", {
-            "sid": sid,
-            "user": session.get("full_name"),
-            "active": False,
-            "campus": None,
-        }, room=room_id)
 
     await sio.save_session(sid, session)
     await sio.emit("peer_portal_mode", {
@@ -946,32 +1028,131 @@ async def meeting_changed(sid, data):
         if scope is None:
             await _echo_state()
             return
+
+        meeting = room_meetings.get(room_id)
+        is_initiator = meeting is not None and meeting.get("initiator_user_id") == session.get("user_id")
+
+        if meeting is not None and scope != meeting.get("scope"):
+            # Scope changed — end the old room meeting before starting the new one
+            await _end_room_meeting(room_id)
+            meeting = None
+            is_initiator = False
+
+        if meeting is None:
+            meeting = {
+                "scope": scope,
+                "initiator_user_id": session.get("user_id"),
+                "initiator_sid": sid,
+                "initiator_name": session.get("full_name"),
+            }
+            room_meetings[room_id] = meeting
+            newly_started = True
+        else:
+            newly_started = False
+            if is_initiator:
+                # Initiator reconnect re-assert (idempotent): refresh sid, don't re-invite
+                meeting["initiator_sid"] = sid
+            elif campus != scope:
+                await _echo_state()
+                return
+
         previous_scope = session.get("meeting_scope")
         session["meeting_active"] = True
         session["meeting_scope"] = scope
-    else:
-        previous_scope = session.get("meeting_scope")
-        session["meeting_active"] = False
-        session["meeting_scope"] = None
+        await sio.save_session(sid, session)
 
-    await sio.save_session(sid, session)
-
-    if session.get("screen_sharing", False):
-        new_scope = session.get("meeting_scope")
-        if previous_scope != new_scope:
+        if session.get("screen_sharing", False) and previous_scope != scope:
             await sio.emit("screen_share_stopped", {
                 "sid": sid,
                 "user": session.get("full_name"),
             }, room=room_id, skip_sid=sid)
-            await _emit_screen_share_started(room_id, sid, session, new_scope)
+            await _emit_screen_share_started(room_id, sid, session, scope)
 
-    print(f"[Backend] meeting_changed: {session.get('full_name')} ({campus}) -> active={session.get('meeting_active')}, scope={session.get('meeting_scope')}")
+        print(f"[Backend] meeting_changed: {session.get('full_name')} ({campus}) -> active=True, scope={scope}")
+        await sio.emit("peer_meeting_changed", {
+            "sid": sid,
+            "user": session.get("full_name"),
+            "active": True,
+            "campus": scope,
+        }, room=room_id)
+        if newly_started:
+            await _send_meeting_invites(room_id, meeting, exclude_sid=sid)
+        await _broadcast_room_users(room_id)
+        return
+
+    previous_scope = session.get("meeting_scope")
+    meeting = room_meetings.get(room_id)
+    if meeting and meeting.get("initiator_user_id") == session.get("user_id"):
+        # Initiator stopping the meeting ends it for the whole room
+        print(f"[Backend] meeting_changed: {session.get('full_name')} ended room meeting ({session.get('campus')})")
+        await _end_room_meeting(room_id)
+        if session.get("screen_sharing", False) and previous_scope is not None:
+            session["meeting_active"] = False
+            session["meeting_scope"] = None
+            await sio.save_session(sid, session)
+            await sio.emit("screen_share_stopped", {
+                "sid": sid,
+                "user": session.get("full_name"),
+            }, room=room_id, skip_sid=sid)
+            await _emit_screen_share_started(room_id, sid, session, None)
+        return
+
+    # A non-initiator leaving the meeting only leaves themselves; the meeting continues
+    session["meeting_active"] = False
+    session["meeting_scope"] = None
+    await sio.save_session(sid, session)
     await sio.emit("peer_meeting_changed", {
         "sid": sid,
         "user": session.get("full_name"),
-        "active": bool(session.get("meeting_active", False)),
+        "active": False,
+        "campus": None,
+    }, room=room_id)
+
+    if session.get("screen_sharing", False) and previous_scope is not None:
+        await sio.emit("screen_share_stopped", {
+            "sid": sid,
+            "user": session.get("full_name"),
+        }, room=room_id, skip_sid=sid)
+        await _emit_screen_share_started(room_id, sid, session, None)
+
+    print(f"[Backend] meeting_changed: {session.get('full_name')} ({campus}) -> active=False, scope=None")
+    await _echo_state()
+    await _broadcast_room_users(room_id)
+
+
+@sio.event
+async def meeting_invite_response(sid, data):
+    try:
+        session = await sio.get_session(sid)
+    except (KeyError, Exception):
+        return
+
+    room_id = session.get("current_room")
+    if not room_id or not data:
+        return
+
+    meeting = room_meetings.get(room_id)
+    if not meeting:
+        return
+    if not data.get("accept"):
+        # Declines are client-side only (banner) — no server state
+        return
+    if session.get("role") not in MEETING_ROLES or session.get("campus") != meeting.get("scope"):
+        return
+    if session.get("portal_active", False) or session.get("meeting_active", False):
+        return
+
+    session["meeting_active"] = True
+    session["meeting_scope"] = meeting.get("scope")
+    await sio.save_session(sid, session)
+    print(f"[Backend] meeting_invite_response: {session.get('full_name')} joined meeting ({meeting.get('scope')})")
+    await sio.emit("peer_meeting_changed", {
+        "sid": sid,
+        "user": session.get("full_name"),
+        "active": True,
         "campus": session.get("meeting_scope"),
     }, room=room_id)
+    await _broadcast_room_users(room_id)
 
 
 @sio.event

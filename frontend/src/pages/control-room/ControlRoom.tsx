@@ -28,6 +28,8 @@ import { WelcomeToast } from '../../components/demo/WelcomeToast';
 import { LiveDemo } from '../../components/demo/LiveDemo';
 import { TalkStatusIndicator } from '../../components/indicators/TalkStatusIndicator';
 import { TalkRequestModal } from '../../components/ui/TalkRequestModal';
+import { MeetingInviteToast } from '../../components/meeting/MeetingInviteToast';
+import { MeetingJoinBanner } from '../../components/meeting/MeetingJoinBanner';
 
 export function ControlRoom() {
   const roomId = ROOMS.MAIN;
@@ -286,8 +288,8 @@ export function ControlRoom() {
   return (
     <DashboardLayout>
       <div className="h-full flex flex-col p-1.5 sm:p-3 md:p-4">
-        {/* Header */}
-        <header className="flex items-center justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-3 md:mb-4 animate-fade-in-up">
+        {/* Header — relative z-30 so the Online dropdown paints above the animated video grid */}
+        <header className="relative z-30 flex items-center justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-3 md:mb-4 animate-fade-in-up">
           <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-wrap">
             <h1 className="font-orbitron text-sm sm:text-base font-bold text-white tracking-wide truncate">Control Room</h1>
             <span className="flex items-center gap-1 text-green-400 font-medium text-[10px] sm:text-xs">
@@ -391,6 +393,8 @@ export function ControlRoom() {
             <div data-demo="btn-bell"><BulletinBoard /></div>
           </div>
         </header>
+
+        <MeetingJoinBanner />
 
         {cameraError && (
           <div className="mb-1.5 sm:mb-3 flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] sm:text-xs">
@@ -702,6 +706,7 @@ export function ControlRoom() {
       <ActivityToast />
       <NotificationToast />
       <TalkRequestModal />
+      <MeetingInviteToast />
     </DashboardLayout>
   );
 }

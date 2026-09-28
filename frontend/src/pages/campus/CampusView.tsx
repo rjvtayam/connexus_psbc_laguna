@@ -27,6 +27,8 @@ import { MicTalkingIndicator } from '../../components/indicators/MicTalkingIndic
 import { WelcomeToast } from '../../components/demo/WelcomeToast';
 import { LiveDemo } from '../../components/demo/LiveDemo';
 import { TalkRequestModal } from '../../components/ui/TalkRequestModal';
+import { MeetingInviteToast } from '../../components/meeting/MeetingInviteToast';
+import { MeetingJoinBanner } from '../../components/meeting/MeetingJoinBanner';
 
 export function CampusView() {
   const { campusName } = useParams<{ campusName: string }>();
@@ -317,6 +319,8 @@ export function CampusView() {
           </div>
         </header>
 
+        <MeetingJoinBanner />
+
         {cameraError && (
           <div className="mb-1.5 sm:mb-3 flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] sm:text-xs">
             <AlertTriangle size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
@@ -542,6 +546,7 @@ export function CampusView() {
       <ActivityToast />
       <NotificationToast />
       <TalkRequestModal />
+      <MeetingInviteToast />
     </DashboardLayout>
   );
 }

@@ -98,6 +98,9 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
       const me = users.find((u: any) => u.sid === mySid);
       if (me && me.meeting && me.meeting_campus && state.meetingScope !== me.meeting_campus) {
         state.setMeetingScope(me.meeting_campus);
+      } else if (me && !me.meeting && state.meetingScope) {
+        // Server cleared my meeting flags (ended/other client left) — drop my scope
+        state.setMeetingScope(null);
       }
     }
 
@@ -282,6 +285,26 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
     setTimeout(() => {
       useSessionStore.getState().clearTalkRequest();
     }, 4000);
+  });
+
+  socket.on('meeting_invite', (data) => {
+    console.log('[Socket] meeting_invite:', data.campus, 'from', data.from_name, 'late=', data.late);
+    const state = useSessionStore.getState();
+    if (state.meetingScope) return;
+    state.setMeetingInvite({
+      campus: data.campus,
+      from_sid: data.from_sid,
+      from_name: data.from_name,
+      late: !!data.late,
+    });
+  });
+
+  socket.on('meeting_ended', (data) => {
+    console.log('[Socket] meeting_ended:', data?.campus);
+    const state = useSessionStore.getState();
+    state.setMeetingInvite(null);
+    state.setMeetingInviteDeclined(false);
+    if (state.meetingScope) state.setMeetingScope(null);
   });
 
   socket.on('bulletin_new', (data) => {

@@ -41,6 +41,8 @@ interface SessionState {
   talkRequest: { from_sid: string; from_name: string; from_campus: string; from_role: string; target_campus: string } | null;
   talkResponseStatus: 'idle' | 'pending' | 'accepted' | 'rejected';
   talkResponderName: string | null;
+  meetingInvite: { campus: string; from_sid: string; from_name: string; late: boolean } | null;
+  meetingInviteDeclined: boolean;
   chatMessages: ChatMessage[];
   unreadAllCount: number;
   unreadCampusCount: number;
@@ -67,6 +69,8 @@ interface SessionState {
   setTalkRequest: (request: SessionState['talkRequest']) => void;
   setTalkResponseStatus: (status: SessionState['talkResponseStatus'], responderName?: string) => void;
   clearTalkRequest: () => void;
+  setMeetingInvite: (invite: SessionState['meetingInvite']) => void;
+  setMeetingInviteDeclined: (declined: boolean) => void;
   addFloatingReaction: (sid: string, emoji: string) => void;
   removeFloatingReaction: (id: number) => void;
   setScreenSharer: (sid: string | null) => void;
@@ -107,6 +111,8 @@ export const useSessionStore = create<SessionState>((set) => ({
   talkRequest: null,
   talkResponseStatus: 'idle',
   talkResponderName: null,
+  meetingInvite: null,
+  meetingInviteDeclined: false,
   chatMessages: [],
   unreadAllCount: 0,
   unreadCampusCount: 0,
@@ -220,6 +226,11 @@ export const useSessionStore = create<SessionState>((set) => ({
   setTalkResponseStatus: (status, responderName) => set({ talkResponseStatus: status, talkResponderName: responderName || null }),
 
   clearTalkRequest: () => set({ talkRequest: null, talkResponseStatus: 'idle', talkResponderName: null }),
+
+  setMeetingInvite: (invite) =>
+    set(invite ? { meetingInvite: invite, meetingInviteDeclined: false } : { meetingInvite: null }),
+
+  setMeetingInviteDeclined: (declined) => set({ meetingInviteDeclined: declined }),
 
   addFloatingReaction: (sid, emoji) =>
     set((state) => {
