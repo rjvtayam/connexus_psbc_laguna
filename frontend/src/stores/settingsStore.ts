@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export interface SettingsState {
   hdVideo: boolean;
   mirrorVideo: boolean;
+  settingsVersion: number;
   hdAudio: boolean;
   echoCancellation: boolean;
   noiseSuppression: boolean;
@@ -50,7 +51,8 @@ function saveToStorage(state: SettingsState) {
 
 const defaults = {
   hdVideo: true,
-  mirrorVideo: false,
+  mirrorVideo: true,
+  settingsVersion: 2,
   hdAudio: true,
   echoCancellation: true,
   noiseSuppression: true,
@@ -91,7 +93,16 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   loadSettings: () => {
     const saved = loadFromStorage();
-    set({ ...defaults, ...saved });
+    const migrated = (saved.settingsVersion ?? 1) < 2;
+    const next = { ...defaults, ...saved };
+    if (migrated) {
+      next.mirrorVideo = true;
+      next.settingsVersion = 2;
+    }
+    set(next);
+    if (migrated) {
+      setTimeout(() => saveToStorage(get()), 0);
+    }
     if (get().darkMode) {
       document.documentElement.classList.add('dark');
     } else {

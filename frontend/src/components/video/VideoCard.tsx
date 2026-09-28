@@ -102,7 +102,7 @@ export function VideoCard({
           autoPlay
           playsInline
           muted={isLocal}
-          className={`w-full h-full object-cover ${isLocal && mirrorVideo ? 'scale-x-[-1]' : ''}`}
+          className={`w-full h-full object-cover ${isLocal && !isScreenShare && mirrorVideo ? 'scale-x-[-1]' : ''}`}
         />
       ) : (
         <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 relative overflow-hidden">

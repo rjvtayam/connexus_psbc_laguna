@@ -112,19 +112,26 @@ export function MeetingToggle({ compact = false }: MeetingToggleProps) {
           <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
             Meet with campus
           </div>
-          {options.map((campus) => (
-            <button
-              key={campus}
-              onClick={() => startMeeting(campus)}
-              className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-xs font-medium text-gray-200 hover:bg-amber-500/15 hover:text-amber-300 transition-colors duration-150"
-            >
-              <Lock size={12} className="text-amber-400" />
-              Meet in {campus === 'paete' ? 'PAETE' : 'PAGSANJAN'}
-              {campus === myCampus && (
-                <span className="ml-auto text-[9px] uppercase text-gray-500">yours</span>
-              )}
-            </button>
-          ))}
+          {options.map((campus) => {
+            const isPagsanjan = campus === 'pagsanjan';
+            return (
+              <button
+                key={campus}
+                onClick={() => startMeeting(campus)}
+                className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-xs font-medium transition-colors duration-150 ${
+                  isPagsanjan
+                    ? 'text-purple-200 hover:bg-purple-500/15 hover:text-purple-300'
+                    : 'text-gray-200 hover:bg-amber-500/15 hover:text-amber-300'
+                }`}
+              >
+                <Lock size={12} className={isPagsanjan ? 'text-purple-400' : 'text-amber-400'} />
+                Meet in {campus === 'paete' ? 'PAETE' : 'PAGSANJAN'}
+                {campus === myCampus && (
+                  <span className="ml-auto text-[9px] uppercase text-gray-500">yours</span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
