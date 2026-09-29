@@ -5,6 +5,7 @@ export interface ChatMessage {
   id?: string;
   sid: string;
   user: string;
+  user_id?: string;
   campus: string;
   role: string;
   message: string;

@@ -215,6 +215,7 @@ async def join_room(sid, data):
                 history = [
                     {
                         "id": str(m.id),
+                        "user_id": str(m.user_id) if m.user_id else None,
                         "user": m.full_name,
                         "campus": m.campus,
                         "role": m.role,
@@ -789,11 +790,17 @@ async def chat_message(sid, data):
     reply_to_message = data.get("reply_to_message")
 
     import uuid as _uuid
+    if reply_to_id:
+        try:
+            reply_to_id = str(_uuid.UUID(str(reply_to_id)))
+        except Exception:
+            reply_to_id = None
     msg_id = str(_uuid.uuid4())
 
     msg_data = {
         "id": msg_id,
         "sid": sid,
+        "user_id": session.get("user_id"),
         "user": session.get("full_name"),
         "campus": sender_campus,
         "role": session.get("role"),
@@ -805,6 +812,7 @@ async def chat_message(sid, data):
 
     if reply_to_id:
         msg_data["reply_to_id"] = reply_to_id
+    if reply_to_user or reply_to_message:
         msg_data["reply_to_user"] = reply_to_user
         msg_data["reply_to_message"] = reply_to_message
 

@@ -27,7 +27,8 @@ function isSameDay(a: string, b: string): boolean {
 }
 
 function isSameSender(a: ChatMessage, b: ChatMessage): boolean {
-  return a.user === b.user && isSameDay(a.timestamp, b.timestamp);
+  const sameSender = a.user_id && b.user_id ? a.user_id === b.user_id : a.user === b.user;
+  return sameSender && isSameDay(a.timestamp, b.timestamp);
 }
 
 const CHAT_REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '😡'];
@@ -166,7 +167,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
         campus_scope: activeTab === 'campus' ? effectiveCampus : undefined,
       };
       if (replyingTo) {
-        payload.reply_to_id = replyingTo.timestamp;
+        payload.reply_to_id = replyingTo.id || replyingTo.timestamp;
         payload.reply_to_user = replyingTo.user;
         payload.reply_to_message = replyingTo.message;
       }
@@ -398,7 +399,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
             </div>
           )}
           {filteredMessages.map((msg, i) => {
-            const isMe = msg.user === user?.full_name;
+            const isMe = msg.user_id ? msg.user_id === user?.id : msg.user === user?.full_name;
             const isCampusMsg = msg.target === 'campus';
             const prev = filteredMessages[i - 1];
             const next = filteredMessages[i + 1];

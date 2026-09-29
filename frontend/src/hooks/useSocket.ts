@@ -9,6 +9,7 @@ import { notificationsApi } from '../api/notifications.api';
 import { queryClient } from '../lib/queryClient';
 
 let socket: Socket | null = null;
+let socketUserId: string | null = null;
 let pendingEvents: Array<{ event: string; data?: any }> = [];
 const MAX_PENDING_EVENTS = 50;
 
@@ -16,14 +17,32 @@ export function getSocket(): Socket | null {
   return socket;
 }
 
-function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
-  if (socket) return socket;
+function teardownSocket() {
+  if (!socket) return;
+  socket.removeAllListeners();
+  socket.disconnect();
+  socket = null;
+  socketUserId = null;
+  pendingEvents = [];
+}
+
+function initSocket(token: string, userId: string | undefined, setRoomUsers: any, setEmergency: any) {
+  const uid = userId ?? null;
+  if (socket && socketUserId === uid) {
+    socket.auth = { token };
+    return socket;
+  }
+  if (socket) {
+    console.log('[Socket] User changed, tearing down stale socket (was user', socketUserId, ')');
+    teardownSocket();
+  }
 
   console.log('[Socket] Creating new socket connection...');
   socket = io(SOCKET_URL, {
     auth: { token },
     transports: ['websocket', 'polling'],
   });
+  socketUserId = uid;
 
   socket.on('connect', () => {
     console.log('[Socket] Connected, sid:', socket?.id);
@@ -354,24 +373,20 @@ function initSocket(token: string, setRoomUsers: any, setEmergency: any) {
 
 export function useSocket() {
   const token = useAuthStore((state) => state.token);
+  const userId = useAuthStore((state) => state.user?.id);
   const { setRoomUsers, setEmergency } = useSessionStore();
   const [, forceUpdate] = useState(0);
 
   useEffect(() => {
     if (!token) {
-      if (socket) {
-        socket.removeAllListeners();
-        socket.disconnect();
-        socket = null;
-        pendingEvents = [];
-      }
+      teardownSocket();
       useSessionStore.getState().clearChatMessages();
       useSessionStore.getState().clearUnreadChat();
       useSessionStore.getState().clearNotificationCount();
       return;
     }
 
-    const s = initSocket(token, setRoomUsers, setEmergency);
+    const s = initSocket(token, userId, setRoomUsers, setEmergency);
 
     const onConnect = () => forceUpdate((n) => n + 1);
     const onDisconnect = () => forceUpdate((n) => n + 1);
@@ -385,7 +400,7 @@ export function useSocket() {
       s.off('connect', onConnect);
       s.off('disconnect', onDisconnect);
     };
-  }, [token, setRoomUsers, setEmergency]);
+  }, [token, userId, setRoomUsers, setEmergency]);
 
   const emit = useCallback((event: string, data?: any) => {
     if (socket?.connected) {
