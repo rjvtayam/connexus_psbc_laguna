@@ -516,7 +516,7 @@ export function ControlRoom() {
         {/* Controls + Local Feed — self card also lives in the campus grid above */}
         <div className="animate-fade-in-up">
           <div className="bg-gray-900/80 backdrop-blur-xl rounded-xl border border-gray-800/60 p-1.5 sm:p-3 flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 md:gap-4">
-            <div className="w-full sm:w-20 md:w-36 lg:w-48 flex-shrink-0" data-demo="local-video">
+            <div className="w-32 sm:w-20 md:w-36 lg:w-48 flex-shrink-0" data-demo="local-video">
               <VideoCard
                 isLocal
                 isSmall
