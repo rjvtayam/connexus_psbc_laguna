@@ -39,7 +39,7 @@ export function ControlRoom() {
   const { localStream, isVideoOff, isScreenSharing, localMicActive, isAudioMuted } = usePeerStore();
   const { roomUsers, isEmergency, emergencyTriggeredBy, remotePortalModes, remoteMeetingScopes, remoteVideoOff, remoteAudioMuted, screenSharerSid, portalMode, meetingScope, unreadAllCount, unreadCampusCount, clearUnreadChat } = useSessionStore();
   const { user } = useAuthStore();
-  const { isRecording, elapsedTime, uploading: recordingUploading, uploadError, startRecording, stopRecording, formatTime: formatRecordingTime } = useRecording(roomId);
+  const { isRecording, elapsedTime, uploading: recordingUploading, uploadError, starting: recordingStarting, startRecording, stopRecording, formatTime: formatRecordingTime } = useRecording(roomId);
   const [activeTalkTarget, setActiveTalkTarget] = useState<'paete' | 'pagsanjan' | 'both' | null>(null);
   const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -314,6 +314,7 @@ export function ControlRoom() {
             )}
             {uploadError && (
               <span className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-1 sm:px-1.5 py-0.5 rounded-md font-semibold" title={uploadError}>
+                <AlertTriangle size={10} className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
                 <span className="hidden sm:inline">UPLOAD FAILED</span>
               </span>
             )}
@@ -586,6 +587,7 @@ export function ControlRoom() {
                 reactionDisabled={portalMode}
                 isRecording={isRecording}
                 recordingUploading={recordingUploading}
+                recordingStarting={recordingStarting}
                 recordingTime={isRecording ? formatRecordingTime(elapsedTime) : undefined}
                 onToggleRecording={isAdmin ? (isRecording ? stopRecording : startRecording) : undefined}
                 recordingDisabled={!isAdmin || portalMode}

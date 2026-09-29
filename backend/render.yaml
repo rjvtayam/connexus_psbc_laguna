@@ -3,7 +3,12 @@ services:
     name: connexus-api
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    # --proxy-headers: Render's router sets X-Forwarded-For; without this every request
+    # shares one client IP and slowapi rate limits (login 10/min etc.) become GLOBAL.
+    # The instance is only reachable through Render's router, so trusting the header is safe.
+    # NOTE: Render's filesystem is ephemeral — recordings under uploads/ do NOT survive
+    # redeploys/restarts (DB rows do). Use a mounted disk or external storage for durability.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
     envVars:
       - key: DATABASE_URL
         sync: false

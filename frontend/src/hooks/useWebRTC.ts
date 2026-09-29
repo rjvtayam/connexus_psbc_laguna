@@ -446,7 +446,7 @@ export function useWebRTC(_roomId: string) {
     try { screenTrack.stop(); } catch {}
     emit('screen_share_stop', {});
     useSessionStore.getState().setScreenSharer(null);
-    usePeerStore.setState({ isScreenSharing: false });
+    usePeerStore.setState({ isScreenSharing: false, screenStream: null });
     applyShareTracks();
   }, [emit, applyShareTracks]);
 
@@ -464,7 +464,7 @@ export function useWebRTC(_roomId: string) {
 
       emit('screen_share_start', {});
       useSessionStore.getState().setScreenSharer(mySid || null);
-      usePeerStore.setState({ isScreenSharing: true });
+      usePeerStore.setState({ isScreenSharing: true, screenStream: screen });
 
       applyShareTracks();
 

@@ -19,6 +19,7 @@ interface VideoControlsProps {
   reactionDisabled?: boolean;
   isRecording?: boolean;
   recordingUploading?: boolean;
+  recordingStarting?: boolean;
   recordingTime?: string;
   onToggleRecording?: () => void;
   recordingDisabled?: boolean;
@@ -41,6 +42,7 @@ export function VideoControls({
   reactionDisabled,
   isRecording,
   recordingUploading,
+  recordingStarting,
   recordingTime,
   onToggleRecording,
   recordingDisabled,
@@ -99,20 +101,20 @@ export function VideoControls({
           <div className="w-px h-4 sm:h-5 bg-gray-700/60 mx-0.5 hidden sm:block" />
           <button
             onClick={onToggleRecording}
-            disabled={recordingDisabled || recordingUploading}
+            disabled={recordingDisabled || recordingUploading || recordingStarting}
             className={`flex items-center justify-center gap-1.5 w-7 h-7 sm:w-9 sm:h-9 rounded-lg transition-all duration-200 ${
               recordingDisabled
                 ? 'bg-gray-800 text-gray-600 border border-gray-700/30 cursor-not-allowed opacity-50'
-                : recordingUploading
+                : recordingUploading || recordingStarting
                 ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400 cursor-wait'
                 : isRecording
                 ? 'bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-transparent'
             }`}
-            title={recordingDisabled ? 'Recording disabled' : recordingUploading ? 'Uploading...' : isRecording ? 'Stop Recording' : 'Start Recording'}
+            title={recordingDisabled ? 'Recording disabled' : recordingUploading ? 'Uploading...' : recordingStarting ? 'Starting...' : isRecording ? 'Stop Recording' : 'Start Recording'}
             data-demo="btn-record"
           >
-            {recordingUploading ? (
+            {recordingUploading || recordingStarting ? (
               <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
             ) : isRecording ? (
               <Square size={10} className="sm:w-3 sm:h-3 fill-current" />

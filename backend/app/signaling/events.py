@@ -32,6 +32,8 @@ broadcast_service = BroadcastService()
 
 room_members: dict[str, set[str]] = {}
 system_metrics_subscribers: set[str] = set()
+# Sockets of currently connected admin users (used to scope recording notifications)
+connected_admin_sids: set[str] = set()
 
 chat_history: dict[str, list[dict]] = {}
 CHAT_HISTORY_LIMIT = 200
@@ -57,6 +59,9 @@ async def connect(sid, environ, auth):
         "campus": user.campus,
     })
 
+    if user.role == "admin":
+        connected_admin_sids.add(sid)
+
     await sio.enter_room(sid, f"user_{user.id}")
 
     print(f"[Backend] User connected: {user.full_name} ({user.campus}), sid={sid}")
@@ -70,6 +75,7 @@ async def disconnect(sid, reason=""):
         session = None
 
     system_metrics_subscribers.discard(sid)
+    connected_admin_sids.discard(sid)
     room_id = session.get("current_room") if session else None
     if not room_id:
         for rid, members in list(room_members.items()):
